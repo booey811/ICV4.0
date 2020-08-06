@@ -8,9 +8,10 @@ from objects import Repair
 
 test = Repair(monday=667786416)
 
-pprint(test.monday.__dict__)
+test.include_vend(test.monday.v_id)
 
-print(test.monday.item.name)
+pprint(test.__dict__)
+
 
 
     
