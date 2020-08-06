@@ -6,6 +6,66 @@ import settings
 import keys.vend
 import keys.monday
 
+from moncli import MondayClient
+
+
+
+class Repair():
+    
+    debug_string = []
+    
+    def __init__(self, vend=False, monday=False, zendesk=False):
+        
+        if vend:
+            self.source = "vend"
+            self.vend = VendRepair(vend)
+            self.debug("[VEND] ID: {}".format(self.vend.id))
+            
+            self.name = self.vend.customer_info["first_name"] + " " + self.vend.customer_info["last_name"]
+            self.email = self.vend.customer_info["email"]
+            self.number = None
+            self.alt_numbers = []
+            
+            for number in [self.vend.mobile, self.vend.phone, self.vend.fax]:
+                if number:
+                    if self.number:
+                        self.alt_numbers.append(number)
+                    else:
+                        self.number = number
+
+        if monday:
+            self.source = "monday"
+            self.monday = MondayRepair(monday)
+        
+        if zendesk:
+            self.source = "zendesk"
+            self.zendesk = ZendeskRepair(zendesk)
+
+    def include_vend(self, vend_sale_id):
+        
+        self.vend = VendRepair(vend_sale_id)            
+
+    def include_monday(self, monday_id):
+        
+        self.monday = MondayRepair(monday_id)
+        
+    def include_zendesk(self, zendesk_ticket_id):
+        
+        self.zendesk = ZendeskRepair(zendesk_ticket_id)
+        
+    def debug(self, message, line=True, func_s=False, func_e=False):
+        
+        if line:
+            self.debug_string.append(message)
+        if func_s:
+            self.debug_string.append("$$$$  " + message + "  $$$$")            
+        if func_e:
+            self.debug_string.append("//$$  " + message + "  $$\\\\")
+        
+    def debug_print(self):
+        
+        print("\n".join(self.debug_string))
+        
 class VendRepair():
     
     def __init__(self, vend_sale_id):
@@ -103,71 +163,86 @@ class VendRepair():
             else:
                 self.products.append(product["product_id"])
                       
-
-class MondayRepair():
+class MondayRepair(Repair):
+         
+    moncli = MondayClient(user_name='systems@icorrect.co.uk',
+                                   api_key_v1=os.environ["MONV1"],
+                                   api_key_v2=os.environ["MONV2"])
     
     def __init__(self, monday_id):
         
-        self.id = monday_id
+        for item in self.moncli.get_items(limit=1, ids=[monday_id]):
+            self.item = item
+            
+        self.name = self.item.name.split()[0] + " " + self.item.name.split()[1]
         
+        self.retreive_column_data()
+        
+        self.translate_column_data()
+        
+        
+
+    def translate_column_data(self):
+        
+        self.debug("test")
+        
+        attributes = [["Status", "m_status", "status"], ["Service", "m_service", "service"],
+                    ["Client", "m_client", "client"], ["Type", "m_type", "type"],
+                    ["End Of Day", "m_eod", "eod"], ["ZenLink", "m_zenlink", "zenlink"],
+                    ["Has Case", "m_has_case", "has_case"]]
+        
+        for column, m_attribute, attribute in attributes:
+
+            # Check in status column dictionary for the corresponding column
+            for option in keys.monday.status_column_dictionary[column]["values"]:
+                
+                # Take title from column dictionary and add it to the Repair object
+                if option["index"] == getattr(self, m_attribute):
+                    setattr(self, attribute, option["title"])
+                    
+        self.debug("MON FUNC translate_column_data")
+
+                       
+    def retreive_column_data(self):
+        
+    
+        column_values = self.item.get_column_values()
+        
+        for item in keys.monday.col_ids_to_attributes:
+            if keys.monday.col_ids_to_attributes[item]['attribute'] is not None:
+                col_id = item
+                for value in column_values:
+                    if value is None:
+                        continue
+                    else:
+                        if value.id == col_id:
+                            try:
+                                setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'],
+                                        getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0]))
+                            except KeyError:
+                                print(
+                                    "*811*ERROR: KEY: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
+                            except TypeError:
+                                print(
+                                    "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
+                                
+
 class ZendeskRepair():
     
     def __init__(self, zendesk_ticket_number):
         
         self.ticket_id = zendesk_ticket_number
-
-class Repair():
-    
-    def __init__(self, vend=False, monday=False, zendesk=False):
         
-        self.debug_string = []
+class MonBoards():
         
-        if vend:
-            self.source = "vend"
-            self.vend = VendRepair(vend)
-            self.name = self.vend.customer_info["first_name"] + " " + self.vend.customer_info["last_name"]
-            self.email = self.vend.customer_info["email"]
-            self.number = None
-            self.alt_numbers = []
-            
-            for number in [self.vend.mobile, self.vend.phone, self.vend.fax]:
-                if number:
-                    if self.number:
-                        self.alt_numbers.append(number)
-                    else:
-                        self.number = number
-            
-
-        if monday:
-            self.source = "monday"
-            self.monday = MondayRepair(monday)
+    def __init__(self):        
         
-        if zendesk:
-            self.source = "zendesk"
-            self.zendesk = ZendeskRepair(zendesk)
-
-    def include_vend(self, vend_sale_id):
+        self.boards = {}
         
-        self.vend = VendRepair(vend_sale_id)            
-
-    def include_monday(self, monday_id):
-        
-        self.monday = MondayRepair(monday_id)
-        
-    def include_zendesk(self, zendesk_ticket_id):
-        
-        self.zendesk = ZendeskRepair(zendesk_ticket_id)
-        
-    def debug(self, message):
-        
-        self.debug_string.append(message)
-        
-    def debug_print(self):
-        
-        print("\n".join(self.debug_string))
+    # def add_board(self, username, board):
         
         
-
+    #     self.boards[user_ids[usern]
 
 
 # COMPARISONS & CORRECTIONS
