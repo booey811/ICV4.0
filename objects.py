@@ -66,7 +66,7 @@ class Repair():
         
         print("\n".join(self.debug_string))
         
-class VendRepair():
+class VendRepair(Repair):
     
     def __init__(self, vend_sale_id):
         
@@ -173,6 +173,7 @@ class MondayRepair(Repair):
         
         for item in self.moncli.get_items(limit=1, ids=[monday_id]):
             self.item = item
+            break
             
         self.name = self.item.name.split()[0] + " " + self.item.name.split()[1]
         
@@ -180,7 +181,7 @@ class MondayRepair(Repair):
         
         self.translate_column_data()
         
-        
+                
 
     def translate_column_data(self):
         
@@ -226,8 +227,7 @@ class MondayRepair(Repair):
                                 print(
                                     "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
                                 
-
-class ZendeskRepair():
+class ZendeskRepair(Repair):
     
     def __init__(self, zendesk_ticket_number):
         
