@@ -1,26 +1,34 @@
-from pprint import pprint
+from objects import PulseToAdd
+
+test = PulseToAdd()
+
+ls = []
+
+print(test.__dict__)
+
+for atrribute in test.__dict__:
+    ls.append(atrribute)
+
+print(len(ls))
+print(len(test.title_to_id))
 
 
-from objects import Repair
+
+# from moncli import MondayClient
+# import os
+
+# import settings
+
+# moncli = MondayClient(user_name='systems@icorrect.co.uk',
+#                                 api_key_v1=os.environ["MONV1SYS"],
+#                                 api_key_v2=os.environ["MONV2SYS"])
 
 
+# main_board = moncli.get_board(id='349212843')
 
+# col_vals = {"text4": "TESTCOL1", "text8": "TESTCOL2", "status4": {"label": "Awaiting Confirmation"}}
 
-test = Repair(monday=667786416)
-
-test.include_vend(test.monday.v_id)
-
-pprint(test.__dict__)
-
-
-
-    
-
-
-# client = moncli.MondayClient(user_name="systems@icorrect.co.uk", api_key_v1=os.environ["MONV1"],
-#                     api_key_v2=os.environ["MONV2"])
-
-# main_board = client.get_board(id='349212843')
+# main_board.add_item(item_name="TESTV4.1", column_values=col_vals)
 
 # warranty_board = client.get_board(id='419735954')
 

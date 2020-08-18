@@ -1,5 +1,5 @@
-import requests
 import json
+import requests
 import os
 
 import settings
@@ -9,46 +9,68 @@ import keys.monday
 from moncli import MondayClient
 
 
+# Differentiation between 'INITIALISATION' and 'INCLUSION'
+
 
 class Repair():
     
     debug_string = []
+    pulses = []
+    vend = None
+    monday = None
+    zendesk = None    
     
-    def __init__(self, vend=False, monday=False, zendesk=False):
+    def __init__(self, vend=False, monday=False, zendesk=False, test=False):
         
         if vend:
             self.include_vend(vend)
+            self.source = "vend"
+            self.name = self.vend.customer_info["first_name"] + " " + self.vend.customer_info["last_name"]
+            self.email = self.vend.customer_info["email"]
+            self.number = None
+            self.alt_numbers = []
+            for number in [self.vend.mobile, self.vend.phone, self.vend.fax]:
+                if number:
+                    if self.number:
+                        self.alt_numbers.append(number)
+                    else:
+                        self.number = number
+
 
         elif monday:
+            
+            # Set self.monday, if another is addded, set to None or = self.pulses
+            
             self.include_monday(monday)
+            self.source = "monday"
         
         elif zendesk:
+            self.source = "zendesk"
             self.include_zendesk(zendesk)
+            
+        elif test:
+            self.name = "Jeremiah Bullfrog"
 
     def include_vend(self, vend_sale_id):
 
         self.debug("Adding[VEND] ID: {}".format(vend_sale_id))
-        self.source = "vend"
         self.vend = VendRepair(vend_sale_id)
-        self.name = self.vend.customer_info["first_name"] + " " + self.vend.customer_info["last_name"]
-        self.email = self.vend.customer_info["email"]
-        self.number = None
-        self.alt_numbers = []
-        for number in [self.vend.mobile, self.vend.phone, self.vend.fax]:
-            if number:
-                if self.number:
-                    self.alt_numbers.append(number)
-                else:
-                    self.number = number
 
     def include_monday(self, monday_id):
+
+        self.debug("Adding[MONDAY] ID: {}".format(monday_id))
         
-        self.source = "monday"
-        self.monday = MondayRepair(monday_id)
+        if isinstance(self.monday, list):
+            self.monday.append(MondayRepair(monday_id))
+        elif self.monday:
+            self.monday = [self.monday, MondayRepair(monday_id)]
+        elif not self.monday:
+            self.monday = MondayRepair(monday_id)
         
+
     def include_zendesk(self, zendesk_ticket_id):
         
-        self.source = "zendesk"
+        self.debug("Adding[ZENDESK] ID: {}".format(zendesk_ticket_id))
         self.zendesk = ZendeskRepair(zendesk_ticket_id)
         
     def debug(self, message, line=True, func_s=False, func_e=False):
@@ -242,6 +264,92 @@ class MonBoards():
         
     #     self.boards[user_ids[usern]
 
+
+class PulseToAdd():
+    
+    title_to_id = {
+        'invoiced': 'check',
+        'link_to_ticket': 'text410',
+        'zenlink': 'status5',
+        'status': 'status4',
+        'service': 'service',
+        'client': 'status',
+        'type': 'status24',
+        'case': 'status_14',
+        'booking_time': 'date6',
+        'technician': 'person',
+        'device': 'device0',
+        'repair': 'repair',
+        'part_colour': 'status8',
+        'screen_condition': 'screen_condition',
+        'imei_sn': 'text4',
+        'data': 'status55',
+        'passcode': 'text8',
+        'dcps': 'text2',
+        'post_code': 'text93',
+        'company_flat': 'dup__of_passcode',
+        'street_name_number': 'passcode',
+        'date_received': 'date4',
+        'number': 'text00',
+        'email': 'text5',
+        'eta': 'hour0',
+        'repaired_date': 'collection_date',
+        'collection_date': 'date3',
+        'notifications': 'dropdown4',
+        'total_time': 'time_tracking98',
+        'diagnostic_time': 'time_tracking',
+        'repair_time': 'time_tracking9',
+        'item_id': 'item_id',
+        'zendeskid': 'text6',
+        'chased': 'status_1',
+        'vend_sale_id': 'text88',
+        'end_of_day': 'blocker',
+        'deactivate': 'check71'
+    }
+    
+    
+    
+    def __init__(self):
+        
+        self.name = None
+        
+        self.invoiced = None
+        self.link_to_ticket = None
+        self.zenlink = None
+        self.status = None
+        self.service = None
+        self.client = None
+        self.type = None
+        self.case = None
+        self.booking_time = None
+        self.technician = None
+        self.device = None
+        self.repair = None
+        self.part_colour = None
+        self.screen_condition = None
+        self.imei_sn = None
+        self.data = None
+        self.passcode = None
+        self.dcps = None
+        self.post_code = None
+        self.company_flat = None
+        self.street_name_number = None
+        self.date_received = None
+        self.number = None
+        self.email = None
+        self.eta = None
+        self.repaired_date = None
+        self.collection_date = None
+        self.notifications = None
+        self.total_time = None
+        self.diagnostic_time = None
+        self.repair_time = None
+        self.item_id = None
+        self.zendeskid = None
+        self.chased = None
+        self.vend_sale_id = None
+        self.end_of_day = None
+        self.deactivate = None
 
 # COMPARISONS & CORRECTIONS
 # comps = []
