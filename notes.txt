@@ -1,0 +1,27 @@
+
+
+EVERY REPAIR WILL ONLY EVER HAVE ONE TICKET AND ONE VEND SALE
+
+HOWEVER
+
+A REPAIR COULD HAVE MORE THAN ONE PULSE ASSOCIATED
+
+
+
+COMPARISONS & CORRECTIONS
+comps = []
+for item in [self.vend, self.monday, self.zendesk]:
+  if item:
+      comps.append(item)
+
+Compare this list
+
+ZENDESK GENERAL
+Tickets are not created until a notification is sent
+
+
+WALK IN CORPORATES
+If user on zendesk and user has company - corporate
+Query the user without creating a ticket, and check to see if they belong to a company
+
+
