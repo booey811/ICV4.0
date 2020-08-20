@@ -16,3 +16,5 @@ v2 = Repair(monday=667786416)
 
 p(v1.__dict__)
 p(v2.__dict__)
+
+test = None
