@@ -1,16 +1,16 @@
-from objects import PulseToAdd
+from pprint import pprint as p
 
-test = PulseToAdd()
+from objects import Repair
 
-ls = []
 
-print(test.__dict__)
+test = Repair(vend='6ffc7cac-fb7b-9dfc-11ea-d59d7f1fc76d')
 
-for atrribute in test.__dict__:
-    ls.append(atrribute)
-
-print(len(ls))
-print(len(test.title_to_id))
+p(test.__dict__)
+print()
+print()
+print()
+print()
+p(test.vend.__dict__)
 
 
 
