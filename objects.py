@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+from datetime import datetime
 
 import settings
 import keys.vend
@@ -16,11 +17,13 @@ class Repair():
     monday = []
     zendesk = None
 
-    moncli = MondayClient(
+    monday_client = MondayClient(
         user_name='systems@icorrect.co.uk',
         api_key_v1=os.environ["MONV1SYS"],
         api_key_v2=os.environ["MONV2SYS"]
         )
+
+    logging_board = monday_client.get_board_by_id(id=722868697)
 
     def __init__(self, vend=False, monday=False, zendesk=False, test=False):
 
@@ -39,8 +42,6 @@ class Repair():
                         self.number = number
 
         elif monday:
-
-            # Set self.monday, if another is addded, set to None or = self.pulses
 
             self.include_monday(monday)
             self.source = "monday"
@@ -88,7 +89,7 @@ class Repair():
 
         elif self.source == 'vend':
             col_val = create_column_value(id='text88', column_type=ColumnType.text, value=str(self.vend.id))
-            for item in self.moncli.get_board(id="349212843").get_items_by_column_values(col_val):
+            for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
 
             for pulse in self.monday:
@@ -98,7 +99,7 @@ class Repair():
 
         elif self.source == 'zendesk':
             col_val = create_column_value(id='text6', column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
-            for item in self.moncli.get_board(id="349212843").get_items_by_column_values(col_val):
+            for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
 
             for pulse in self.monday:
@@ -110,18 +111,44 @@ class Repair():
             self.debug("Source of Repair not set")
 
 
-    def debug(self, message, line=True, func_s=False, func_e=False):
+    def debug(self, message, func_s=False, func_e=False):
+        """Adds to a list of strings that will eventaully be printed
 
-        if line:
-            self.debug_string.append(message)
-        elif func_s:
-            self.debug_string.append("$$$$  " + message + "  $$$$")
+        Args:
+            message (string): The message required to add to debug list
+            func_s (bool, optional): Used to signify the beginning of a function. Defaults to False.
+            func_e (bool, optional): Used to signify the end of a function. Defaults to False.
+        """
+
+        if func_s:
+            self.debug_string.append("================= OPEN " + message + " OPEN =================")
         elif func_e:
-            self.debug_string.append("//$$  " + message + "  $$\\\\")
+            self.debug_string.append("================= CLOSE " + message + " CLOSE =================")
+        else:
+            self.debug_string.append(message)
 
     def debug_print(self):
 
-        print("\n".join(self.debug_string))
+        now = datetime.now()
+
+        col_vals = {"status5": {"label": self.source.capitalize()}}
+
+        for pulse in  self.monday:
+            col_vals["text"] = str(pulse.id)
+        if self.vend:
+            col_vals["text3"] = str(self.vend.id)
+        if self.zendesk:
+            col_vals["text1"] = str(self.zendesk.ticket_id)
+
+        time = str(now.strftime("%X"))
+
+        print(col_vals)
+
+        log = self.logging_board.add_item(item_name=time + " // " + str(self.name), column_values=col_vals)
+
+        self.debug_string.append("FROM APPV4 PLEASE DELETE")
+
+        log.add_update("\n".join(self.debug_string))
 
 class VendRepair(Repair):
 
@@ -222,15 +249,14 @@ class VendRepair(Repair):
 
 class MondayRepair(Repair):
 
-
-
     v_id = None
     z_ticket_id = None
 
     def __init__(self, monday_id):
 
-        for item in super().moncli.get_items(limit=1, ids=[int(monday_id)]):
+        for item in super().monday_client.get_items(limit=1, ids=[int(monday_id)]):
             self.item = item
+            self.id = item.id
             break
 
         self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
@@ -241,7 +267,7 @@ class MondayRepair(Repair):
 
     def translate_column_data(self):
 
-        self.debug("MONDAY translate_column_data", func_s=True)
+        self.debug("translate_column_data", func_s=True)
 
         attributes = [["Status", "m_status", "status"], ["Service", "m_service", "service"],
                     ["Client", "m_client", "client"], ["Type", "m_type", "type"],
@@ -257,7 +283,7 @@ class MondayRepair(Repair):
                 if option["index"] == getattr(self, m_attribute):
                     setattr(self, attribute, option["title"])
 
-        self.debug("MONDAY translate_column_data", func_e=True)
+        self.debug("translate_column_data", func_e=True)
 
 
     def retreive_column_data(self):
