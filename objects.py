@@ -288,7 +288,6 @@ class MondayRepair(Repair):
 
         self.debug("translate_column_data", func_e=True)
 
-
     def retreive_column_data(self):
 
 
@@ -411,3 +410,64 @@ class PulseToAdd():
         self.end_of_day = None
         self.deactivate = None
 
+class MondayColumns():
+
+    column_values  = {}
+
+    # Dictionary to iterate through when translating column data
+    attributes_to_ids = {
+
+        "statuses": {
+
+            "values": {
+                "status": "status4", # Status Column
+                "service": "service", # Servcie Column
+                "client": "status", # Client Column
+                "type": "status24", # Type Column
+                "case": "status_14", # Case Column
+            },
+
+            "structure": lambda id, value: [id, {"label": value}]
+        },
+    }
+    #     "checkboxes": {
+    #         "invoiced": "check", # Invoiced? Column
+    #     },
+
+    #     "text": {
+    #         "zenlink": "text410", # Zenlink Column
+    #     },
+
+    #     "dropdown": {
+    #         "device": "device0", # Device Column
+    #         "repairs": "repair", # Repairs Column
+    #     },
+
+    #     "date": {
+    #         "booking_time": "date6", # Booking Date Column
+    #         "deadline": "date36", # Deadline Column
+
+    #     },
+
+    #     "numbers": {
+    #         "time": "numbers0", # Time Column
+
+    #     },
+
+    # }
+
+    def __init__(self):
+
+        for category in self.attributes_to_ids:
+
+            values = self.attributes_to_ids[category]["values"]
+            structure = self.attributes_to_ids[category]["structure"]
+
+            for column in values:
+                diction = structure(values[column], "attribute taken from Repair using super()")
+                self.column_values[diction[0]] = diction[1]
+
+            print(self.column_values)
+
+
+test = MondayColumns()
