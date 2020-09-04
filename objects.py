@@ -1,28 +1,36 @@
 import json
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import settings
 import keys.vend
 import keys.monday
 
 from moncli import MondayClient, create_column_value, ColumnType
+from zenpy import Zenpy
 
 class Repair():
 
     debug_string = []
-    pulses = []
     vend = None
     monday = []
     zendesk = None
 
+    # Application Clients
     monday_client = MondayClient(
         user_name='systems@icorrect.co.uk',
         api_key_v1=os.environ["MONV1SYS"],
         api_key_v2=os.environ["MONV2SYS"]
         )
 
+    zendesk_client = Zenpy(
+        email='zendesk@icorrect.co.uk',
+        token=os.environ["ZENDESK"],
+        subdomain="icorrect"
+        )
+
+    # Monday Boards
     logging_board = monday_client.get_board_by_id(id=722868697)
 
     def __init__(self, vend=False, monday=False, zendesk=False, test=False):
@@ -42,7 +50,6 @@ class Repair():
                         self.number = number
 
         elif monday:
-
             self.include_monday(monday)
             self.source = "monday"
             self.name = self.monday[0].name
@@ -55,7 +62,6 @@ class Repair():
 
         elif test:
             self.name = "Jeremiah Bullfrog"
-
 
         self.query_applications()
 
@@ -78,6 +84,8 @@ class Repair():
     def query_applications(self):
 
         """Searches the specified applications for information related to the current repair"""
+
+        self.debug("query_applications", func_s=True)
 
         if self.source == 'monday':
             if self.monday[0].v_id:
@@ -110,6 +118,7 @@ class Repair():
         else:
             self.debug("Source of Repair not set")
 
+        self.debug("query_applications", func_e=True)
 
     def debug(self, message, func_s=False, func_e=False):
         """Adds to a list of strings that will eventaully be printed
@@ -121,34 +130,27 @@ class Repair():
         """
 
         if func_s:
-            self.debug_string.append("================= OPEN " + message + " OPEN =================")
+            self.debug_string.append("================== OPEN " + message + " OPEN ==================")
         elif func_e:
             self.debug_string.append("================= CLOSE " + message + " CLOSE =================")
         else:
             self.debug_string.append(message)
 
-    def debug_print(self):
-
-        now = datetime.now()
-
-        col_vals = {"status5": {"label": self.source.capitalize()}}
-
-        for pulse in  self.monday:
-            col_vals["text"] = str(pulse.id)
-        if self.vend:
-            col_vals["text3"] = str(self.vend.id)
-        if self.zendesk:
-            col_vals["text1"] = str(self.zendesk.ticket_id)
-
-        time = str(now.strftime("%X"))
-
-        print(col_vals)
-
-        log = self.logging_board.add_item(item_name=time + " // " + str(self.name), column_values=col_vals)
-
-        self.debug_string.append("FROM APPV4 PLEASE DELETE")
-
-        log.add_update("\n".join(self.debug_string))
+    def debug_print(self, console=False):
+        if not console:
+            now = datetime.now() + timedelta(hours=1)
+            col_vals = {"status5": {"label": self.source.capitalize()}}
+            for pulse in  self.monday:
+                col_vals["text"] = str(pulse.id)
+            if self.vend:
+                col_vals["text3"] = str(self.vend.id)
+            if self.zendesk:
+                col_vals["text1"] = str(self.zendesk.ticket_id)
+            time = str(now.strftime("%X"))
+            log = self.logging_board.add_item(item_name=time + " // " + str(self.name) + " -- FROM APPV4", column_values=col_vals)
+            log.add_update("\n".join(self.debug_string))
+        else:
+            print("\n".join(self.debug_string))
 
 class VendRepair(Repair):
 
@@ -282,6 +284,7 @@ class MondayRepair(Repair):
                 # Take title from column dictionary and add it to the Repair object
                 if option["index"] == getattr(self, m_attribute):
                     setattr(self, attribute, option["title"])
+                    self.debug("{}: {}".format(column, option["title"]))
 
         self.debug("translate_column_data", func_e=True)
 
@@ -314,17 +317,13 @@ class ZendeskRepair(Repair):
     def __init__(self, zendesk_ticket_number):
 
         self.ticket_id = zendesk_ticket_number
-
-class MonBoards():
-
-    def __init__(self):
-
-        self.boards = {}
-
-    # def add_board(self, username, board):
-
-
-    #     self.boards[user_ids[usern]
+        ticket = super().zendesk_client.search(str(self.ticket_id), type="ticket")
+        if ticket:
+            self.ticket = ticket
+            self.user = self.ticket.requester
+            self.user_id = self.user.id
+        else:
+            self.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
 
 class PulseToAdd():
 

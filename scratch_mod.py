@@ -8,8 +8,11 @@ from moncli import ColumnType, create_column_value, MondayClient
 
 
 
-test = Repair(monday=719462379)
+test = Repair(zendesk=5019)
 
-test.debug_print()
+test.debug_print(console=True)
+print()
+print()
+
 
 

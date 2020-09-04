@@ -36,6 +36,7 @@ def monday_status_change():
     repair = Repair(monday=int(data["event"]["pulseId"]))
     repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], data["event"]["value"]["label"]["text"]))
 
+    repair.debug_print()
 
 
 
@@ -49,12 +50,17 @@ def vend_sale_update():
         sale = sale.decode('utf-8')
         sale = parse_qs(sale)
         sale = json.loads(sale['payload'][0])
+        repair = Repair(vend=sale["id"])
+
+        repair.debug_print()
 
     thread = Thread(target=process, kwargs={"sale": request.get_data()})
     thread.start()
+
+
     return ""
 
 
 # Top Line Driver Code
 if __name__ == "__main__":
-    icv3.run(load_dotenv=True)
+    app.run(load_dotenv=True)
