@@ -762,8 +762,8 @@ codes = {
                 }
 
 
-col_ids_to_attributes = {'check': {'title': 'Invoiced?', 'value_type': ['checkbox'], 'attribute': None},
-            'text410': {'title': 'Link to Ticket', 'value_type': ['text'], 'attribute': None},
+col_ids_to_attributes = {'check': {'title': 'Invoiced?', 'value_type': ['checked'], 'attribute': "invoiced"},
+            'text410': {'title': 'Link to Ticket', 'value_type': ['text'], 'attribute': "zendesk_url"},
             'status5': {'title': 'ZenLink', 'value_type': ["index", "label"], 'attribute': "m_zenlink"},
             'status4': {'title': 'Status', 'value_type': ["index", "label"], 'attribute': "m_status"},
             'service': {'title': 'Service', 'value_type': ["index", "label"], 'attribute': "m_service"},
@@ -772,18 +772,18 @@ col_ids_to_attributes = {'check': {'title': 'Invoiced?', 'value_type': ['checkbo
             'person': {'title': 'Technician', 'value_type': 'persons_and_teams', 'attribute': None},
             'device0': {'title': 'Device', 'value_type': ["ids", "label"], 'attribute': 'm_device'},
             'repair': {'title': 'Repair', 'value_type': ["ids", "label"], 'attribute': 'm_repairs'},
-            'status82': {'title': 'Screen Condition', 'value_type': ["index", "label"], 'attribute': None},
+            'screen_condition': {'title': 'Screen Condition', 'value_type': ["ids", "label"], 'attribute': None},
             'status8': {'title': 'Colour', 'value_type': ["index", "label"], 'attribute': 'm_colour'},
             'text4': {'title': 'IMEI/SN', 'value_type': ['text'], 'attribute': 'imeisn'},
-            'status55': {'title': 'Data', 'value_type': ["index", "label"], 'attribute': None},
+            'status55': {'title': 'Data', 'value_type': ["index", "label"], 'attribute': "data"},
             'text8': {'title': 'Passcode', 'value_type': ['text'], 'attribute': 'passcode'},
             'text2': {'title': 'DCPS', 'value_type': ['text'], 'attribute': None},
             'text93': {'title': 'Post Code', 'value_type': ['text'], 'attribute': 'postcode'},
-            'date4': {'title': 'Date Received', 'value_type': ['date', 'time'], 'attribute': None},
+            'date4': {'title': 'Date Received', 'value_type': ['date', 'time'], 'attribute': "date_received"},
             'text00': {'title': 'Tel.No', 'value_type': ['text'], 'attribute': 'phone'},
             'text5': {'title': 'Email', 'value_type': ['text'], 'attribute': 'email'},
-            'repair_complete': {'title': 'Repaired Date', 'value_type': ['date', 'time'], 'attribute': None},
-            'date3': {'title': 'Collection Date', 'value_type': ['date', 'time'], 'attribute': None},
+            'repair_complete': {'title': 'Repaired Date', 'value_type': ['date', 'time'], 'attribute': "date_repaired"},
+            'date3': {'title': 'Collection Date', 'value_type': ['date', 'time'], 'attribute': "date_collected"},
             'dropdown4': {'title': 'Notifications', 'value_type': ['ids', 'label'], 'attribute': "m_notifications"},
             'time_tracking98': {'title': 'Total Time', 'value_type': None, 'attribute': None},
             'time_tracking': {'title': 'Diagnostic Time', 'value_type': None, 'attribute': None},
@@ -833,7 +833,7 @@ status_column_dictionary = {
             {"title": "Severed",
              "index": 15,
              "label": "Severed",
-             "z_tag": ""    
+             "z_tag": ""
             }
         ]
     },

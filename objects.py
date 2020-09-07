@@ -74,7 +74,7 @@ class Repair():
 
         self.debug("Adding[MONDAY] ID: {}".format(monday_id))
 
-        self.monday.append(MondayRepair(monday_id))
+        self.monday.append(MondayRepair(monday_id=monday_id, self.debug_string))
 
     def include_zendesk(self, zendesk_ticket_id):
 
@@ -119,6 +119,20 @@ class Repair():
             self.debug("Source of Repair not set")
 
         self.debug("query_applications", func_e=True)
+
+    def add_to_monday(self):
+
+        self.debug("add_to_monday", func_s=True)
+
+        main_board = self.monday_client.get_board_by_id(id=349212843)
+
+        for pulse in self.monday:
+
+            pulse.columns = MondayColumns(pulse)
+
+            main_board.add_item(item_name=self.name, column_values=pulse.columns.column_values )
+
+        self.debug("add_to_monday", func_e=True)
 
     def debug(self, message, func_s=False, func_e=False):
         """Adds to a list of strings that will eventaully be printed
@@ -249,34 +263,55 @@ class VendRepair(Repair):
             else:
                 self.products.append(product["product_id"])
 
+    def convert_to_monday_codes(self):
+
+        inv_board = super().monday_client.get_board_by_id(id=349212843)
+
+        for item in self.products:
+            col_val = create_column_value(id="text", column_type=ColumnType.text, text=item)
+            for item in inv_board.get_items_by_column_values(col_val):
+                super().monday
+
+
 class MondayRepair(Repair):
 
     v_id = None
     z_ticket_id = None
 
-    def __init__(self, monday_id):
+    def __init__(self, debug_string, monday_id=False: str, created=False: list):
 
-        for item in super().monday_client.get_items(limit=1, ids=[int(monday_id)]):
-            self.item = item
-            self.id = item.id
-            break
+        if monday_id:
 
-        self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
+            for item in super().monday_client.get_items(limit=1, ids=[int(monday_id)]):
+                self.item = item
+                self.id = item.id
+                break
 
-        self.retreive_column_data()
+            self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
 
-        self.translate_column_data()
+            self.retreive_column_data()
+
+            self.translate_column_data()
+
+
+
+        # self.columns = MondayColumns(self)
 
     def translate_column_data(self):
 
         self.debug("translate_column_data", func_s=True)
 
-        attributes = [["Status", "m_status", "status"], ["Service", "m_service", "service"],
-                    ["Client", "m_client", "client"], ["Type", "m_type", "type"],
-                    ["End Of Day", "m_eod", "eod"], ["ZenLink", "m_zenlink", "zenlink"],
-                    ["Has Case", "m_has_case", "has_case"]]
+        status_attributes = [
+            ["Status", "m_status", "status"],
+            ["Service", "m_service", "service"],
+            ["Client", "m_client", "client"],
+            ["Type", "m_type", "type"],
+            ["End Of Day", "m_eod", "end_of_day"],
+            ["ZenLink", "m_zenlink", "zenlink"],
+            ["Has Case", "m_has_case", "case"]
+        ]
 
-        for column, m_attribute, attribute in attributes:
+        for column, m_attribute, attribute in status_attributes:
 
             # Check in status column dictionary for the corresponding column
             for option in keys.monday.status_column_dictionary[column]["values"]:
@@ -286,10 +321,18 @@ class MondayRepair(Repair):
                     setattr(self, attribute, option["title"])
                     self.debug("{}: {}".format(column, option["title"]))
 
+        dropdown_attributes = [
+            ["Device", "m_device", "device"],
+            ["Repairs", "m_repairs", "repairs"]
+        ]
+
+        for column, m_attribute, attribute in dropdown_attributes:
+
+            setattr(self, attribute, getattr(self, m_attribute))
+
         self.debug("translate_column_data", func_e=True)
 
     def retreive_column_data(self):
-
 
         column_values = self.item.get_column_values()
 
@@ -412,9 +455,15 @@ class PulseToAdd():
 
 class MondayColumns():
 
+
+    """Object that contains relevant column information for when repairs are added to Monday.
+
+        This will translate normal attributes to values that are usable through moncli
+    """
+
     column_values  = {}
 
-    # Dictionary to iterate through when translating column data
+    # Dictionary to iterate through when translating column data back to Monday
     attributes_to_ids = {
 
         "statuses": {
@@ -425,38 +474,60 @@ class MondayColumns():
                 "client": "status", # Client Column
                 "type": "status24", # Type Column
                 "case": "status_14", # Case Column
+                "colour": "status8", # Colour Column
+                "data": "status55", # Data Column
+                "end_of_day": "blocker": # End Of Day Column
             },
 
             "structure": lambda id, value: [id, {"label": value}]
         },
+
+        # "checkboxes": {
+        #     "values": {
+        #         "invoiced": "check", # Invoiced? Column
+        #     },
+
+        #     "structure":
+        # },
+
+        "text": {
+            "values": {
+                "zendesk_url": "text410", # Zenlink Column
+            },
+
+            "structure": lambda id, value: [id, value]
+        },
+
+        "dropdown": {
+            "values": {
+                "device": "device0", # Device Column
+                "repairs": "repair", # Repairs Column
+            },
+
+            "structure": lambda id, value: [id, {"ids": value}]
+        },
+
+        # "date": {
+        #     "values": {
+        #         "booking_time": "date6", # Booking Date Column
+        #         "deadline": "date36", # Deadline Column
+        #     },
+
+        #     "structure": lambda id, value:
+        # },
+
+        # "numbers": {
+        #     "values": {
+        #         "time": "numbers0", # Time Column
+        #     },
+
+        #     "structure": lambda id, value: [id, value]
+        # }
+
     }
-    #     "checkboxes": {
-    #         "invoiced": "check", # Invoiced? Column
-    #     },
 
-    #     "text": {
-    #         "zenlink": "text410", # Zenlink Column
-    #     },
+    def __init__(self, monday_object):
 
-    #     "dropdown": {
-    #         "device": "device0", # Device Column
-    #         "repairs": "repair", # Repairs Column
-    #     },
-
-    #     "date": {
-    #         "booking_time": "date6", # Booking Date Column
-    #         "deadline": "date36", # Deadline Column
-
-    #     },
-
-    #     "numbers": {
-    #         "time": "numbers0", # Time Column
-
-    #     },
-
-    # }
-
-    def __init__(self):
 
         for category in self.attributes_to_ids:
 
@@ -464,10 +535,16 @@ class MondayColumns():
             structure = self.attributes_to_ids[category]["structure"]
 
             for column in values:
-                diction = structure(values[column], "attribute taken from Repair using super()")
+                diction = structure(values[column], getattr(monday_object, column))
                 self.column_values[diction[0]] = diction[1]
 
             print(self.column_values)
 
 
-test = MondayColumns()
+test = Repair(monday=726460853)
+
+test.add_to_monday()
+
+test.debug_print(console=True)
+
+
