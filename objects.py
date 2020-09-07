@@ -73,8 +73,8 @@ class Repair():
     def include_monday(self, monday_id):
 
         self.debug("Adding[MONDAY] ID: {}".format(monday_id))
+        self.monday.append(MondayRepair(monday_id=monday_id))
 
-        self.monday.append(MondayRepair(monday_id=monday_id, self.debug_string))
 
     def include_zendesk(self, zendesk_ticket_id):
 
@@ -183,6 +183,7 @@ class VendRepair(Repair):
         self.products = []
         self.notes = []
 
+        self.name = "{} {}".format(self.customer_info["first_name"], self.customer_info["last_name"])
         self.phone = self.customer_info["phone"]
         self.mobile = self.customer_info["mobile"]
         self.fax = self.customer_info["fax"]
@@ -190,7 +191,7 @@ class VendRepair(Repair):
 
         self.client = "End User"
         self.service = "Walk-In"
-        self.type = "Repair"
+        self.repair_type = "Repair"
 
         self.update_monday = False
 
@@ -233,7 +234,7 @@ class VendRepair(Repair):
 
             # Check if Diagnostic Product is present, extract notes if so
             if product["product_id"] == "02d59481-b6ab-11e5-f667-e9f1a04c6e04":
-                self.type = "Diagnostic"
+                self.repair_type = "Diagnostic"
                 self.notes.append(product["note"])
                 continue
 
@@ -265,12 +266,29 @@ class VendRepair(Repair):
 
     def convert_to_monday_codes(self):
 
-        inv_board = super().monday_client.get_board_by_id(id=349212843)
+        inv_board = super().monday_client.get_board_by_id(id=703218230)
+
+        monday_object = MondayRepair(created=self.name)
 
         for item in self.products:
-            col_val = create_column_value(id="text", column_type=ColumnType.text, text=item)
+            print(item)
+            col_val = create_column_value(id="text", column_type=ColumnType.text, value=item)
             for item in inv_board.get_items_by_column_values(col_val):
-                super().monday
+                device = item.get_column_value(id='numbers3').number
+                print(device)
+                repair = item.get_column_value(id="device").number
+                print(repair)
+                colour = item.get_column_value(id="numbers44").number
+                print(colour)
+                if not monday_object.device and device:
+                    monday_object.device = [device]
+                monday_object.repairs.append(repair)
+                if not monday_object.colour and colour:
+                    monday_object.colour = colour
+
+        super().monday.append(monday_object)
+
+        # setattr(super(), 'monday', monday_object)
 
 
 class MondayRepair(Repair):
@@ -278,7 +296,44 @@ class MondayRepair(Repair):
     v_id = None
     z_ticket_id = None
 
-    def __init__(self, debug_string, monday_id=False: str, created=False: list):
+    invoiced = None # Not currently used in program
+    zendesk_url = None
+    zenlink = None
+    status = None
+    service = None
+    client = None
+    repair_type = None
+    case = None
+    booking_time = None # Not currently used in program
+    deadline = None # Not currently used in program
+    time = None # Not currently used in program
+    technician = None # Not currently used in program
+    device = []
+    repairs = []
+    colour = None
+    screen_condition = None # Not currently used in program
+    imeisn = None
+    data = None
+    passcode = None
+    postcode = None
+    address_2 = None
+    address_1 = None
+    date_received = None
+    number = None
+    email = None
+    eta = None # Not currently used in program
+    date_repaired = None # Not currently used in program
+    date_collected = None # Not currently used in program
+    end_of_day = None
+    deactivated = None
+
+
+
+
+
+    def __init__(self, monday_id=False, created=False):
+
+        self.debug_string = super().debug_string
 
         if monday_id:
 
@@ -293,6 +348,11 @@ class MondayRepair(Repair):
 
             self.translate_column_data()
 
+        if created:
+
+            self.name = created
+            self.id = None
+
 
 
         # self.columns = MondayColumns(self)
@@ -305,7 +365,7 @@ class MondayRepair(Repair):
             ["Status", "m_status", "status"],
             ["Service", "m_service", "service"],
             ["Client", "m_client", "client"],
-            ["Type", "m_type", "type"],
+            ["Type", "m_type", "repair_type"],
             ["End Of Day", "m_eod", "end_of_day"],
             ["ZenLink", "m_zenlink", "zenlink"],
             ["Has Case", "m_has_case", "case"]
@@ -376,7 +436,7 @@ class PulseToAdd():
         'status': 'status4',
         'service': 'service',
         'client': 'status',
-        'type': 'status24',
+        'repair_type': 'status24',
         'case': 'status_14',
         'booking_time': 'date6',
         'technician': 'person',
@@ -421,7 +481,7 @@ class PulseToAdd():
         self.status = None
         self.service = None
         self.client = None
-        self.type = None
+        self.repair_type = None
         self.case = None
         self.booking_time = None
         self.technician = None
@@ -472,14 +532,23 @@ class MondayColumns():
                 "status": "status4", # Status Column
                 "service": "service", # Servcie Column
                 "client": "status", # Client Column
-                "type": "status24", # Type Column
+                "repair_type": "status24", # Type Column
                 "case": "status_14", # Case Column
                 "colour": "status8", # Colour Column
                 "data": "status55", # Data Column
-                "end_of_day": "blocker": # End Of Day Column
+                "end_of_day": "blocker" # End Of Day Column
             },
 
             "structure": lambda id, value: [id, {"label": value}]
+        },
+
+        "index_statuses": {
+
+            "values": {
+                "colour": "status8", # Colour Column
+            },
+
+            "structure": lambda id, value: [id, {"index": value}]
         },
 
         # "checkboxes": {
@@ -541,10 +610,10 @@ class MondayColumns():
             print(self.column_values)
 
 
-test = Repair(monday=726460853)
+test = Repair(vend="6ffc7cac-fb7b-81bf-11ea-edeb91d40df1")
+
+test.vend.convert_to_monday_codes()
 
 test.add_to_monday()
 
 test.debug_print(console=True)
-
-
