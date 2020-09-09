@@ -271,15 +271,11 @@ class VendRepair(Repair):
         monday_object = MondayRepair(created=self.name)
 
         for item in self.products:
-            print(item)
             col_val = create_column_value(id="text", column_type=ColumnType.text, value=item)
             for item in inv_board.get_items_by_column_values(col_val):
                 device = item.get_column_value(id='numbers3').number
-                print(device)
                 repair = item.get_column_value(id="device").number
-                print(repair)
                 colour = item.get_column_value(id="numbers44").number
-                print(colour)
                 if not monday_object.device and device:
                     monday_object.device = [device]
                 monday_object.repairs.append(repair)
@@ -326,10 +322,6 @@ class MondayRepair(Repair):
     date_collected = None # Not currently used in program
     end_of_day = None
     deactivated = None
-
-
-
-
 
     def __init__(self, monday_id=False, created=False):
 
@@ -419,8 +411,9 @@ class ZendeskRepair(Repair):
     def __init__(self, zendesk_ticket_number):
 
         self.ticket_id = zendesk_ticket_number
-        ticket = super().zendesk_client.search(str(self.ticket_id), type="ticket")
-        if ticket:
+        search = super().zendesk_client.search(str(self.ticket_id), type="ticket")
+        for ticket in search:
+            # ISSUE WITH SEARCH RESULT GENERATOR
             self.ticket = ticket
             self.user = self.ticket.requester
             self.user_id = self.user.id
@@ -608,12 +601,3 @@ class MondayColumns():
                 self.column_values[diction[0]] = diction[1]
 
             print(self.column_values)
-
-
-test = Repair(vend="6ffc7cac-fb7b-81bf-11ea-edeb91d40df1")
-
-test.vend.convert_to_monday_codes()
-
-test.add_to_monday()
-
-test.debug_print(console=True)
