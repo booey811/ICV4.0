@@ -38,6 +38,9 @@ def monday_status_change():
     if data[0] is False:
         return data[1]
 
+    else:
+        data = data[1]
+
     repair = Repair(monday=int(data["event"]["pulseId"]))
     repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], data["event"]["value"]["label"]["text"]))
 
