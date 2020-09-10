@@ -1,1 +1,1 @@
-web: gunicorn main:icv3
+web: gunicorn app:icv3
