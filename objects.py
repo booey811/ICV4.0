@@ -31,7 +31,7 @@ class Repair():
         )
 
     # Monday Boards
-    logging_board = monday_client.get_board_by_id(id=723623233)
+    logging_board = monday_client.get_board_by_id(id=736027251)
 
     def __init__(self, vend=False, monday=False, zendesk=False, test=False):
 
