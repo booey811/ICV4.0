@@ -29,7 +29,7 @@ def monday_handshake(webhook):
 
 # ROUTES // MONDAY
 # Status Change
-@app.route("/monday/status")
+@app.route("/monday/status", methods=["POST", "GET"])
 def monday_status_change():
     webhook = request.get_data()
     data = monday_handshake(webhook)
