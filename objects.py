@@ -3,13 +3,13 @@ import os
 import requests
 from datetime import datetime, timedelta
 
+from moncli import MondayClient, create_column_value, ColumnType
+from zenpy import Zenpy
+from zenpy.lib import exception as zenpyExceptions
+
 import settings
 import keys.vend
 import keys.monday
-
-from moncli import MondayClient, create_column_value, ColumnType
-from zenpy import Zenpy
-
 class Repair():
 
     debug_string = []
@@ -411,9 +411,14 @@ class ZendeskRepair(Repair):
     def __init__(self, zendesk_ticket_number):
 
         self.ticket_id = zendesk_ticket_number
-        search = super().zendesk_client.search(str(self.ticket_id), type="ticket")
-        for ticket in search:
-            # ISSUE WITH SEARCH RESULT GENERATOR
+
+        try:
+            ticket = super().zendesk_client.tickets(id=self.ticket_id)
+        except zenpyExceptions.RecordNotFoundException:
+            self.debug("Ticket {} Does Not Exist".format(zendesk_ticket_number))
+            ticket = False
+
+        if ticket:
             self.ticket = ticket
             self.user = self.ticket.requester
             self.user_id = self.user.id
