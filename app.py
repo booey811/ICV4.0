@@ -23,9 +23,9 @@ def monday_handshake(webhook):
 
     if "challenge" in data.keys():
         authtoken = {"challenge": data["challenge"]}
-        return authtoken
+        return [False, authtoken]
     else:
-        return data
+        return [True, data]
 
 
 # ROUTES // MONDAY
@@ -34,6 +34,10 @@ def monday_handshake(webhook):
 def monday_status_change():
     webhook = request.get_data()
     data = monday_handshake(webhook)
+
+    if data[0] is False:
+        return data[1]
+
     repair = Repair(monday=int(data["event"]["pulseId"]))
     repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], data["event"]["value"]["label"]["text"]))
 
