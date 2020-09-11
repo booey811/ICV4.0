@@ -35,6 +35,8 @@ class Repair():
 
     def __init__(self, vend=False, monday=False, zendesk=False, test=False):
 
+        print("creating repair")
+
         if vend:
             self.include_vend(vend)
             self.source = "vend"
@@ -50,6 +52,7 @@ class Repair():
                         self.number = number
 
         elif monday:
+            print("repair - monday -- route")
             self.include_monday(monday)
             self.source = "monday"
             self.name = self.monday[0].name
@@ -57,6 +60,7 @@ class Repair():
             self.number = self.monday[0].phone
 
         elif zendesk:
+            print("repair - zendesk -- route")
             self.source = "zendesk"
             self.include_zendesk(zendesk)
 
@@ -169,6 +173,8 @@ class Repair():
 class VendRepair(Repair):
 
     def __init__(self, vend_sale_id):
+
+        print("VendRepair")
 
         self.id = vend_sale_id
         self.sale_info = self.query_for_sale()
@@ -288,6 +294,8 @@ class VendRepair(Repair):
 
 
 class MondayRepair(Repair):
+
+    print("MondayRepair")
 
     v_id = None
     z_ticket_id = None
@@ -409,6 +417,8 @@ class MondayRepair(Repair):
 class ZendeskRepair(Repair):
 
     def __init__(self, zendesk_ticket_number):
+
+        print("ZendeskRepair")
 
         self.ticket_id = zendesk_ticket_number
 
