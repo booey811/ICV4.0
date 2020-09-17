@@ -41,11 +41,10 @@ def monday_status_change():
     else:
         data = data[1]
 
-    print(data)
     repair = Repair(monday=int(data["event"]["pulseId"]))
     repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], data["event"]["value"]["label"]["text"]))
 
-    repair.debug_print()
+    repair.debug_print(console=True)
 
     return "Status Change Route Complete"
 
