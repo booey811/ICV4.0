@@ -42,7 +42,10 @@ def monday_status_change():
         data = data[1]
 
     repair = Repair(monday=int(data["event"]["pulseId"]))
-    repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], data["event"]["value"]["label"]["text"]))
+    try:
+        repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], data["event"]["value"]["label"]["text"]))
+    except TypeError:
+        repair.debug("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
     repair.debug_print()
 
