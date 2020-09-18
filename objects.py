@@ -93,6 +93,9 @@ class Repair():
 
         self.debug("query_applications", func_s=True)
 
+        if self.monday:
+            print(self.monday)
+
         if self.source == 'monday':
             if self.monday[0].v_id:
                 self.include_vend(self.monday[0].v_id)
