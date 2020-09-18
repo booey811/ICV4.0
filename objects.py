@@ -618,3 +618,6 @@ class MondayColumns():
                 self.column_values[diction[0]] = diction[1]
 
             print(self.column_values)
+
+
+print(type(os.environ["CONSOLE"]))

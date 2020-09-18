@@ -47,7 +47,7 @@ def monday_status_change():
     except TypeError:
         repair.debug("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
-    repair.debug_print()
+    repair.debug_print(console=True)
 
     return "Status Change Route Complete"
 
