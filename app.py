@@ -48,6 +48,7 @@ def monday_status_change():
         repair.debug("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
     repair.debug_print(console=True)
+    repair.debug_print()
 
     return "Status Change Route Complete"
 
