@@ -98,6 +98,7 @@ class Repair():
                 self.include_vend(self.monday[0].v_id)
 
             for pulse in self.monday:
+                print(pulse.name)
                 if pulse.z_ticket_id:
                     self.include_zendesk(pulse.z_ticket_id)
 
@@ -294,46 +295,13 @@ class VendRepair(Repair):
 
         # setattr(super(), 'monday', monday_object)
 
-
 class MondayRepair(Repair):
 
-    print("MondayRepair")
-
-    v_id = None
-    z_ticket_id = None
-
-    invoiced = None # Not currently used in program
-    zendesk_url = None
-    zenlink = None
-    status = None
-    service = None
-    client = None
-    repair_type = None
-    case = None
-    booking_time = None # Not currently used in program
-    deadline = None # Not currently used in program
-    time = None # Not currently used in program
-    technician = None # Not currently used in program
-    device = []
-    repairs = []
-    colour = None
-    screen_condition = None # Not currently used in program
-    imeisn = None
-    data = None
-    passcode = None
-    postcode = None
-    address_2 = None
-    address_1 = None
-    date_received = None
-    number = None
-    email = None
-    eta = None # Not currently used in program
-    date_repaired = None # Not currently used in program
-    date_collected = None # Not currently used in program
-    end_of_day = None
-    deactivated = None
-
     def __init__(self, monday_id=False, created=False):
+
+        print("MondayRepair")
+
+        self.initialise_attributes()
 
         self.debug_string = super().debug_string
 
@@ -358,6 +326,42 @@ class MondayRepair(Repair):
 
 
         # self.columns = MondayColumns(self)
+
+    def initialise_attributes(self):
+
+        self.v_id = None
+        self.z_ticket_id = None
+
+        self.invoiced = None # Not currently used in program
+        self.zendesk_url = None
+        self.zenlink = None
+        self.status = None
+        self.service = None
+        self.client = None
+        self.repair_type = None
+        self.case = None
+        self.booking_time = None # Not currently used in program
+        self.deadline = None # Not currently used in program
+        self.time = None # Not currently used in program
+        self.technician = None # Not currently used in program
+        self.device = []
+        self.repairs = []
+        self.colour = None
+        self.screen_condition = None # Not currently used in program
+        self.imeisn = None
+        self.data = None
+        self.passcode = None
+        self.postcode = None
+        self.address_2 = None
+        self.address_1 = None
+        self.date_received = None
+        self.number = None
+        self.email = None
+        self.eta = None # Not currently used in program
+        self.date_repaired = None # Not currently used in program
+        self.date_collected = None # Not currently used in program
+        self.end_of_day = None
+        self.deactivated = None
 
     def translate_column_data(self):
 
