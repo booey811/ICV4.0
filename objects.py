@@ -14,11 +14,6 @@ import keys.monday
 
 class Repair():
 
-    debug_string = []
-    vend = None
-    monday = []
-    zendesk = None
-
     # Application Clients
     monday_client = MondayClient(
         user_name='systems@icorrect.co.uk',
@@ -38,6 +33,11 @@ class Repair():
     def __init__(self, vend=False, monday=False, zendesk=False, test=False):
 
         print("creating repair")
+
+        self.debug_string = []
+        self.vend = None
+        self.monday = []
+        self.zendesk = None
 
         if vend:
             self.include_vend(vend)
@@ -535,8 +535,6 @@ class MondayColumns():
         This will translate normal attributes to values that are usable through moncli
     """
 
-    column_values  = {}
-
     # Dictionary to iterate through when translating column data back to Monday
     attributes_to_ids = {
 
@@ -610,6 +608,8 @@ class MondayColumns():
     }
 
     def __init__(self, monday_object):
+
+        self.column_values  = {}
 
 
         for category in self.attributes_to_ids:
