@@ -619,5 +619,3 @@ class MondayColumns():
 
             print(self.column_values)
 
-
-print(type(os.environ["CONSOLE"]))
