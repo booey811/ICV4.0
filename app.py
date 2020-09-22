@@ -37,17 +37,89 @@ def monday_status_change():
 
     if data[0] is False:
         return data[1]
-
     else:
         data = data[1]
 
     repair = Repair(monday=int(data["event"]["pulseId"]))
+
+    new_status = data["event"]["value"]["label"]["text"]
+
     try:
-        repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], data["event"]["value"]["label"]["text"]))
+        repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], new_status))
     except TypeError:
         repair.debug("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
-    repair.debug_print(console=True)
+
+    # Filter By Status
+    if repair.monday.status = "Received":
+        pass
+
+    elif repair.monday.status = "Awaiting Confirmation":
+        pass
+
+    elif repair.monday.status = "Booking Confirmed":
+        pass
+
+    elif repair.monday.status = "Book Courier":
+        pass
+
+    elif repair.monday.status = "Courier Booked":
+        pass
+
+    elif repair.monday.status = "Received":
+        pass
+
+    elif repair.monday.status = "Diagnostics":
+        pass
+
+    elif repair.monday.status = "Diagnostic Complete":
+        pass
+
+    elif repair.monday.status = "Quote Sent":
+        pass
+
+    elif repair.monday.status = "Quote Accepted":
+        pass
+
+    elif repair.monday.status = "Under Repair":
+        pass
+
+    elif repair.monday.status = "Repair Paused":
+        pass
+
+    elif repair.monday.status = "With Rico":
+        pass
+
+    elif repair.monday.status = "Invoiced":
+        pass
+
+    elif repair.monday.status = "Paid":
+        pass
+
+    elif repair.monday.status = "Book Return Courier":
+        pass
+
+    elif repair.monday.status = "Return Booked":
+        pass
+
+    elif repair.monday.status = "Returned":
+        pass
+
+    elif repair.monday.status = "Quote Rejected":
+        pass
+
+    elif repair.monday.status = "Unrepairable":
+        pass
+
+    elif repair.monday.status = "Repaired":
+        pass
+
+    elif repair.monday.status = "Client Contacted":
+        pass
+
+    elif repair.monday.status = "!! See Updates !!":
+        pass
+
     repair.debug_print()
 
     return "Status Change Route Complete"
@@ -65,6 +137,10 @@ def vend_sale_update():
         sale = parse_qs(sale)
         sale = json.loads(sale['payload'][0])
         repair = Repair(vend=sale["id"])
+
+        # 'Update Monday' Product in Sale
+
+        for product in 
 
         repair.debug_print()
 

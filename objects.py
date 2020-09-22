@@ -28,13 +28,18 @@ class Repair():
         )
 
     # Monday Boards
-    logging_board = monday_client.get_board_by_id(id=736027251)
+    boards = {
+        "logging": monday_client.get_board_by_id(id=736027251),
+        "inventory": monday_client.get_board_by_id(id=703218230),
+        "main": monday_client.get_board_by_id(id=349212843)
+    }
+
 
     def __init__(self, vend=False, monday=False, zendesk=False, test=False):
 
         self.debug_string = []
         self.vend = None
-        self.monday = []
+        self.monday = None
         self.zendesk = None
 
         if vend:
@@ -54,9 +59,9 @@ class Repair():
         elif monday:
             self.include_monday(monday)
             self.source = "monday"
-            self.name = self.monday[0].name
-            self.email = self.monday[0].email
-            self.number = self.monday[0].phone
+            self.name = self.monday.name
+            self.email = self.monday.email
+            self.number = self.monday.phone
 
         elif zendesk:
             self.source = "zendesk"
@@ -75,7 +80,7 @@ class Repair():
     def include_monday(self, monday_id):
 
         self.debug("Adding[MONDAY] ID: {}".format(monday_id))
-        self.monday.append(Repair.MondayRepair(self, monday_id=monday_id))
+        self.monday = Repair.MondayRepair(self, monday_id=monday_id)
 
     def include_zendesk(self, zendesk_ticket_id):
 
@@ -89,32 +94,29 @@ class Repair():
         self.debug(start="query_applications")
 
         if self.source == 'monday':
-            if self.monday[0].v_id:
-                self.include_vend(self.monday[0].v_id)
+            if self.monday.v_id:
+                self.include_vend(self.monday.v_id)
 
-            for pulse in self.monday:
-                if pulse.z_ticket_id:
-                    self.include_zendesk(pulse.z_ticket_id)
+            if self.monday.z_ticket_id:
+                self.include_zendesk(self.monday.z_ticket_id)
 
         elif self.source == 'vend':
             col_val = create_column_value(id='text88', column_type=ColumnType.text, value=str(self.vend.id))
             for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
 
-            for pulse in self.monday:
-                if pulse.z_ticket_id:
-                    self.include_zendesk(pulse.z_ticket_id)
-                    break
+            if self.monday:
+                if self.monday.z_ticket_id:
+                    self.include_zendesk(self.monday.z_ticket_id)
 
         elif self.source == 'zendesk':
             col_val = create_column_value(id='text6', column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
             for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
 
-            for pulse in self.monday:
-                if pulse.v_id:
-                    self.include_vend(pulse.v_id)
-                    break
+            if self.monday.v_id:
+                self.include_vend(self.monday.v_id)
+
 
         else:
             self.debug("Source of Repair not set")
@@ -123,17 +125,13 @@ class Repair():
 
     def add_to_monday(self):
 
-        self.debug("add_to_monday", start=True)
+        self.debug(start="add_to_monday")
 
-        main_board = self.monday_client.get_board_by_id(id=349212843)
+        self.monday.columns = MondayColumns(self.monday)
 
-        for pulse in self.monday:
+        self.boards["main"].add_item(item_name=self.name, column_values=pulse.columns.column_values )
 
-            pulse.columns = MondayColumns(pulse)
-
-            main_board.add_item(item_name=self.name, column_values=pulse.columns.column_values )
-
-        self.debug("add_to_monday", end=True)
+        self.debug(end="add_to_monday")
 
     def debug(self, *args, start=False, end=False):
         """Adds to a list of strings that will eventaully be printed
@@ -156,14 +154,14 @@ class Repair():
         if not console:
             now = datetime.now() + timedelta(hours=1)
             col_vals = {"status5": {"label": self.source.capitalize()}}
-            for pulse in  self.monday:
-                col_vals["text"] = str(pulse.id)
+            if self.monday:
+                col_vals["text"]= self.monday.id
             if self.vend:
                 col_vals["text3"] = str(self.vend.id)
             if self.zendesk:
                 col_vals["text1"] = str(self.zendesk.ticket_id)
             time = str(now.strftime("%X"))
-            log = self.logging_board.add_item(item_name=time + " // " + str(self.name) + " -- FROM APPV4", column_values=col_vals)
+            log = self.boards["logging"].add_item(item_name=time + " // " + str(self.name) + " -- FROM APPV4", column_values=col_vals)
             log.add_update("\n".join(self.debug_string))
         else:
             print("\n".join(self.debug_string))
@@ -286,9 +284,7 @@ class Repair():
                     if not monday_object.colour and colour:
                         monday_object.colour = colour
 
-            self.parent.monday.append(monday_object)
-
-            # setattr(super(), 'monday', monday_object)
+            self.parent.monday = monday_object
 
     class MondayRepair():
 
@@ -609,13 +605,19 @@ class MondayColumns():
 
         self.column_values  = {}
 
+        print(monday_object)
+
 
         for category in self.attributes_to_ids:
 
             values = self.attributes_to_ids[category]["values"]
             structure = self.attributes_to_ids[category]["structure"]
 
+            print(values)
+            print(structure)
+
             for column in values:
+                print(column)
                 diction = structure(values[column], getattr(monday_object, column))
                 self.column_values[diction[0]] = diction[1]
 

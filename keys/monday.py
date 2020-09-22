@@ -79,6 +79,11 @@ status_column_dictionary = {
     'Status': {
         'col_id': 'status4',
         'values': [
+            {"title": "New Repair",
+             'index': 5,
+             "label": 'New Repair',
+             'z_tag': "new_repair"
+             },
             {"title": "Booking Confirmed",
              'index': 106,
              "label": 'Booking Confirmed',
@@ -104,10 +109,10 @@ status_column_dictionary = {
                 'label': "Courier Booked",
                 'z_tag': 'courier_booked'
              },
-            {"title": 'Contact Client',
+            {"title": 'Client Contacted',
                 'index': 10,
-                'label': 'Contact Client',
-                'z_tag': 'contact_client'
+                'label': 'Client Contacted',
+                'z_tag': 'client_contacted'
              },
             {"title": 'Diagnostic Complete',
                 'index': 2,

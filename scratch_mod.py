@@ -1,6 +1,9 @@
 from objects import Repair
 
-test = Repair(monday=726460853)
+from keys.monday import status_column_dictionary
 
+test = Repair(vend="6ffc7cac-fb7b-9eb1-11ea-fcae01e226df")
 
-test.debug_print(console=True)
+test.add_to_monday()
+
+test.debug_print()
