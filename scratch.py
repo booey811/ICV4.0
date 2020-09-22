@@ -6,30 +6,53 @@ import settings
 
 
 
-query = """query {
-  items (ids: 703224936) {
-    column_values {
-      title
-      value
-    }
-  }
-}"""
+class OuterClass():
 
-query2 = """:query {
-  item
-}"""
+    attribute = "attribute"
 
-json = {'query': query}
+    def __init__(self):
+        self.init_attribute = "init attribute"
+        self.list = []
 
-headers = {
-  "Authorization":os.environ["MONV2SYS"]
-}
+    def outer_method1(self):
+        print("This is outer method 1")
 
-url="https://api.monday.com/v2"
+    def outer_method2(self):
+        print("This is outer method 2")
 
-print(json)
+    def add_to_list(self, thing_to_add):
+        self.list.append(thing_to_add)
+        print(self.list)
 
-response = requests.post(url=url, headers=headers, json=json)
+    def add_inner(self):
+        self.inner_container = OuterClass.InnerClass(self)
+        # return OuterClass.InnerClass(self)
 
-print(response.status_code)
-print(response.text)
+
+
+    class InnerClass():
+
+        def __init__(self, outer_instance):
+            self.outer = outer_instance
+            self.inner_method_to_access_outer()
+
+        def inner_method_to_access_outer(self):
+            self.outer.add_to_list("Added from inner class")
+
+
+        def inner_method1(self):
+            print("This is inner method 1")
+
+
+
+test = OuterClass()
+test.add_inner()
+test.inner_container.inner_method1()
+
+
+print(test.__dict__)
+
+# test.inner_container.inner_method1()
+
+
+

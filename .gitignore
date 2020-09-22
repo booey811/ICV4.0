@@ -59,6 +59,7 @@ target/
 
 # VS Code
 .vscode/
+/venv
 
 # Project Specific
 .env
