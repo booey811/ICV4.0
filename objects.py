@@ -178,7 +178,7 @@ class Repair():
             self.customer_info = self.query_for_customer()
 
             self.passcode = None
-            self.imeisn = None
+            self.imei_sn = None
 
             self.pre_checks = []
             self.post_checks = []
@@ -254,7 +254,7 @@ class Repair():
                 # Extract IMEI
                 if product["note"]:
                     if any(option in product["note"] for option in ["IMEI", "SN", "S/N"]):
-                        self.imeisn = product["note"].split(":")[1].strip()
+                        self.imei_sn = product["note"].split(":")[1].strip()
 
 
                 # Check if product is a pre-check
@@ -327,6 +327,7 @@ class Repair():
             self.client = None
             self.repair_type = None
             self.case = None
+            self.refurb = None
             self.booking_time = None # Not currently used in program
             self.deadline = None # Not currently used in program
             self.time = None # Not currently used in program
@@ -334,8 +335,8 @@ class Repair():
             self.device = []
             self.repairs = []
             self.colour = None
-            self.screen_condition = None # Not currently used in program
-            self.imeisn = None
+            self.screen_condition = None
+            self.imei_sn = None
             self.data = None
             self.passcode = None
             self.postcode = None
@@ -362,7 +363,8 @@ class Repair():
                 ["Refurb Type", "m_refurb", "refurb"],
                 ["End Of Day", "m_eod", "end_of_day"],
                 ["ZenLink", "m_zenlink", "zenlink"],
-                ["Has Case", "m_has_case", "case"]
+                ["Has Case", "m_has_case", "case"],
+                ["Colour", "m_colour", "colour"]
             ]
 
             for column, m_attribute, attribute in status_attributes:
@@ -377,7 +379,8 @@ class Repair():
 
             dropdown_attributes = [
                 ["Device", "m_device", "device"],
-                ["Repairs", "m_repairs", "repairs"]
+                ["Repairs", "m_repairs", "repairs"],
+                ["Screen Condition", "m_screen_condition", "screen_condition"]
             ]
 
             for column, m_attribute, attribute in dropdown_attributes:
@@ -385,7 +388,6 @@ class Repair():
                 setattr(self, attribute, getattr(self, m_attribute))
 
             self.parent.debug(end="translate_column_data")
-
 
         def retreive_column_data(self):
 
@@ -412,6 +414,72 @@ class Repair():
                                         "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
 
             self.parent.debug(end="retreive_column_data")
+
+        def check_column_presence(self):
+            """Goes through monday columns to make sure essential data has been filled out for this repair
+            Returns False if any information is missing or True if all is well
+            """
+
+            self.parent.debug(start="check_column_presence")
+
+            placeholder_repairs = [96, 97, 98]
+
+            # Check if a placeholder repair has been left on pulse
+            if any(repair in self.repairs for repair in placeholder_repairs):
+                self.add_update("You have selected a placeholder repair - please select the repair you have completed and try again", user="error")
+                return False
+
+            # Check if some type of screen repair has been completed
+            if any(repair in self.m_repairs for repair in [69, 74, 84, 89, 90, 83]):
+
+                # Check that screen condition has been selected/not left blank
+                if not self.m_screen_condition:
+                    self.add_update("You have not selected a screen condition for this repair - please select an option from the dropdown menu and try again", user="error")
+                    return False
+
+                # Check that colour has been selected/not left blank
+                elif not self.m_colour or self.m_colour == 5:
+                    self.add_update("You have not selected a colour for the screen of this device - please select an colour option and try again", user="error")
+                    return False
+
+                # Check that a refurb type has been selected/not left blank
+                elif not self.m_refurb or self.m_refurb == 5:
+                    self.add_update("You have not selected what refurb variety of screen was used with this repair - please select a refurbishmnet option and try again", user="error")
+                    return False
+
+            if not self.imei_sn:
+                self.add_update("This device does not have an IMEI or SN given - please input this and try again", user="error")
+                return False
+
+            return True
+
+            self.parent.debug(end="check_column_presence")
+
+        def add_update(self, message, user=False):
+
+            self.parent.debug(start="add_update")
+
+            if user == 'error':
+                client =  MondayClient(user_name='admin@icorrect.co.uk', api_key_v1=os.environ["MONV1ERR"], api_key_v2=os.environ["MONV2ERR"])
+                for item in client.get_items(ids=[int(self.id)], limit=1):
+                    monday_object = item
+                    item.change_column_value(column_id="status4", column_value={"label": "!! See Updates !!"})
+                    break
+
+            elif user == 'email':
+                client =  MondayClient(user_name='icorrectltd@gmail.com', api_key_v1=os.environ["MONV1EML"], api_key_v2=os.environ["MONV2EML"])
+                for item in client.get_items(ids=[int(self.id)], limit=1):
+                    monday_object = item
+                    break
+
+            else:
+                monday_object = self.item
+
+            monday_object.add_update(message)
+
+            self.parent.debug(end="add_update")
+
+
 
     class ZendeskRepair():
 
@@ -577,6 +645,7 @@ class MondayColumns():
             "values": {
                 "device": "device0", # Device Column
                 "repairs": "repair", # Repairs Column
+                "screen_condition": "screen_condition" # Screen Condition Column
             },
 
             "structure": lambda id, value: [id, {"ids": value}]

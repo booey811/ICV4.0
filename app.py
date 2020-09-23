@@ -112,7 +112,8 @@ def monday_status_change():
         pass
 
     elif repair.monday.status = "Repaired":
-        pass
+        if not repair.monday.check_column_presence():
+            return "Status Change Route Complete - Returning Early"
 
     elif repair.monday.status = "Client Contacted":
         pass
@@ -122,7 +123,7 @@ def monday_status_change():
 
     repair.debug_print()
 
-    return "Status Change Route Complete"
+    return "Status Change Route Completed Successfully"
 
 
 

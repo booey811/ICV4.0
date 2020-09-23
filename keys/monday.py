@@ -1,3 +1,7 @@
+user_ids = {
+        "systems": 12304876, "errors": 15365289, "emails": 11581083
+}
+
 col_ids_to_attributes = {
     'check': {'title': 'Invoiced?', 'value_type': ['checked'], 'attribute': "invoiced"},
     'text410': {'title': 'Link to Ticket', 'value_type': ['text'], 'attribute': "zendesk_url"},
@@ -9,11 +13,11 @@ col_ids_to_attributes = {
     'person': {'title': 'Technician', 'value_type': 'persons_and_teams', 'attribute': None},
     'device0': {'title': 'Device', 'value_type': ["ids", "label"], 'attribute': 'm_device'},
     'repair': {'title': 'Repair', 'value_type': ["ids", "label"], 'attribute': 'm_repairs'},
-    'screen_condition': {'title': 'Screen Condition', 'value_type': ["ids", "label"], 'attribute': None},
+    'screen_condition': {'title': 'Screen Condition', 'value_type': ["ids", "label"], 'attribute': "m_screen_condition"},
     'status8': {'title': 'Colour', 'value_type': ["index", "label"], 'attribute': 'm_colour'},
-    'text4': {'title': 'IMEI/SN', 'value_type': ['text'], 'attribute': 'imeisn'},
+    'text4': {'title': 'IMEI/SN', 'value_type': ['text'], 'attribute': 'imei_sn'},
     'status_15': {'title': 'Refurb Type', 'value_type': ['index', 'label'], 'attribute': 'm_refurb'},
-    'status55': {'title': 'Data', 'value_type': ["index", "label"], 'attribute': "data"},
+    'status55': {'title': 'Data', 'value_type': ["index", "label"], 'attribute': "m_data"},
     'text8': {'title': 'Passcode', 'value_type': ['text'], 'attribute': 'passcode'},
     'text2': {'title': 'DCPS', 'value_type': ['text'], 'attribute': None},
     'text93': {'title': 'Post Code', 'value_type': ['text'], 'attribute': 'postcode'},
@@ -36,8 +40,6 @@ col_ids_to_attributes = {
     "date6": {"title": "Booking Time ", "value_type": ['date', 'time'], "attribute": "m_date"},
     "status_14": {"title": "Has Case", "value_type": ["index", "label"], "attribute": "m_has_case"}
 }
-
-
 
 status_column_dictionary = {
     "ZenLink": {
@@ -220,6 +222,82 @@ status_column_dictionary = {
                 "label": "Mail-In",
                 "z_tag": "walk-in"
              }
+        ]
+    },
+
+    "Colour": {
+        "col_id": "status8",
+        "values": [
+            {"title": "White",
+                "index": 16,
+                "label": "White",
+                "z_tag": ""
+            },
+            {"title": "Black",
+                "index": 10,
+                "label": "Black",
+                "z_tag": ""
+            },
+            {"title": "Coral",
+                "index": 9,
+                "label": "Coral",
+                "z_tag": ""
+            },
+            {"title": "Blue",
+                "index": 7,
+                "label": "Blue",
+                "z_tag": ""
+            },
+            {"title": "Red",
+                "index": 2,
+                "label": "Red",
+                "z_tag": ""
+            },
+            {"title": "Space Grey",
+                "index": 17,
+                "label": "Space Grey",
+                "z_tag": ""
+            },
+            {"title": "Silver",
+                "index": 0,
+                "label": "Silver",
+                "z_tag": ""
+            },
+            {"title": "Yellow",
+                "index": 8,
+                "label": "Yellow",
+                "z_tag": ""
+            },
+            {"title": "Rose Gold",
+                "index": 101,
+                "label": "Rose Gold",
+                "z_tag": ""
+            },
+            {"title": "Champagne Gold",
+                "index": 103,
+                "label": "Champagne Gold",
+                "z_tag": ""
+            },
+            {"title": "Gold",
+                "index": 19,
+                "label": "Gold",
+                "z_tag": ""
+            },
+            {"title": "Green",
+                "index": 6,
+                "label": "Green",
+                "z_tag": ""
+            },
+            {"title": "Purple",
+                "index": 14,
+                "label": "Purple",
+                "z_tag": ""
+            },
+            {"title": "Midnight Green",
+                "index": 5,
+                "label": "Midnight Green",
+                "z_tag": ""
+            }
         ]
     },
 
