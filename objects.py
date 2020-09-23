@@ -290,6 +290,90 @@ class Repair():
 
             self.parent.monday = monday_object
 
+        def edit_sale(self, vend_sale):
+            
+            self.parent.debug(start="post_sale")
+            
+            
+            
+            url = "https://icorrect.vendhq.com/api/register_sales"
+
+            payload = self.VendSale(self)
+            
+            
+            
+            
+            headers = {
+                'content-type': "application/json",
+                'authorization': os.environ["VENDSYS"]
+                }
+
+            response = requests.request("POST", url, data=payload, headers=headers)
+
+            print(response.text)
+            
+            self.parent.debug(end="post_sale")
+        
+        class VendSale():
+            
+            sale_attributes = {
+                "register_id": "02d59481-b67d-11e5-f667-b318647c76c1",
+                "user_id": "0a6f6e36-8bab-11ea-f3d6-9603728ea3e6",
+                "status" = False,
+                "register_sale_products": []
+            }
+            
+            def __init__(self, vend_object):
+                """Creates the request object for the Vend API and assists with editing it
+
+                Args:
+                    vend_object (VendRepair): The parent VendRepair object
+                """
+                                
+                self.vend_parent = vend_object
+                self.sale_attributes["customer_id"] = self.vend_parent.customer_info["id"]
+            
+            def create_register_sale_products(self):
+                
+                self.vend_parent.parent.debug(start="create_register_sale_products")
+                
+                for product in vend_parent.products:
+                    
+                    dictionary = {
+                        "product_id": product,
+                        "quantity": 1,
+                        "price": False
+                        "tax": False,
+                        "tax_id": "647087e0-b318-11e5-9667-02d59481b67d"
+                    }
+                    
+                    self.get_pricing_info(dictionary)
+                    
+                self.vend_parent.parent.debug(end="create_register_sale_products")
+            
+            def get_pricing_info(self, dictionary):
+                
+                self.vend_parent.parent.debug(start="get_pricing_info")
+
+                url = "https://icorrect.vendhq.com/api/products/{}".format(dictionary["product_id"])
+
+                headers = {'authorization': os.environ["VENDSYS"]}
+
+                response = requests.request("GET", url, headers=headers)
+
+                info = json.loads(response.text)
+                print(info)
+                
+                dictionay["price"] = info["price"]
+                dictionay["tax"] = info["price_book_entries"][0]["tax"]
+
+                self.vend_parent.parent.debug(end="get_pricing_info")
+                
+            def post_sale(self):
+                
+
+
+            
     class MondayRepair():
 
         def __init__(self, repair_object, monday_id=False, created=False):
@@ -530,7 +614,7 @@ class Repair():
                 self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error")
 
             else:
-                pass
+                self.
 
             self.parent.debug(end="adjust stock")
 
@@ -773,3 +857,4 @@ class MondayColumns():
                 self.column_values[diction[0]] = diction[1]
 
             print(self.column_values)
+
