@@ -51,74 +51,74 @@ def monday_status_change():
 
 
     # Filter By Status
-    if repair.monday.status = "Received":
+    if repair.monday.status == "Received":
         pass
 
-    elif repair.monday.status = "Awaiting Confirmation":
+    elif repair.monday.status == "Awaiting Confirmation":
         pass
 
-    elif repair.monday.status = "Booking Confirmed":
+    elif repair.monday.status == "Booking Confirmed":
         pass
 
-    elif repair.monday.status = "Book Courier":
+    elif repair.monday.status == "Book Courier":
         pass
 
-    elif repair.monday.status = "Courier Booked":
+    elif repair.monday.status == "Courier Booked":
         pass
 
-    elif repair.monday.status = "Received":
+    elif repair.monday.status == "Received":
         pass
 
-    elif repair.monday.status = "Diagnostics":
+    elif repair.monday.status == "Diagnostics":
         pass
 
-    elif repair.monday.status = "Diagnostic Complete":
+    elif repair.monday.status == "Diagnostic Complete":
         pass
 
-    elif repair.monday.status = "Quote Sent":
+    elif repair.monday.status == "Quote Sent":
         pass
 
-    elif repair.monday.status = "Quote Accepted":
+    elif repair.monday.status == "Quote Accepted":
         pass
 
-    elif repair.monday.status = "Under Repair":
+    elif repair.monday.status == "Under Repair":
         pass
 
-    elif repair.monday.status = "Repair Paused":
+    elif repair.monday.status == "Repair Paused":
         pass
 
-    elif repair.monday.status = "With Rico":
+    elif repair.monday.status == "With Rico":
         pass
 
-    elif repair.monday.status = "Invoiced":
+    elif repair.monday.status == "Invoiced":
         pass
 
-    elif repair.monday.status = "Paid":
+    elif repair.monday.status == "Paid":
         pass
 
-    elif repair.monday.status = "Book Return Courier":
+    elif repair.monday.status == "Book Return Courier":
         pass
 
-    elif repair.monday.status = "Return Booked":
+    elif repair.monday.status == "Return Booked":
         pass
 
-    elif repair.monday.status = "Returned":
+    elif repair.monday.status == "Returned":
         pass
 
-    elif repair.monday.status = "Quote Rejected":
+    elif repair.monday.status == "Quote Rejected":
         pass
 
-    elif repair.monday.status = "Unrepairable":
+    elif repair.monday.status == "Unrepairable":
         pass
 
-    elif repair.monday.status = "Repaired":
+    elif repair.monday.status == "Repaired":
         if not repair.monday.check_column_presence():
             return "Status Change Route Complete - Returning Early"
 
-    elif repair.monday.status = "Client Contacted":
+    elif repair.monday.status == "Client Contacted":
         pass
 
-    elif repair.monday.status = "!! See Updates !!":
+    elif repair.monday.status == "!! See Updates !!":
         pass
 
     repair.debug_print()
