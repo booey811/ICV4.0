@@ -58,7 +58,6 @@ docs/_build/
 target/
 
 # VS Code
-.vscode/
 /venv
 
 # Project Specific

@@ -358,6 +358,8 @@ class Repair():
             self.end_of_day = None
             self.deactivated = None
 
+            self.vend_codes = []
+
         def translate_column_data(self):
 
             self.parent.debug(start="translate_column_data")
@@ -521,9 +523,14 @@ class Repair():
         def adjust_stock(self):
 
             self.parent.debug(start="adjust stock")
+            
+            self.convert_to_vend_codes()
 
+            if len(self.vend_codes) != len(self.repairs):
+                self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error")
 
-
+            else:
+                pass
 
             self.parent.debug(end="adjust stock")
 
@@ -532,7 +539,27 @@ class Repair():
             self.parent.debug(start="convert_to_vend_codes")
 
             for repair in self.repairs:
-                print(tuple((self.device,), (repair,), (self.colour,)))
+                search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
+                col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
+                results = self.parent.boards["inventory"].get_items_by_column_values(column_value=col_val)
+                if not len(results) or len(results) > 1:
+                    self.parent.debug("No results found for tuple (including colour): {}".format(search))
+                    search = tuple([(self.device[0],), (repair,), ()])
+                    col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
+                    results = self.parent.boards["inventory"].get_items_by_column_values(column_value=col_val)
+                    if not len(results):
+                        self.parent.debug("No results found for tuple (excluding colour): {}".format(search))
+                    elif len(results) > 1:
+                        self.parent.debug("Too many results found for tuple: {}".format(search))
+                        self.add_update("Cannot Find: {}".format(search))
+                        continue
+                
+                for product in results:
+                    self.vend_codes.append(product.get_column_value(id="text").text)
+                    
+            
+                
+
 
             self.parent.debug(end="convert_to_vend_codes")
 
