@@ -518,6 +518,23 @@ class Repair():
 
             self.parent.debug(end="send_notifcation")
 
+        def adjust_stock(self):
+
+            self.parent.debug(start="adjust stock")
+
+
+
+
+            self.parent.debug(end="adjust stock")
+
+        def convert_to_vend_codes(self):
+
+            self.parent.debug(start="convert_to_vend_codes")
+
+            for repair in self.repairs:
+                print(tuple((self.device,), (repair,), (self.colour,)))
+
+            self.parent.debug(end="convert_to_vend_codes")
 
     class ZendeskRepair():
 
