@@ -470,6 +470,7 @@ class Repair():
                     )
                     return False
 
+            # Check that IMEI has been recorded
             if not self.imei_sn:
                 self.add_update(
                     "This device does not have an IMEI or SN given - please input this and try again",
@@ -499,19 +500,20 @@ class Repair():
                     break
             else:
                 monday_object = self.item
+                client = self.parent.monday_client
 
             monday_object.add_update(update)
             if notify:
-                self.send_notification(message=notify, user_id=self.user_id)
+                self.send_notification(sender=client, message=notify, user_id=self.user_id)
 
 
             self.parent.debug(end="add_update")
 
-        def send_notification(self, message, user_id):
+        def send_notification(self, sender, message, user_id):
 
             self.parent.debug(start="send_notifcation")
 
-            self.parent.monday_client.create_notification(text=message, user_id=user_id, target_id=349212843, target_type=NotificationTargetType.Project)
+            sender.create_notification(text=message, user_id=user_id, target_id=349212843, target_type=NotificationTargetType.Project)
             self.parent.debug(message)
 
             self.parent.debug(end="send_notifcation")

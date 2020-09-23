@@ -120,7 +120,9 @@ def monday_status_change():
 
         # Check for corporate repairs
         elif repair.monday.end_of_day != "Complete":
-            repair.monday.adjust_stock()
+            repair.debug("End of Day != Complete")
+            pass
+            # repair.monday.adjust_stock()
 
     elif repair.monday.status == "Client Contacted":
         pass
