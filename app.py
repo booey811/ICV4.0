@@ -141,8 +141,6 @@ def vend_sale_update():
 
         # 'Update Monday' Product in Sale
 
-        for product in 
-
         repair.debug_print()
 
     thread = Thread(target=process, kwargs={"sale": request.get_data()})
