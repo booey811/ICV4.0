@@ -40,7 +40,7 @@ def monday_status_change():
     else:
         data = data[1]
 
-    repair = Repair(monday=int(data["event"]["pulseId"]))
+    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
 
     new_status = data["event"]["value"]["label"]["text"]
 
@@ -112,9 +112,15 @@ def monday_status_change():
         pass
 
     elif repair.monday.status == "Repaired":
+
+        # Check the required information has been filled out
         if not repair.monday.check_column_presence():
             repair.debug_print()
             return "Status Change Route Complete - Returning Early"
+
+        # Check for corporate repairs
+        elif repair.monday.end_of_day != "Complete":
+            repair.monday.adjust_stock()
 
     elif repair.monday.status == "Client Contacted":
         pass

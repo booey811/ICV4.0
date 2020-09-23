@@ -3,7 +3,7 @@ import os
 import requests
 from datetime import datetime, timedelta
 
-from moncli import MondayClient, create_column_value, ColumnType
+from moncli import MondayClient, create_column_value, ColumnType, NotificationTargetType
 from zenpy import Zenpy
 from zenpy.lib import exception as zenpyExceptions
 
@@ -35,12 +35,16 @@ class Repair():
     }
 
 
-    def __init__(self, vend=False, monday=False, zendesk=False, test=False):
+    def __init__(self, webhook_payload=False, vend=False, monday=False, zendesk=False, test=False):
 
         self.debug_string = []
         self.vend = None
         self.monday = None
         self.zendesk = None
+        if webhook_payload:
+            self.payload = webhook_payload
+        else:
+            self.payload = None
 
         if vend:
             self.include_vend(vend)
@@ -303,6 +307,9 @@ class Repair():
 
                 self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
 
+                if self.parent.payload:
+                    self.user_id = self.parent.payload["event"]["userId"]
+
                 self.retreive_column_data()
 
                 self.translate_column_data()
@@ -426,7 +433,11 @@ class Repair():
 
             # Check if a placeholder repair has been left on pulse
             if any(repair in self.repairs for repair in placeholder_repairs):
-                self.add_update("You have selected a placeholder repair - please select the repair you have completed and try again", user="error")
+                self.add_update(
+                    "You have selected a placeholder repair - please select the repair you have completed and try again",
+                    user="error",
+                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                )
                 return False
 
             # Check if some type of screen repair has been completed
@@ -434,28 +445,44 @@ class Repair():
 
                 # Check that screen condition has been selected/not left blank
                 if not self.m_screen_condition:
-                    self.add_update("You have not selected a screen condition for this repair - please select an option from the dropdown menu and try again", user="error")
+                    self.add_update(
+                        "You have not selected a screen condition for this repair - please select an option from the dropdown menu and try again",
+                        user="error",
+                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                    )
                     return False
 
                 # Check that colour has been selected/not left blank
                 elif not self.m_colour or self.m_colour == 5:
-                    self.add_update("You have not selected a colour for the screen of this device - please select an colour option and try again", user="error")
+                    self.add_update(
+                        "You have not selected a colour for the screen of this device - please select an colour option and try again",
+                        user="error",
+                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                    )
                     return False
 
                 # Check that a refurb type has been selected/not left blank
                 elif not self.m_refurb or self.m_refurb == 5:
-                    self.add_update("You have not selected what refurb variety of screen was used with this repair - please select a refurbishmnet option and try again", user="error")
+                    self.add_update(
+                        "You have not selected what refurb variety of screen was used with this repair - please select a refurbishmnet option and try again",
+                        user="error",
+                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                    )
                     return False
 
             if not self.imei_sn:
-                self.add_update("This device does not have an IMEI or SN given - please input this and try again", user="error")
+                self.add_update(
+                    "This device does not have an IMEI or SN given - please input this and try again",
+                    user="error",
+                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                )
                 return False
 
             return True
 
             self.parent.debug(end="check_column_presence")
 
-        def add_update(self, message, user=False):
+        def add_update(self, update, user=False, notify=False):
 
             self.parent.debug(start="add_update")
 
@@ -465,20 +492,29 @@ class Repair():
                     monday_object = item
                     item.change_column_value(column_id="status4", column_value={"label": "!! See Updates !!"})
                     break
-
             elif user == 'email':
                 client =  MondayClient(user_name='icorrectltd@gmail.com', api_key_v1=os.environ["MONV1EML"], api_key_v2=os.environ["MONV2EML"])
                 for item in client.get_items(ids=[int(self.id)], limit=1):
                     monday_object = item
                     break
-
             else:
                 monday_object = self.item
 
-            monday_object.add_update(message)
+            monday_object.add_update(update)
+            if notify:
+                self.send_notification(message=notify, user_id=self.user_id)
+
 
             self.parent.debug(end="add_update")
 
+        def send_notification(self, message, user_id):
+
+            self.parent.debug(start="send_notifcation")
+
+            self.parent.monday_client.create_notification(text=message, user_id=user_id, target_id=349212843, target_type=NotificationTargetType.Project)
+            self.parent.debug(message)
+
+            self.parent.debug(end="send_notifcation")
 
 
     class ZendeskRepair():
