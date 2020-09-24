@@ -665,6 +665,7 @@ class Repair():
                     }
                     self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
 
+                self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
             self.parent.debug(end="adjust stock")
 
         def convert_to_vend_codes(self):
