@@ -121,8 +121,11 @@ def monday_status_change():
         # Check for corporate repairs
         elif repair.monday.end_of_day != "Complete":
             repair.debug("End of Day != Complete")
-            pass
-            # repair.monday.adjust_stock()
+            if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
+                repair.debug("End User Walk-in Repair - Skipping Stock Adjustment")
+                return "Status Change Route Complete - Returning Early"
+            else:
+                repair.monday.adjust_stock()
 
     elif repair.monday.status == "Client Contacted":
         pass

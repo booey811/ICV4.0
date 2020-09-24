@@ -2,6 +2,7 @@ import json
 import os
 import requests
 from datetime import datetime, timedelta
+from pprint import pprint
 
 from moncli import MondayClient, create_column_value, ColumnType, NotificationTargetType
 from zenpy import Zenpy
@@ -79,7 +80,7 @@ class Repair():
     def include_vend(self, vend_sale_id):
 
         self.debug("Adding[VEND] ID: {}".format(vend_sale_id))
-        self.vend = Repair.VendRepair(self, vend_sale_id)
+        self.vend = Repair.VendRepair(self, vend_sale_id=vend_sale_id)
 
     def include_monday(self, monday_id):
 
@@ -172,36 +173,45 @@ class Repair():
 
     class VendRepair():
 
-        def __init__(self, repair_object, vend_sale_id):
+        def __init__(self, repair_object, vend_sale_id=False):
 
             self.parent = repair_object
 
-            self.id = vend_sale_id
-            self.sale_info = self.query_for_sale()
-            self.customer_id = str(self.sale_info["customer_id"])
-            self.customer_info = self.query_for_customer()
+            if vend_sale_id:
 
-            self.passcode = None
-            self.imei_sn = None
+                self.id = vend_sale_id
+                self.sale_info = self.query_for_sale()
+                self.customer_id = str(self.sale_info["customer_id"])
+                self.customer_info = self.query_for_customer()
 
-            self.pre_checks = []
-            self.post_checks = []
-            self.products = []
-            self.notes = []
+                self.passcode = None
+                self.imei_sn = None
 
-            self.name = "{} {}".format(self.customer_info["first_name"], self.customer_info["last_name"])
-            self.phone = self.customer_info["phone"]
-            self.mobile = self.customer_info["mobile"]
-            self.fax = self.customer_info["fax"]
-            self.email = self.customer_info["email"]
+                self.pre_checks = []
+                self.post_checks = []
+                self.products = []
+                self.notes = []
 
-            self.client = "End User"
-            self.service = "Walk-In"
-            self.repair_type = "Repair"
+                self.name = "{} {}".format(self.customer_info["first_name"], self.customer_info["last_name"])
+                self.phone = self.customer_info["phone"]
+                self.mobile = self.customer_info["mobile"]
+                self.fax = self.customer_info["fax"]
+                self.email = self.customer_info["email"]
 
-            self.update_monday = False
+                self.client = "End User"
+                self.service = "Walk-In"
+                self.repair_type = "Repair"
 
-            self.get_and_organise_product_codes()
+                self.update_monday = False
+
+                self.get_and_organise_product_codes()
+
+            else:
+
+                self.parent = repair_object
+
+
+
 
         def query_for_customer(self):
 
@@ -290,19 +300,29 @@ class Repair():
 
             self.parent.monday = monday_object
 
-        def edit_sale(self, vend_sale):
-            
+        def create_eod_sale(self):
+
+            self.parent.debug(start="create_eod_sale")
+
+            if not self.parent.monday:
+                self.parent.debug("No Monday Object to Generate Repairs From")
+            else:
+                self.sale_to_post = self.VendSale(self)
+                self.sale_to_post.create_register_sale_products(self.parent.monday.vend_codes)
+                self.sale_to_post.sale_attributes["status"] = "ONACCOUNT_CLOSED"
+
+            self.parent.debug(end="create_eod_sale")
+
+
+        def post_sale(self, vend_sale):
+
             self.parent.debug(start="post_sale")
-            
-            
-            
+
             url = "https://icorrect.vendhq.com/api/register_sales"
 
-            payload = self.VendSale(self)
-            
-            
-            
-            
+            payload = vend_sale.sale_attributes
+            payload = json.dumps(payload)
+
             headers = {
                 'content-type': "application/json",
                 'authorization': os.environ["VENDSYS"]
@@ -310,49 +330,59 @@ class Repair():
 
             response = requests.request("POST", url, data=payload, headers=headers)
 
-            print(response.text)
-            
+            sale = json.loads(response.text)
+
+            self.sale_info = sale["register_sale"]
+
+            self.id = sale["register_sale"]["id"]
+
             self.parent.debug(end="post_sale")
-        
+
         class VendSale():
-            
+
             sale_attributes = {
                 "register_id": "02d59481-b67d-11e5-f667-b318647c76c1",
                 "user_id": "0a6f6e36-8bab-11ea-f3d6-9603728ea3e6",
-                "status" = False,
+                "status": "SAVED",
                 "register_sale_products": []
             }
-            
+
             def __init__(self, vend_object):
                 """Creates the request object for the Vend API and assists with editing it
 
                 Args:
                     vend_object (VendRepair): The parent VendRepair object
                 """
-                                
+
                 self.vend_parent = vend_object
-                self.sale_attributes["customer_id"] = self.vend_parent.customer_info["id"]
-            
-            def create_register_sale_products(self):
-                
+
+            def create_register_sale_products(self, product_ids):
+                """Creates line items for the register sale
+
+                Args:
+                    product_ids (list): List of product ids to be added to the sale
+                """
+
                 self.vend_parent.parent.debug(start="create_register_sale_products")
-                
-                for product in vend_parent.products:
-                    
+
+                for product in product_ids:
+
                     dictionary = {
                         "product_id": product,
                         "quantity": 1,
-                        "price": False
+                        "price": False,
                         "tax": False,
                         "tax_id": "647087e0-b318-11e5-9667-02d59481b67d"
                     }
-                    
+
                     self.get_pricing_info(dictionary)
-                    
+
+                    self.sale_attributes["register_sale_products"].append(dictionary)
+
                 self.vend_parent.parent.debug(end="create_register_sale_products")
-            
+
             def get_pricing_info(self, dictionary):
-                
+
                 self.vend_parent.parent.debug(start="get_pricing_info")
 
                 url = "https://icorrect.vendhq.com/api/products/{}".format(dictionary["product_id"])
@@ -361,19 +391,18 @@ class Repair():
 
                 response = requests.request("GET", url, headers=headers)
 
-                info = json.loads(response.text)
-                print(info)
-                
-                dictionay["price"] = info["price"]
-                dictionay["tax"] = info["price_book_entries"][0]["tax"]
+                info = json.loads(response.text)["products"][0]
+
+                dictionary["price"] = info["price"]
+                dictionary["tax"] = info["price_book_entries"][0]["tax"]
+
+                self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
 
                 self.vend_parent.parent.debug(end="get_pricing_info")
-                
-            def post_sale(self):
-                
 
 
-            
+
+
     class MondayRepair():
 
         def __init__(self, repair_object, monday_id=False, created=False):
@@ -443,6 +472,7 @@ class Repair():
             self.deactivated = None
 
             self.vend_codes = []
+            self.repair_names = []
 
         def translate_column_data(self):
 
@@ -607,14 +637,17 @@ class Repair():
         def adjust_stock(self):
 
             self.parent.debug(start="adjust stock")
-            
+
             self.convert_to_vend_codes()
 
             if len(self.vend_codes) != len(self.repairs):
+                self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(vend_codes), len(repairs)))
                 self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error")
 
             else:
-                self.
+                self.parent.vend = Repair.VendRepair(self.parent)
+                self.parent.vend.create_eod_sale()
+                self.parent.vend.post_sale(self.parent.vend.sale_to_post)
 
             self.parent.debug(end="adjust stock")
 
@@ -637,12 +670,13 @@ class Repair():
                         self.parent.debug("Too many results found for tuple: {}".format(search))
                         self.add_update("Cannot Find: {}".format(search))
                         continue
-                
+
                 for product in results:
                     self.vend_codes.append(product.get_column_value(id="text").text)
-                    
-            
-                
+                    self.repair_names.append(product.name)
+
+
+
 
 
             self.parent.debug(end="convert_to_vend_codes")

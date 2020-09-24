@@ -1,14 +1,15 @@
 import requests
 import json
 import os
+from pprint import pprint
 
 import settings
 
 from objects import Repair
 
-test = Repair(monday=726460853, webhook_payload={"event": {"userId": 4251271}})
+test = Repair(monday=760722760)
 
 
-test.monday.convert_to_vend_codes()
+test.monday.adjust_stock()
 
-test.debug_print(console=True)
+test.debug_print()
