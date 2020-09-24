@@ -13,3 +13,4 @@ test = Repair(monday=760722760)
 test.monday.adjust_stock()
 
 test.debug_print()
+

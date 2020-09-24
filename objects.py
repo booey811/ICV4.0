@@ -32,7 +32,8 @@ class Repair():
     boards = {
         "logging": monday_client.get_board_by_id(id=736027251),
         "inventory": monday_client.get_board_by_id(id=703218230),
-        "main": monday_client.get_board_by_id(id=349212843)
+        "main": monday_client.get_board_by_id(id=349212843),
+        "usage": monday_client.get_board_by_id(id=722437885)
     }
 
 
@@ -173,9 +174,19 @@ class Repair():
 
     class VendRepair():
 
+
+
         def __init__(self, repair_object, vend_sale_id=False):
 
             self.parent = repair_object
+            self.id = None
+            self.passcode = None
+            self.imei_sn = None
+
+            self.pre_checks = []
+            self.post_checks = []
+            self.products = []
+            self.notes = []
 
             if vend_sale_id:
 
@@ -183,14 +194,6 @@ class Repair():
                 self.sale_info = self.query_for_sale()
                 self.customer_id = str(self.sale_info["customer_id"])
                 self.customer_info = self.query_for_customer()
-
-                self.passcode = None
-                self.imei_sn = None
-
-                self.pre_checks = []
-                self.post_checks = []
-                self.products = []
-                self.notes = []
 
                 self.name = "{} {}".format(self.customer_info["first_name"], self.customer_info["last_name"])
                 self.phone = self.customer_info["phone"]
@@ -207,8 +210,7 @@ class Repair():
                 self.get_and_organise_product_codes()
 
             else:
-
-                self.parent = repair_object
+                pass
 
 
 
@@ -311,6 +313,9 @@ class Repair():
                 self.sale_to_post.create_register_sale_products(self.parent.monday.vend_codes)
                 self.sale_to_post.sale_attributes["status"] = "ONACCOUNT_CLOSED"
 
+                if self.id:
+                    self.sale_to_post.sale_attributes["id"] = self.id
+
             self.parent.debug(end="create_eod_sale")
 
 
@@ -396,11 +401,13 @@ class Repair():
                 dictionary["price"] = info["price"]
                 dictionary["tax"] = info["price_book_entries"][0]["tax"]
 
+                self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["price"])
+                self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["tax"])
+                self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["supply_price"])
+
                 self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
 
                 self.vend_parent.parent.debug(end="get_pricing_info")
-
-
 
 
     class MondayRepair():
@@ -472,7 +479,7 @@ class Repair():
             self.deactivated = None
 
             self.vend_codes = []
-            self.repair_names = []
+            self.repair_names = {}
 
         def translate_column_data(self):
 
@@ -648,6 +655,15 @@ class Repair():
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
                 self.parent.vend.post_sale(self.parent.vend.sale_to_post)
+                for repair in self.repair_names:
+                    col_vals = {
+                        "text": self.name,
+                        "text2": self.parent.source.capitalize(),
+                        "numbers": self.repair_names[repair][3],
+                        "numbers4": self.repair_names[repair][2],
+                        "numbers_1": self.repair_names[repair][1]
+                    }
+                    self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
 
             self.parent.debug(end="adjust stock")
 
@@ -672,8 +688,9 @@ class Repair():
                         continue
 
                 for product in results:
-                    self.vend_codes.append(product.get_column_value(id="text").text)
-                    self.repair_names.append(product.name)
+                    product_id = product.get_column_value(id="text").text
+                    self.vend_codes.append(product_id)
+                    self.repair_names[product_id] = [product.name]
 
 
 
