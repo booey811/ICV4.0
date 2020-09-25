@@ -7,9 +7,9 @@ import settings
 
 from objects import Repair
 
-test = Repair(monday=760722760)
+test = Repair(zendesk=5472)
 
-print(test.monday.end_of_day)
+print(test.__dict__)
 
-test.debug_print()
+test.debug_print(console=True)
 

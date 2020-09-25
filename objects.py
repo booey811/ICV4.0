@@ -71,6 +71,9 @@ class Repair():
         elif zendesk:
             self.source = "zendesk"
             self.include_zendesk(zendesk)
+            self.name = self.zendesk.name
+            self.email = self.zendesk.email
+            self.number = self.zendesk.number
 
         elif test:
             self.name = "Jeremiah Bullfrog"
@@ -119,9 +122,9 @@ class Repair():
             for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
 
-            if self.monday.v_id:
-                self.include_vend(self.monday.v_id)
-
+            if self.monday:
+                if self.monday.v_id:
+                    self.include_vend(self.monday.v_id)
 
         else:
             self.debug("Source of Repair not set")
@@ -693,6 +696,10 @@ class Repair():
 
     class ZendeskRepair():
 
+        name = None
+        email = None
+        number = None
+
         def __init__(self, repair_object, zendesk_ticket_number):
 
             self.parent = repair_object
@@ -709,6 +716,10 @@ class Repair():
                 self.ticket = ticket
                 self.user = self.ticket.requester
                 self.user_id = self.user.id
+
+                self.name = self.user.name
+                self.email = self.user.email
+                self.number = self.user.phone
             else:
                 self.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
 

@@ -20,7 +20,6 @@ def monday_handshake(webhook):
     """
     data = webhook.decode('utf-8')
     data = json.loads(data)
-
     if "challenge" in data.keys():
         authtoken = {"challenge": data["challenge"]}
         return [False, authtoken]
@@ -34,16 +33,12 @@ def monday_handshake(webhook):
 def monday_status_change():
     webhook = request.get_data()
     data = monday_handshake(webhook)
-
     if data[0] is False:
         return data[1]
     else:
         data = data[1]
-
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-
     new_status = data["event"]["value"]["label"]["text"]
-
     try:
         repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], new_status))
     except TypeError:
@@ -139,6 +134,16 @@ def monday_status_change():
 
     return "Status Change Route Completed Successfully"
 
+@app.route("/monday/notifications", methods=["POST"])
+def monday_notifications_column():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+
 
 # End of Day Column
 @app.route("/monday/eod/do_now", methods=["POST"])
@@ -146,20 +151,14 @@ def monday_eod_column_do_now():
 
     webhook = request.get_data()
     data = monday_handshake(webhook)
-
     if data[0] is False:
         return data[1]
     else:
         data = data[1]
-
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-
     repair.debug("End of Day Column --> Do Now")
-
     repair.monday.adjust_stock()
-
     repair.debug_print()
-
     return "Monday End of Day Route Completed Successfully"
 
 
@@ -186,6 +185,26 @@ def vend_sale_update():
 
     return ""
 
+
+# ROUTES // ZENDESK
+# New Comment
+@app.route("/zendesk/comments", methods=["POST"])
+def zendesk_comment_sent():
+    data = request.get_data().decode()
+    data = json.loads(data)
+
+    repair = Repair(zendesk=data["z_id"])
+    repair.debug("Zendesk Commment Webhook Received")
+
+    if not repair.monday:
+        repair.debug("No Associated Monday Pulse - Unable to add comment to Monday")
+
+    else:
+        repair.monday.add_update(body=data["latest_comment"], user="email")
+
+    repair.debug_print()
+
+    return "Zendesk Commments Route Completed Successfully"
 
 # Top Line Driver Code
 if __name__ == "__main__":
