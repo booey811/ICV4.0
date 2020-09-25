@@ -9,8 +9,7 @@ from objects import Repair
 
 test = Repair(monday=760722760)
 
-
-test.monday.adjust_stock()
+print(test.monday.end_of_day)
 
 test.debug_print()
 

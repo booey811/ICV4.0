@@ -36,7 +36,6 @@ class Repair():
         "usage": monday_client.get_board_by_id(id=722437885)
     }
 
-
     def __init__(self, webhook_payload=False, vend=False, monday=False, zendesk=False, test=False):
 
         self.debug_string = []
@@ -174,8 +173,6 @@ class Repair():
 
     class VendRepair():
 
-
-
         def __init__(self, repair_object, vend_sale_id=False):
 
             self.parent = repair_object
@@ -211,9 +208,6 @@ class Repair():
 
             else:
                 pass
-
-
-
 
         def query_for_customer(self):
 
@@ -318,7 +312,6 @@ class Repair():
 
             self.parent.debug(end="create_eod_sale")
 
-
         def post_sale(self, vend_sale):
 
             self.parent.debug(start="post_sale")
@@ -408,7 +401,6 @@ class Repair():
                 self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
 
                 self.vend_parent.parent.debug(end="get_pricing_info")
-
 
     class MondayRepair():
 

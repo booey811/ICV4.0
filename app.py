@@ -140,6 +140,25 @@ def monday_status_change():
     return "Status Change Route Completed Successfully"
 
 
+# End of Day Column
+@app.route("/monday/eod/do_now", methods=["POST"])
+def monday_eod_column_do_now():
+
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+
+    repair.monday.adjust_stock()
+
+    return "Monday End of Day Route Completed Successfully"
+
+
 
 # ROUTES // VEND
 # Sale Update
