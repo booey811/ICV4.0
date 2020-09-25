@@ -505,7 +505,8 @@ class Repair():
             dropdown_attributes = [
                 ["Device", "m_device", "device"],
                 ["Repairs", "m_repairs", "repairs"],
-                ["Screen Condition", "m_screen_condition", "screen_condition"]
+                ["Screen Condition", "m_screen_condition", "screen_condition"],
+                ["Notifications", "m_notifications", "notifications"]
             ]
 
             for column, m_attribute, attribute in dropdown_attributes:
@@ -619,11 +620,9 @@ class Repair():
             else:
                 monday_object = self.item
                 client = self.parent.monday_client
-
             monday_object.add_update(update)
             if notify:
                 self.send_notification(sender=client, message=notify, user_id=self.user_id)
-
 
             self.parent.debug(end="add_update")
 
@@ -643,7 +642,7 @@ class Repair():
             self.convert_to_vend_codes()
 
             if len(self.vend_codes) != len(self.repairs):
-                self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(vend_codes), len(repairs)))
+                self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(repairs)))
                 self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error")
 
             else:

@@ -38,7 +38,8 @@ col_ids_to_attributes = {
     "dup__of_passcode": {"title": "Company/Flat", 'value_type': ["text"], "attribute": "address2"},
     "check71": {"title": "Deactivate", "value_type": ["checked"], "attribute": "deactivate"},
     "date6": {"title": "Booking Time ", "value_type": ['date', 'time'], "attribute": "m_date"},
-    "status_14": {"title": "Has Case", "value_type": ["index", "label"], "attribute": "m_has_case"}
+    "status_14": {"title": "Has Case", "value_type": ["index", "label"], "attribute": "m_has_case"},
+    "dropdown8": {"title": "Notifications", "value_type": ["ids", "label"], "attribute": "m_notifications"}
 }
 
 status_column_dictionary = {

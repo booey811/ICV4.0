@@ -190,8 +190,11 @@ def vend_sale_update():
 # New Comment
 @app.route("/zendesk/comments", methods=["POST"])
 def zendesk_comment_sent():
+
     data = request.get_data().decode()
     data = json.loads(data)
+
+    print(data)
 
     repair = Repair(zendesk=data["z_id"])
     repair.debug("Zendesk Commment Webhook Received")

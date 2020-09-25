@@ -7,9 +7,8 @@ import settings
 
 from objects import Repair
 
-test = Repair(zendesk=5472)
+test = Repair(monday=760722760)
 
-print(test.__dict__)
+print(test.monday.notifications)
 
 test.debug_print(console=True)
-
