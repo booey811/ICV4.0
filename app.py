@@ -154,7 +154,11 @@ def monday_eod_column_do_now():
 
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
 
+    repair.debug("End of Day Column --> Do Now")
+
     repair.monday.adjust_stock()
+
+    repair.debug_print()
 
     return "Monday End of Day Route Completed Successfully"
 
