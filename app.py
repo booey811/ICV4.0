@@ -190,23 +190,16 @@ def vend_sale_update():
 # New Comment
 @app.route("/zendesk/comments", methods=["POST"])
 def zendesk_comment_sent():
-
     data = request.get_data().decode()
     data = json.loads(data)
-
-    print(data)
-
     repair = Repair(zendesk=data["z_id"])
     repair.debug("Zendesk Commment Webhook Received")
-
     if not repair.monday:
         repair.debug("No Associated Monday Pulse - Unable to add comment to Monday")
 
     else:
         repair.monday.add_update(update=data["latest_comment"], user="email")
-
     repair.debug_print()
-
     return "Zendesk Commments Route Completed Successfully"
 
 # Top Line Driver Code
