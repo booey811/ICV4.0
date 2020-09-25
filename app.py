@@ -203,7 +203,7 @@ def zendesk_comment_sent():
         repair.debug("No Associated Monday Pulse - Unable to add comment to Monday")
 
     else:
-        repair.monday.add_update(body=data["latest_comment"], user="email")
+        repair.monday.add_update(update=data["latest_comment"], user="email")
 
     repair.debug_print()
 
