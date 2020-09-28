@@ -144,6 +144,8 @@ def monday_notifications_column():
         data = data[1]
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
 
+    return "Monday Notificaions Column Chnage Route Complete"
+
 
 # End of Day Column
 @app.route("/monday/eod/do_now", methods=["POST"])
@@ -201,6 +203,16 @@ def zendesk_comment_sent():
         repair.monday.add_update(update=data["latest_comment"], user="email")
     repair.debug_print()
     return "Zendesk Commments Route Completed Successfully"
+
+
+@app.route("/zendesk/creation", methods=["POST"])
+def zendesk_to_monday():
+    data = request.get_data().decode()
+    data = json.loads(data)
+    repair = Repair(zendesk=data["z_id"])
+    repair.debug("Adding Zendesk Ticket to Monday")
+
+    repair.add_to_monday()
 
 # Top Line Driver Code
 if __name__ == "__main__":
