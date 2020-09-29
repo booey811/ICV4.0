@@ -211,8 +211,12 @@ def zendesk_to_monday():
     data = json.loads(data)
     repair = Repair(zendesk=data["z_id"])
     repair.debug("Adding Zendesk Ticket to Monday")
-
+    repair.zendesk.convert_to_monday()
     repair.add_to_monday()
+
+    repair.debug_print()
+
+    return "Zendesk to Monday Route Completed Successfully"
 
 # Top Line Driver Code
 if __name__ == "__main__":

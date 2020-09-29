@@ -783,7 +783,6 @@ class Repair():
 
             # Cycle Through Tags on Ticket
             for tag in self.ticket.tags:
-                print(tag)
                 # Create Column Value with Tag for Text Value
                 col_val = create_column_value(id="text", column_type=ColumnType.text, value=tag)
                 results = self.parent.boards["zendesk_tags"].get_items_by_column_values(col_val)
@@ -797,18 +796,13 @@ class Repair():
                     for result in results:
                         self.parent.debug("Found Tag: {}".format(tag))
                         attribute = result.get_column_value(id="text9").text
-                        print(attribute)
                         value = result.name
-                        print(value)
                         value_type = result.get_column_value(id="status7").index
-                        print(value_type)
                         # Status type value
                         if value_type == 15:
-                            print("status type")
                             setattr(self, attribute, value)
                         # Dropdown type value
                         elif value_type == 4:
-                            print("dropdown type")
                             getattr(self, attribute).append([value, result.get_column_value(id="text3").text])
                         else:
                             self.parent.debug("'type' Status Column index not matched")
@@ -953,21 +947,12 @@ class MondayColumns():
 
         self.column_values  = {}
 
-        print(monday_object)
-
-
         for category in self.attributes_to_ids:
 
             values = self.attributes_to_ids[category]["values"]
             structure = self.attributes_to_ids[category]["structure"]
 
-            print(values)
-            print(structure)
-
             for column in values:
-                print(column)
                 diction = structure(values[column], getattr(monday_object, column))
                 self.column_values[diction[0]] = diction[1]
-
-            print(self.column_values)
 
