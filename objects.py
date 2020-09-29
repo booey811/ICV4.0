@@ -7,6 +7,7 @@ from pprint import pprint
 from moncli import MondayClient, create_column_value, ColumnType, NotificationTargetType
 from zenpy import Zenpy
 from zenpy.lib import exception as zenpyExceptions
+from zenpy.lib.api_objects import CustomField
 
 import settings
 import keys.vend
@@ -142,7 +143,11 @@ class Repair():
             self.monday.columns = MondayColumns(self.monday)
             if self.source == "zendesk":
                 self.monday.columns.column_values["status5"] = {"label": "Active"}
-            self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
+            item = self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
+
+            if self.source == "zendesk":
+                self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
+                self.zendesk_client.tickets.update(self.zendesk.ticket)
 
         self.debug(end="add_to_monday")
 
