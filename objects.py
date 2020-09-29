@@ -136,9 +136,13 @@ class Repair():
 
         self.debug(start="add_to_monday")
 
-        self.monday.columns = MondayColumns(self.monday)
-
-        self.boards["main"].add_item(item_name=self.name, column_values=columns.column_values )
+        if not self.monday:
+            self.debug("No Monday Object Available - Unable to Add to Monday")
+        else:
+            self.monday.columns = MondayColumns(self.monday)
+            if self.source == "zendesk":
+                self.monday.columns.column_values["status5"] = {"label": "Active"}
+            self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
 
         self.debug(end="add_to_monday")
 
@@ -412,32 +416,6 @@ class Repair():
 
             self.parent = repair_object
 
-            self.initialise_attributes()
-
-            if monday_id:
-
-                for item in self.parent.monday_client.get_items(limit=1, ids=[int(monday_id)]):
-                    self.item = item
-                    self.id = item.id
-                    break
-
-                self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
-
-                if self.parent.payload:
-                    self.user_id = self.parent.payload["event"]["userId"]
-
-                self.retreive_column_data()
-
-                self.translate_column_data()
-
-            if created:
-
-                self.name = created
-                self.id = None
-
-            # self.columns = MondayColumns(self)
-
-        def initialise_attributes(self):
 
             self.v_id = None
             self.z_ticket_id = None
@@ -463,8 +441,8 @@ class Repair():
             self.data = None
             self.passcode = None
             self.postcode = None
-            self.address_2 = None
-            self.address_1 = None
+            self.address2 = None
+            self.address1 = None
             self.date_received = None
             self.number = None
             self.email = None
@@ -473,9 +451,33 @@ class Repair():
             self.date_collected = None # Not currently used in program
             self.end_of_day = None
             self.deactivated = None
+            self.notifications = []
 
             self.vend_codes = []
             self.repair_names = {}
+
+            if monday_id:
+
+                for item in self.parent.monday_client.get_items(limit=1, ids=[int(monday_id)]):
+                    self.item = item
+                    self.id = item.id
+                    break
+
+                self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
+
+                if self.parent.payload:
+                    self.user_id = self.parent.payload["event"]["userId"]
+
+                self.retreive_column_data()
+
+                self.translate_column_data()
+
+            if created:
+
+                self.name = created
+                self.id = None
+
+            # self.columns = MondayColumns(self)
 
         def translate_column_data(self):
 
@@ -696,7 +698,7 @@ class Repair():
 
     class ZendeskRepair():
 
-        def __init__(self, repair_object, zendesk_ticket_number):
+        def __init__(self, repair_object, zendesk_ticket_number, created=False):
 
             self.name = None
             self.email = None
@@ -705,30 +707,36 @@ class Repair():
             self.status = None
             self.client = None
             self.service = None
+            self.repair_type = None
             self.notifications = []
+
 
             self.parent = repair_object
 
-            self.ticket_id = zendesk_ticket_number
 
-            self.type = None
+            if not created:
+                self.ticket_id = zendesk_ticket_number
+                try:
+                    ticket = self.parent.zendesk_client.tickets(id=self.ticket_id)
+                except zenpyExceptions.RecordNotFoundException:
+                    self.debug("Ticket {} Does Not Exist".format(zendesk_ticket_number))
+                    ticket = False
 
-            try:
-                ticket = self.parent.zendesk_client.tickets(id=self.ticket_id)
-            except zenpyExceptions.RecordNotFoundException:
-                self.debug("Ticket {} Does Not Exist".format(zendesk_ticket_number))
-                ticket = False
+                if ticket:
+                    self.ticket = ticket
+                    self.user = self.ticket.requester
+                    self.user_id = self.user.id
 
-            if ticket:
-                self.ticket = ticket
-                self.user = self.ticket.requester
-                self.user_id = self.user.id
+                    self.name = self.user.name
+                    self.email = self.user.email
+                    self.number = self.user.phone
 
-                self.name = self.user.name
-                self.email = self.user.email
-                self.number = self.user.phone
+                    self.convert_to_attributes()
+
+                else:
+                    self.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
             else:
-                self.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
+                pass
 
 
         def convert_to_attributes(self):
@@ -745,7 +753,7 @@ class Repair():
                 "address2": [False, 360006582798],
                 "client": [True, 360010408778],
                 "service": [True, 360010444117],
-                "type": [True, 360010444077],
+                "repair_type": [True, 360010444077],
                 "monday_id": [False, 360004570218]
             }
 
@@ -775,6 +783,7 @@ class Repair():
 
             # Cycle Through Tags on Ticket
             for tag in self.ticket.tags:
+                print(tag)
                 # Create Column Value with Tag for Text Value
                 col_val = create_column_value(id="text", column_type=ColumnType.text, value=tag)
                 results = self.parent.boards["zendesk_tags"].get_items_by_column_values(col_val)
@@ -788,15 +797,19 @@ class Repair():
                     for result in results:
                         self.parent.debug("Found Tag: {}".format(tag))
                         attribute = result.get_column_value(id="text9").text
+                        print(attribute)
                         value = result.name
+                        print(value)
                         value_type = result.get_column_value(id="status7").index
+                        print(value_type)
                         # Status type value
                         if value_type == 15:
+                            print("status type")
                             setattr(self, attribute, value)
                         # Dropdown type value
                         elif value_type == 4:
-                            dropdowns = getattr(self, "notifications")
-                            dropdowns.append(result.name)
+                            print("dropdown type")
+                            getattr(self, attribute).append([value, result.get_column_value(id="text3").text])
                         else:
                             self.parent.debug("'type' Status Column index not matched")
 
@@ -809,23 +822,36 @@ class Repair():
         def convert_to_monday(self):
             self.parent.debug(start="convert_to_monday")
             if self.parent.monday:
-                self.debug("Monday Object Already Exists - Cannot Create")
+                self.parent.debug("Monday Object Already Exists - Cannot Create")
             else:
+
+                self.parent.monday = Repair.MondayRepair(repair_object=self.parent, created=self.name)
 
                 attributes = [
                     "status",
                     "client",
                     "service",
-                    "type",
                     "imei_sn",
-                    "address_1",
-                    "address_2",
+                    "address1",
+                    "address2",
                     "postcode",
+                    "passcode",
                     "number",
-                    "email"
+                    "email",
+                    "name",
+                    "repair_type"
                 ]
-                self.parent.monday = Repair.MondayRepair(repair_object=self.parent, created=self.name)
 
+                for attribute in attributes:
+
+                    value = getattr(self, attribute, None)
+                    if value:
+                        setattr(self.parent.monday, attribute, value)
+
+                self.parent.monday.z_ticket_id = self.ticket_id
+
+                for notification in self.notifications:
+                    self.parent.monday.notifications.append(int(notification[1]))
 
             self.parent.debug(end="convert_to_monday")
 
@@ -852,7 +878,8 @@ class MondayColumns():
                 "colour": "status8", # Colour Column
                 "refurb": "status_15", # Refurb Type Column
                 "data": "status55", # Data Column
-                "end_of_day": "blocker" # End Of Day Column
+                "end_of_day": "blocker", # End Of Day Column
+                "zenlink": "status5" # Zenlink Column
             },
 
             "structure": lambda id, value: [id, {"label": value}]
@@ -878,6 +905,15 @@ class MondayColumns():
         "text": {
             "values": {
                 "zendesk_url": "text410", # Zenlink Column
+                "email": "text5", # Email Column
+                "number": "text00", # Tel. No. Column
+                "z_ticket_id": "text6", # Zendesk ID Column
+                "v_id": "text6", # Vend Sale ID Column
+                "address1": "passcode", # Street Address Column
+                "address2": "dup__of_passcode", # Company/Flat Column
+                "postcode": "text93", # Postcode Column
+                "passcode": "text8", # Passcode Column
+                "imei_sn": "text4" # IMEI Column
             },
 
             "structure": lambda id, value: [id, value]
@@ -887,7 +923,8 @@ class MondayColumns():
             "values": {
                 "device": "device0", # Device Column
                 "repairs": "repair", # Repairs Column
-                "screen_condition": "screen_condition" # Screen Condition Column
+                "screen_condition": "screen_condition",
+                "notifications": "dropdown8" # Screen Condition Column
             },
 
             "structure": lambda id, value: [id, {"ids": value}]
