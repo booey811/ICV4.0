@@ -580,9 +580,9 @@ class Repair():
                     return False
 
                 # Check that colour has been selected/not left blank
-                elif not self.m_colour or self.m_colour == 5:
+                elif self.m_colour is None or self.m_colour == 5:
                     self.add_update(
-                        "You have not selected a colour for the screen of this device - please select an colour option and try again",
+                        "You have not selected a colour for the screen of this device - please select a colour option and try again",
                         user="error",
                         notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
                     )
@@ -694,10 +694,6 @@ class Repair():
                     product_id = product.get_column_value(id="text").text
                     self.vend_codes.append(product_id)
                     self.repair_names[product_id] = [product.name]
-
-
-
-
 
             self.parent.debug(end="convert_to_vend_codes")
 
