@@ -650,7 +650,7 @@ class Repair():
             self.convert_to_vend_codes()
 
             if len(self.vend_codes) != len(self.repairs):
-                self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(repairs)))
+                self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
                 self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error")
 
             else:
