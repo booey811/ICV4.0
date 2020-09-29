@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pprint import pprint
 
 from moncli import MondayClient, create_column_value, ColumnType, NotificationTargetType
+from moncli.api_v2.exceptions import MondayApiError
 from zenpy import Zenpy
 from zenpy.lib import exception as zenpyExceptions
 from zenpy.lib.api_objects import CustomField
@@ -665,7 +666,11 @@ class Repair():
                         "numbers4": self.repair_names[repair][2],
                         "numbers_1": self.repair_names[repair][1]
                     }
-                    self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
+                    try:
+                        self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
+                    except MondayApiError:
+                        self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage", column_values=col_vals)
+                        self.parent.debug("Experienced Parse Error While Adding to Usage")
 
                 self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
             self.parent.debug(end="adjust stock")
