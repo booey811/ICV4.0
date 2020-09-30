@@ -147,7 +147,7 @@ class Repair():
                 self.monday.columns.column_values["status5"] = {"label": "Active"}
             item = self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
 
-            if self.source == "zendesk":
+            if self.zendesk:
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
                 self.zendesk_client.tickets.update(self.zendesk.ticket)
 
@@ -677,7 +677,7 @@ class Repair():
                 for product in results:
                     product_id = product.get_column_value(id="text").text
                     self.vend_codes.append(product_id)
-                    self.repair_names[product_id] = [product.name]
+                    self.repair_names[product_id] = [product.name.replace("\"", "")]
             self.parent.debug(end="convert_to_vend_codes")
 
     class ZendeskRepair():
