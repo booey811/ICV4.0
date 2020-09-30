@@ -44,6 +44,7 @@ col_ids_to_attributes = {
 
 status_column_dictionary = {
     "ZenLink": {
+        "attribute": None,
         "col_id": "status5",
         "values": [
             {"title": 'Not Active',
@@ -80,6 +81,7 @@ status_column_dictionary = {
     },
 
     'Status': {
+        "attribute": "status",
         'col_id': 'status4',
         'values': [
             {"title": "New Repair",
@@ -131,11 +133,6 @@ status_column_dictionary = {
                 'index': 11,
                 'label': 'Invoiced',
                 'z_tag': 'invoiced'
-             },
-            {"title": 'New Repair',
-                'index': 5,
-                'label': 'New Repair',
-                'z_tag': 'new_repair'
              },
             {"title": 'Paid',
                 'index': 9,
@@ -206,6 +203,7 @@ status_column_dictionary = {
     },
 
     "Service": {
+        "attribute": "service",
         "col_id": "service",
         "values": [
             {"title": "Walk-In",
@@ -227,6 +225,7 @@ status_column_dictionary = {
     },
 
     "Colour": {
+        "attribute": "colour",
         "col_id": "status8",
         "values": [
             {"title": "White",
@@ -303,6 +302,7 @@ status_column_dictionary = {
     },
 
     "Client": {
+        "attribute": "client",
         "col_id": "status",
         "values": [
             {"title": "End User",
@@ -328,6 +328,7 @@ status_column_dictionary = {
     },
 
     "Type": {
+        "attribute": "repair_type",
         "col_id": "status24",
         "values": [
             {"title": "Repair",
@@ -343,22 +344,33 @@ status_column_dictionary = {
             {"title": "Unrepairable",
                 "index": 18,
                 "label": "Unrepairable",
-                "z_tag": "unrepairable"
+                "z_tag": "unrepairable_type"
              },
             {"title": "Quote Rejected",
                 "index": 4,
                 "label": "Quote Rejected",
-                "z_tag": "quote_rejected"
+                "z_tag": "quote_rejected_type"
              },
             {"title": "Lead",
                 "index": 3,
                 "label": "Lead",
                 "z_tag": "lead"
-             }
+            },
+            {"title": "Board Level",
+                "index": 9,
+                "label": "Board Level",
+                "z_tag": "board_level"
+            },
+            {"title": "No Fault Found",
+                "index": 9,
+                "label": "No Fault Found",
+                "z_tag": "no_fault_found_type"
+            }
         ]
     },
 
     "End Of Day": {
+        "attribute": "end_of_day",
         "col_id": "blocker",
         "values": [
             {"title": "Not Done",
@@ -377,6 +389,7 @@ status_column_dictionary = {
     },
 
     "Has Case": {
+        "attribute": "case",
         "col_id": "status_14",
         "values": [
             {"title": "HAS CASE",
@@ -391,6 +404,7 @@ status_column_dictionary = {
     },
 
     "Refurb Type": {
+        "attribute": "refurb",
         "col_id": "status_15",
         "values": [
             {"title": "Glass Only",
@@ -413,6 +427,66 @@ status_column_dictionary = {
                 "index": 2,
                 "label": "China Screen",
                 "z_tag": ""}
+        ]
+    }
+}
+
+
+dropdown_column_dictionary = {
+    "Notifications": {
+        "attribute": "notifications",
+        "col_id": "dropdown8",
+        "values": [
+            {
+                "title": "Booking Confirmed",
+                "ids": 1,
+                "z_tag": "booking_confirmed_email"
+            },
+            {
+                "title": "Invoiced",
+                "ids": 4,
+                "z_tag": "invoiced_email"
+            },
+            {
+                "title": "Courier Booked",
+                "ids": 6,
+                "z_tag": "courier_booked_email"
+            },
+            {
+                "title": "Passcode Request",
+                "ids": 8,
+                "z_tag": "passcode_request_email"
+            },
+            {
+                "title": "Feedback Request",
+                "ids": 10,
+                "z_tag": "feedback_request_email"
+            },
+            {
+                "title": "Device Repaired",
+                "ids": 2,
+                "z_tag": "device_repaired_email"
+            },
+            {
+                "title": "Device Received",
+                "ids": 3,
+                "z_tag": "device_received_email"
+            },
+            {
+                "title": "Returned",
+                "ids": 5,
+                "z_tag": "returned_email"
+            },
+            {
+                "title": "Return Booked",
+                "ids": 7,
+                "z_tag": "return_booked_email"
+            },
+            {
+                "title": "Request Contact",
+                "ids": 9,
+                "z_tag": "request_contact_email"
+            },
         ]
     }
 }

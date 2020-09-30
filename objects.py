@@ -36,7 +36,8 @@ class Repair():
         "inventory": monday_client.get_board_by_id(id=703218230),
         "main": monday_client.get_board_by_id(id=349212843),
         "usage": monday_client.get_board_by_id(id=722437885),
-        "zendesk_tags": monday_client.get_board_by_id(id=765453815)
+        "zendesk_tags": monday_client.get_board_by_id(id=765453815),
+        "macros": monday_client.get_board_by_id(id=762417852)
     }
 
     def __init__(self, webhook_payload=False, vend=False, monday=False, zendesk=False, test=False):
@@ -525,11 +526,8 @@ class Repair():
             self.parent.debug(end="translate_column_data")
 
         def retreive_column_data(self):
-
             self.parent.debug(start="retreive_column_data")
-
             column_values = self.item.get_column_values()
-
             for item in keys.monday.col_ids_to_attributes:
                 if keys.monday.col_ids_to_attributes[item]['attribute'] is not None:
                     col_id = item
@@ -547,18 +545,15 @@ class Repair():
                                 except TypeError:
                                     print(
                                         "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
-
             self.parent.debug(end="retreive_column_data")
+
 
         def check_column_presence(self):
             """Goes through monday columns to make sure essential data has been filled out for this repair
             Returns False if any information is missing or True if all is well
             """
-
             self.parent.debug(start="check_column_presence")
-
             placeholder_repairs = [96, 97, 98]
-
             # Check if a placeholder repair has been left on pulse
             if any(repair in self.repairs for repair in placeholder_repairs):
                 self.add_update(
@@ -567,10 +562,8 @@ class Repair():
                     notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
                 )
                 return False
-
             # Check if some type of screen repair has been completed
             if any(repair in self.m_repairs for repair in [69, 74, 84, 89, 90, 83]):
-
                 # Check that screen condition has been selected/not left blank
                 if not self.m_screen_condition:
                     self.add_update(
@@ -579,7 +572,6 @@ class Repair():
                         notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
                     )
                     return False
-
                 # Check that colour has been selected/not left blank
                 elif self.m_colour is None or self.m_colour == 5:
                     self.add_update(
@@ -588,7 +580,6 @@ class Repair():
                         notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
                     )
                     return False
-
                 # Check that a refurb type has been selected/not left blank
                 elif not self.m_refurb or self.m_refurb == 5:
                     self.add_update(
@@ -597,7 +588,6 @@ class Repair():
                         notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
                     )
                     return False
-
             # Check that IMEI has been recorded
             if not self.imei_sn:
                 self.add_update(
@@ -606,15 +596,12 @@ class Repair():
                     notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
                 )
                 return False
-
             return True
-
             self.parent.debug(end="check_column_presence")
 
+
         def add_update(self, update, user=False, notify=False):
-
             self.parent.debug(start="add_update")
-
             if user == 'error':
                 client =  MondayClient(user_name='admin@icorrect.co.uk', api_key_v1=os.environ["MONV1ERR"], api_key_v2=os.environ["MONV2ERR"])
                 for item in client.get_items(ids=[int(self.id)], limit=1):
@@ -632,28 +619,22 @@ class Repair():
             monday_object.add_update(update)
             if notify:
                 self.send_notification(sender=client, message=notify, user_id=self.user_id)
-
             self.parent.debug(end="add_update")
 
+
         def send_notification(self, sender, message, user_id):
-
             self.parent.debug(start="send_notifcation")
-
             sender.create_notification(text=message, user_id=user_id, target_id=349212843, target_type=NotificationTargetType.Project)
             self.parent.debug(message)
-
             self.parent.debug(end="send_notifcation")
 
+
         def adjust_stock(self):
-
             self.parent.debug(start="adjust stock")
-
             self.convert_to_vend_codes()
-
             if len(self.vend_codes) != len(self.repairs):
                 self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
                 self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error")
-
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
@@ -671,14 +652,13 @@ class Repair():
                     except MondayApiError:
                         self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage", column_values=col_vals)
                         self.parent.debug("Experienced Parse Error While Adding to Usage")
-
-                self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
+                    finally:
+                        self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
             self.parent.debug(end="adjust stock")
 
+
         def convert_to_vend_codes(self):
-
             self.parent.debug(start="convert_to_vend_codes")
-
             for repair in self.repairs:
                 search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
                 col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
@@ -694,18 +674,15 @@ class Repair():
                         self.parent.debug("Too many results found for tuple: {}".format(search))
                         self.add_update("Cannot Find: {}".format(search))
                         continue
-
                 for product in results:
                     product_id = product.get_column_value(id="text").text
                     self.vend_codes.append(product_id)
                     self.repair_names[product_id] = [product.name]
-
             self.parent.debug(end="convert_to_vend_codes")
 
     class ZendeskRepair():
 
         def __init__(self, repair_object, zendesk_ticket_number, created=False):
-
             self.name = None
             self.email = None
             self.number = None
@@ -737,86 +714,121 @@ class Repair():
                     self.email = self.user.email
                     self.number = self.user.phone
 
-                    self.convert_to_attributes()
+
+                    # self.convert_to_attributes()
 
                 else:
                     self.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
             else:
                 pass
 
-
         def convert_to_attributes(self):
+
             self.parent.debug(start="convert_to_attributes")
 
             self.tag_conversion()
 
             custom_fields = {
-                "imei_sn": [False, 360004242638],
-                "monday_id": [False, 360004570218],
-                "passcode": [False, 360005102118],
-                "postcode": [False, 360006582758],
-                "address1": [False, 360006582778],
-                "address2": [False, 360006582798],
-                "client": [True, 360010408778],
-                "service": [True, 360010444117],
-                "repair_type": [True, 360010444077],
-                "monday_id": [False, 360004570218]
+                "imei_sn": 360004242638,
+                "monday_id": 360004570218,
+                "passcode": 360005102118,
+                "postcode": 360006582758,
+                "address1": 360006582778,
+                "address2": 360006582798,
+                "monday_id": 360004570218
             }
 
             for field in self.ticket.custom_fields:
                 for attribute in custom_fields:
                     if field["value"]:
-                        if field["id"] == custom_fields[attribute][1]:
-                            if custom_fields[attribute][0]:
-                                text = str(field["value"])
-                                col_val = create_column_value(id="text", column_type=ColumnType.text, value=text)
-                                results = self.parent.boards["zendesk_tags"].get_items_by_column_values(col_val)
-                                if len(results) > 1:
-                                    self.parent.debug("Too many results from tag board")
-                                elif len(results) == 0:
-                                    self.parent.debug("No results from tag board")
-                                else:
-                                    setattr(self, attribute, results[0].name)
-                            else:
-                                setattr(self, attribute, field["value"])
+                        if field["id"] == custom_fields[attribute]:
+                            setattr(self, attribute, field["value"])
 
             self.parent.debug(end="convert_to_attributes")
 
 
         def tag_conversion(self):
-
             self.parent.debug(start="tag conversion")
-
             # Cycle Through Tags on Ticket
             for tag in self.ticket.tags:
                 # Create Column Value with Tag for Text Value
-                col_val = create_column_value(id="text", column_type=ColumnType.text, value=tag)
-                results = self.parent.boards["zendesk_tags"].get_items_by_column_values(col_val)
-                if len(results) > 1:
-                    self.parent.debug("Multiple Tags Found - Ending Early")
-                    continue
-                elif len(results) == 0:
-                    self.parent.debug("No Tags Found - Ending Early")
-                    continue
-                else:
-                    for result in results:
-                        self.parent.debug("Found Tag: {}".format(tag))
-                        attribute = result.get_column_value(id="text9").text
-                        value = result.name
-                        value_type = result.get_column_value(id="status7").index
-                        # Status type value
-                        if value_type == 15:
-                            setattr(self, attribute, value)
-                        # Dropdown type value
-                        elif value_type == 4:
-                            getattr(self, attribute).append([value, result.get_column_value(id="text3").text])
-                        else:
-                            self.parent.debug("'type' Status Column index not matched")
-
-            self.parent.debug(start="tag conversion")
+                for category in keys.monday.status_column_dictionary:
+                    for option in keys.monday.status_column_dictionary[category]["values"]:
+                        if tag == option["z_tag"]:
+                            setattr(self, keys.monday.status_column_dictionary[category]["attribute"], option["label"])
+                            continue
+                for category in keys.monday.dropdown_column_dictionary:
+                    for option in keys.monday.dropdown_column_dictionary[category]["values"]:
+                        if tag == option["z_tag"]:
+                            to_append = getattr(self, keys.monday.dropdown_column_dictionary[category]["attribute"])
+                            to_append.append([option["title"], int(option["ids"])])
+                            continue
+            self.parent.debug(end="tag conversion")
 
 
 
+        # def convert_to_attributes(self):
+        #     self.parent.debug(start="convert_to_attributes")
+        #     self.tag_conversion()
+        #     custom_fields = {
+        #         "imei_sn": [False, 360004242638],
+        #         "monday_id": [False, 360004570218],
+        #         "passcode": [False, 360005102118],
+        #         "postcode": [False, 360006582758],
+        #         "address1": [False, 360006582778],
+        #         "address2": [False, 360006582798],
+        #         "client": [True, 360010408778],
+        #         "service": [True, 360010444117],
+        #         "repair_type": [True, 360010444077],
+        #         "monday_id": [False, 360004570218]
+        #     }
+        #     for field in self.ticket.custom_fields:
+        #         for attribute in custom_fields:
+        #             if field["value"]:
+        #                 if field["id"] == custom_fields[attribute][1]:
+        #                     if custom_fields[attribute][0]:
+        #                         text = str(field["value"])
+        #                         col_val = create_column_value(id="text", column_type=ColumnType.text, value=text)
+        #                         results = self.parent.boards["zendesk_tags"].get_items_by_column_values(col_val)
+        #                         if len(results) > 1:
+        #                             self.parent.debug("Too many results from tag board")
+        #                         elif len(results) == 0:
+        #                             self.parent.debug("No results from tag board")
+        #                         else:
+        #                             setattr(self, attribute, results[0].name)
+        #                     else:
+        #                         setattr(self, attribute, field["value"])
+        #     self.parent.debug(end="convert_to_attributes")
+
+
+        # def tag_conversion(self):
+        #     self.parent.debug(start="tag conversion")
+        #     # Cycle Through Tags on Ticket
+        #     for tag in self.ticket.tags:
+        #         # Create Column Value with Tag for Text Value
+        #         col_val = create_column_value(id="text", column_type=ColumnType.text, value=tag)
+        #         results = self.parent.boards["zendesk_tags"].get_items_by_column_values(col_val)
+        #         if len(results) > 1:
+        #             self.parent.debug("Multiple Tags Found - Ending Early")
+        #             continue
+        #         elif len(results) == 0:
+        #             self.parent.debug("No Tags Found - Ending Early")
+        #             continue
+        #         else:
+        #             for result in results:
+        #                 self.parent.debug("Found Tag: {}".format(tag))
+        #                 attribute = result.get_column_value(id="text9").text
+        #                 value = result.name
+        #                 value_type = result.get_column_value(id="status7").index
+        #                 # Status type value
+        #                 if value_type == 15:
+        #                     setattr(self, attribute, value)
+        #                 # Dropdown type value
+        #                 elif value_type == 4:
+        #                     getattr(self, attribute).append([value, result.get_column_value(id="text3").text])
+        #                 else:
+        #                     self.parent.debug("'type' Status Column index not matched")
+        #     self.parent.debug(start="tag conversion")
 
 
         def convert_to_monday(self):
@@ -824,7 +836,6 @@ class Repair():
             if self.parent.monday:
                 self.parent.debug("Monday Object Already Exists - Cannot Create")
             else:
-
                 self.parent.monday = Repair.MondayRepair(repair_object=self.parent, created=self.name)
 
                 attributes = [
@@ -843,16 +854,12 @@ class Repair():
                 ]
 
                 for attribute in attributes:
-
                     value = getattr(self, attribute, None)
                     if value:
                         setattr(self.parent.monday, attribute, value)
-
                 self.parent.monday.z_ticket_id = self.ticket_id
-
                 for notification in self.notifications:
                     self.parent.monday.notifications.append(int(notification[1]))
-
             self.parent.debug(end="convert_to_monday")
 
 

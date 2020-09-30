@@ -3,10 +3,18 @@ import json
 import os
 from pprint import pprint
 
-import settings
+from moncli import create_column_value, ColumnType
 
+import settings
 from objects import Repair
 
-test = Repair(monday=765530679)
+test = Repair(zendesk=5646)
 
-print(test.monday.m_colour)
+test.zendesk.convert_to_attributes()
+
+test.zendesk.convert_to_monday()
+
+pprint(test.monday.__dict__)
+
+test.debug_print(console=True)
+
