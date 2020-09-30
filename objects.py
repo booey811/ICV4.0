@@ -715,7 +715,7 @@ class Repair():
                     self.number = self.user.phone
 
 
-                    # self.convert_to_attributes()
+                    self.convert_to_attributes()
 
                 else:
                     self.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
