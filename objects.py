@@ -145,7 +145,7 @@ class Repair():
             self.monday.columns = MondayColumns(self.monday)
             if self.source == "zendesk":
                 self.monday.columns.column_values["status5"] = {"label": "Active"}
-                self.monday.columns.column_values["text6"] = str(self.zendesk.id)
+                self.monday.columns.column_values["text6"] = str(self.zendesk.ticket_id)
             item = self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
 
             if self.zendesk:
