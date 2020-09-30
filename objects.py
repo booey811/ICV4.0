@@ -861,7 +861,7 @@ class Repair():
                     if value:
                         setattr(self.parent.monday, attribute, value)
                 self.parent.monday.z_ticket_id = self.ticket_id
-                if self.ticket.organization.name:
+                if self.ticket.organization:
                     self.parent.monday.name += " ({})".format(self.ticket.organization.name)
                 for notification in self.notifications:
                     self.parent.monday.notifications.append(int(notification[1]))
