@@ -677,7 +677,9 @@ class Repair():
                 for product in results:
                     product_id = product.get_column_value(id="text").text
                     self.vend_codes.append(product_id)
-                    self.repair_names[product_id] = [product.name.replace("\"", "")]
+                    name = product.name.replace('"', "")
+                    name = name.replace('\\"', "")
+                    self.repair_names[product_id] = [name]
             self.parent.debug(end="convert_to_vend_codes")
 
     class ZendeskRepair():
