@@ -145,6 +145,7 @@ class Repair():
             self.monday.columns = MondayColumns(self.monday)
             if self.source == "zendesk":
                 self.monday.columns.column_values["status5"] = {"label": "Active"}
+                self.monday.columns.column_values["text6"] = str(self.zendesk.id)
             item = self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
 
             if self.zendesk:
@@ -860,6 +861,8 @@ class Repair():
                     if value:
                         setattr(self.parent.monday, attribute, value)
                 self.parent.monday.z_ticket_id = self.ticket_id
+                if self.ticket.organization.name:
+                    self.parent.monday.name += " ({})".format(self.ticket.organization.name)
                 for notification in self.notifications:
                     self.parent.monday.notifications.append(int(notification[1]))
             self.parent.debug(end="convert_to_monday")
