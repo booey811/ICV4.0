@@ -8,15 +8,8 @@ from moncli import create_column_value, ColumnType
 import settings
 from objects import Repair
 
-test = Repair(zendesk=5692)
+test = Repair(monday=772988281)
 
-test.zendesk.convert_to_attributes()
+test.monday.adjust_stock()
 
-test.zendesk.convert_to_monday()
-
-print(test.zendesk.ticket.organization.name)
-
-
-pprint(test.monday.__dict__)
-
-
+test.debug_print(console=True)

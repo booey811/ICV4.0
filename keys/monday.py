@@ -487,6 +487,11 @@ dropdown_column_dictionary = {
                 "ids": 9,
                 "z_tag": "request_contact_email"
             },
+            {
+                "title": "Missed Appointment",
+                "ids": 11,
+                "z_tag": "missed_appointment_email"
+            }
         ]
     }
 }
