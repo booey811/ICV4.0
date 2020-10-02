@@ -931,6 +931,8 @@ class Repair():
                                 name = "{} {} {} {}".format(item.name, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type)
             if macro_id:
                 self.execute_macro(macro_id)
+                self.ticket.tags.extend([tag])
+                self.parent.zendesk_client.tickets.update(self.ticket)
                 self.parent.debug("Macro Sent: {}".format(name))
             else:
                 self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know", user="error")
