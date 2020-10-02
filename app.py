@@ -151,17 +151,15 @@ def monday_notifications_column():
         data = data[1]
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     repair.debug("Notifications Column Route")
-
-    new_notification = repair.monday.dropdown_value_webhook_comparison(data)
-
-    print(new_notification)
-
-    # Select New Value in Column
-    # Query notifications board
-    # Check that this ticket has not had that notification before (on Zendesk)
-    # Send notification
-
-    return "Monday Notificaions Column Chnage Route Complete"
+    # Check Zendesk Exists
+    if not repair.zendesk:
+        repair.debug("Unable to send macro - no zendesk ticket exists")
+        repair.monday.add_update(update="Unable to send Macro - No Zendesk Ticket Exists", user="error", notify="error")
+    else:
+        new_notification = repair.monday.dropdown_value_webhook_comparison(data)
+        repair.zendesk.notifications_check_and_send(new_notification)
+        repair.debug_print()
+        return "Monday Notificaions Column Chnage Route Complete"
 
 
 # End of Day Column

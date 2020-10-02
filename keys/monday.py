@@ -26,7 +26,6 @@ col_ids_to_attributes = {
     'text5': {'title': 'Email', 'value_type': ['text'], 'attribute': 'email'},
     'repair_complete': {'title': 'Repaired Date', 'value_type': ['date', 'time'], 'attribute': "date_repaired"},
     'date3': {'title': 'Collection Date', 'value_type': ['date', 'time'], 'attribute': "date_collected"},
-    'dropdown4': {'title': 'Notifications', 'value_type': ['ids', 'label'], 'attribute': "m_notifications"},
     'time_tracking98': {'title': 'Total Time', 'value_type': None, 'attribute': None},
     'time_tracking': {'title': 'Diagnostic Time', 'value_type': None, 'attribute': None},
     'time_tracking9': {'title': 'Repair Time', 'value_type': None, 'attribute': None},
@@ -362,7 +361,7 @@ status_column_dictionary = {
                 "z_tag": "board_level"
             },
             {"title": "No Fault Found",
-                "index": 9,
+                "index": 109,
                 "label": "No Fault Found",
                 "z_tag": "no_fault_found_type"
             }

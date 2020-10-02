@@ -30,12 +30,3 @@ data= {'event': {'app': 'monday',
            'userId': 4251271,
            'value': {'chosenValues': [{'id': 1, 'name': 'Booking Confirmed'},
                                       {'id': 2, 'name': 'Device Received'}]}}}
-
-
-
-
-
-print(test.monday.dropdown_value_webhook_comparison(data))
-
-test.debug_print(console=True)
-

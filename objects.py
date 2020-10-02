@@ -464,6 +464,10 @@ class Repair():
             self.vend_codes = []
             self.repair_names = {}
 
+            self.m_notifications = []
+
+            self.z_notification_tags = []
+
             if monday_id:
 
                 for item in self.parent.monday_client.get_items(limit=1, ids=[int(monday_id)]):
@@ -522,12 +526,28 @@ class Repair():
 
             for column, m_attribute, attribute in dropdown_attributes:
 
-                setattr(self, attribute, getattr(self, m_attribute))
+                if column == "Notifications":
+                    for ids in self.m_notifications:
+                        for option in keys.monday.dropdown_column_dictionary["Notifications"]["values"]:
+                            if option["ids"] == ids:
+                                getattr(self, attribute).append(option["title"])
+                                self.z_notification_tags.append(option["z_tag"])
+                else:
+                    setattr(self, attribute, getattr(self, m_attribute))
 
             self.parent.debug(end="translate_column_data")
 
         def retreive_column_data(self):
             self.parent.debug(start="retreive_column_data")
+
+            for line in keys.monday.col_ids_to_attributes:
+                if keys.monday.col_ids_to_attributes[line]["attribute"]:
+                    if keys.monday.col_ids_to_attributes[line]["value_type"][0] == "ids":
+                        setattr(self, keys.monday.col_ids_to_attributes[line]["attribute"], [])
+                    else:
+                        setattr(self, keys.monday.col_ids_to_attributes[line]["attribute"], None)
+
+
             column_values = self.item.get_column_values()
             for item in keys.monday.col_ids_to_attributes:
                 if keys.monday.col_ids_to_attributes[item]['attribute'] is not None:
@@ -538,8 +558,11 @@ class Repair():
                         else:
                             if value.id == col_id:
                                 try:
-                                    setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'],
-                                            getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0]))
+                                    if keys.monday.col_ids_to_attributes[item]["value_type"][0] == "ids":
+                                        getattr(self, keys.monday.col_ids_to_attributes[item]['attribute']).append(getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0]))
+                                    else:
+                                        setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'],
+                                                getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0]))
                                 except KeyError:
                                     print(
                                         "*811*ERROR: KEY: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
@@ -689,7 +712,6 @@ class Repair():
             added_id = list(set(new_ids) - set(previous_ids))[0]
             self.parent.debug(end="dropdown_value_webhook_comparison")
             return added_id
-
 
     class ZendeskRepair():
 
@@ -875,6 +897,41 @@ class Repair():
                     self.parent.monday.notifications.append(int(notification[1]))
             self.parent.debug(end="convert_to_monday")
 
+        def execute_macro(self, macro_id):
+            self.parent.debug(start="execute_macro")
+            macro_result = self.parent.zendesk_client.tickets.show_macro_effect(self.ticket, macro_id)
+            self.parent.zendesk_client.tickets.update(macro_result.ticket)
+            self.parent.debug(end="execute_macro")
+
+        def notifications_check_and_send(self, notification_id):
+            self.parent.debug(start="notifcations_check_and_send")
+            macro_id = None
+            tag = None
+            for option in keys.monday.dropdown_column_dictionary["Notifications"]["values"]:
+                if option["ids"] == notification_id:
+                    tag = option["z_tag"]
+            if tag and tag in self.ticket.tags:
+                self.parent.debug("No macro sent - macro has already been applied to this ticket")
+                self.parent.monday.add_update(update="Cannot Send Macro - This ticket has already received this macro", user="error")
+            elif not tag:
+                self.parent.debug("No Macro Sent - Cannot find notification ID in dropdown_column_dictionary")
+                self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know", user="error")
+            else:
+                col_val = create_column_value(id="numbers8", column_type=ColumnType.numbers, value=int(notification_id))
+                results = self.parent.boards["macros"].get_items_by_column_values(col_val)
+                for item in results:
+                    if item.get_column_value(id="status06").index == self.parent.monday.m_service:
+                        if item.get_column_value(id="status5").index == self.parent.monday.m_client:
+                            if item.get_column_value(id="status0").index == self.parent.monday.m_type:
+                                macro_id = item.get_column_value(id="text").text
+                                name = "{} {} {} {}".format(item.name, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type)
+            if macro_id:
+                self.execute_macro(macro_id)
+                self.parent.debug("Macro Sent: {}".format(name))
+            else:
+                self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know", user="error")
+                self.parent.debug("Could Not Get Macro ID from Macro Board\nNotication ID: {}\nService: {}\nClient: {}\nType: {}".format(notification_id, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type))
+            self.parent.debug(end="notifcations_check_and_send")
 
 class MondayColumns():
 
