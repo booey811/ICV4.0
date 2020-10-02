@@ -157,8 +157,10 @@ def monday_notifications_column():
         repair.monday.add_update(update="Unable to send Macro - No Zendesk Ticket Exists", user="error", notify="error")
     else:
         new_notification = repair.monday.dropdown_value_webhook_comparison(data)
-        repair.zendesk.notifications_check_and_send(new_notification)
-
+        if new_notification:
+            repair.zendesk.notifications_check_and_send(new_notification)
+        else:
+            pass
     repair.debug_print()
     return "Monday Notificaions Column Change Route Complete"
 
