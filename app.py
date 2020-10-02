@@ -51,6 +51,9 @@ def monday_status_change():
         repair.debug("Change made by System -- Ignored")
 
     else:
+        # Add to notification column
+        repair.monday.status_to_notification(data["event"]["value"]["label"]["text"])
+
         # Filter By Status
         if repair.monday.status == "Received":
             pass
