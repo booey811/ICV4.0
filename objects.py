@@ -705,11 +705,15 @@ class Repair():
             self.parent.debug(start="dropdown_value_webhook_comparison")
             previous_ids = []
             new_ids = []
+            added_id = False
             for value in webhook_data["event"]["previousValue"]["chosenValues"]:
                 previous_ids.append(value["id"])
             for value in webhook_data["event"]["value"]["chosenValues"]:
                 new_ids.append(value["id"])
-            added_id = list(set(new_ids) - set(previous_ids))[0]
+            if len(new_ids) <= len(previous_ids):
+                self.parent.debug("Notification ID Deleted - Nothing Done")
+            else:
+                added_id = list(set(new_ids) - set(previous_ids))[0]
             self.parent.debug(end="dropdown_value_webhook_comparison")
             return added_id
 
