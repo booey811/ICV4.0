@@ -682,10 +682,10 @@ class Repair():
             self.parent.debug(start="dropdown_value_webhook_comparison")
             previous_values = []
             new_values = []
-            for value_type in data["event"]["chosenValues"]:
+            for value_type in webhook_data["event"]["chosenValues"]:
                 for value in value_type:
                     new_values.append(value["id"])
-            for value_type in data["event"]["previousValue"]:
+            for value_type in webhook_data["event"]["previousValue"]:
                 for value in value_type:
                     new_values.append(value["id"])
             added_id = int(list(set(new_values) - set(previous_values)))
