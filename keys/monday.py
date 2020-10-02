@@ -463,12 +463,12 @@ dropdown_column_dictionary = {
             },
             {
                 "title": "Device Repaired",
-                "ids": 2,
+                "ids": 3,
                 "z_tag": "device_repaired_email"
             },
             {
                 "title": "Device Received",
-                "ids": 3,
+                "ids": 2,
                 "z_tag": "device_received_email"
             },
             {

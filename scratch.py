@@ -10,23 +10,9 @@ from objects import Repair
 
 test = Repair(monday=765530679)
 
-data= {'event': {'app': 'monday',
-           'boardId': 349212843,
-           'changedAt': 1601633204.2622943,
-           'columnId': 'dropdown8',
-           'columnTitle': 'Notifications',
-           'columnType': 'dropdown',
-           'groupId': 'new_group49546',
-           'isTopGroup': False,
-           'originalTriggerUuid': None,
-           'previousValue': {'chosenValues': [{'id': 1,
-                                               'name': 'Booking Confirmed'}]},
-           'pulseId': 765530679,
-           'pulseName': 'Jeremiah Bullfrog',
-           'subscriptionId': 20434895,
-           'triggerTime': '2020-10-02T10:06:44.554Z',
-           'triggerUuid': 'bb0a5b1cebed96c3968757e55ae13b58',
-           'type': 'update_column_value',
-           'userId': 4251271,
-           'value': {'chosenValues': [{'id': 1, 'name': 'Booking Confirmed'},
-                                      {'id': 2, 'name': 'Device Received'}]}}}
+data= {'event': {'userId': 4251271, 'originalTriggerUuid': None, 'boardId': 349212843, 'groupId': 'new_group49546', 'pulseId': 765530679, 'pulseName': 'Jeremiah Bullfrog', 'columnId': 'dropdown8', 'columnType': 'dropdown', 'columnTitle': 'Notifications', 'value': None, 'previousValue': {'chosenValues': [{'id': 3, 'name': 'Repaired'}]}, 'changedAt': 1601646222.1596475, 'isTopGroup': False, 'type': 'update_column_value', 'app': 'monday', 'triggerTime': '2020-10-02T13:43:50.245Z', 'subscriptionId': 20434895, 'triggerUuid': '45aba7891112874c4bae3bcdd1d72bb8'}}
+
+pprint(data)
+
+
+for value in webhook_data["event"]["value"]["chosenValues"]
