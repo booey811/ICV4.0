@@ -709,8 +709,9 @@ class Repair():
             if not webhook_data["event"]["value"]:
                 self.parent.debug("Notification Column Empty - Nothing Done")
             else:
-                for value in webhook_data["event"]["previousValue"]["chosenValues"]:
-                    previous_ids.append(value["id"])
+                if webhook_data["event"]["previousValue"]:
+                    for value in webhook_data["event"]["previousValue"]["chosenValues"]:
+                        previous_ids.append(value["id"])
                 for value in webhook_data["event"]["value"]["chosenValues"]:
                     new_ids.append(value["id"])
                 if len(new_ids) <= len(previous_ids):
