@@ -149,6 +149,8 @@ def monday_notifications_column():
         return data[1]
     else:
         data = data[1]
+
+    print(data)
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     repair.debug("Notifications Column Route")
     # Check Zendesk Exists
