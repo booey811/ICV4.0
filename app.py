@@ -140,6 +140,7 @@ def monday_status_change():
 
     return "Status Change Route Completed Successfully"
 
+# Notifications Column
 @app.route("/monday/notifications", methods=["POST"])
 def monday_notifications_column():
     webhook = request.get_data()
@@ -149,6 +150,14 @@ def monday_notifications_column():
     else:
         data = data[1]
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+    repair.debug("Notifications Column Route")
+
+    print(data)
+
+    # Select New Value in Column
+    # Query notifications board
+    # Check that this ticket has not had that notification before (on Zendesk)
+    # Send notification
 
     return "Monday Notificaions Column Chnage Route Complete"
 
@@ -168,7 +177,6 @@ def monday_eod_column_do_now():
     repair.monday.adjust_stock()
     repair.debug_print()
     return "Monday End of Day Route Completed Successfully"
-
 
 
 # ROUTES // VEND
