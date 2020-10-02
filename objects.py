@@ -548,7 +548,6 @@ class Repair():
                                         "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
             self.parent.debug(end="retreive_column_data")
 
-
         def check_column_presence(self):
             """Goes through monday columns to make sure essential data has been filled out for this repair
             Returns False if any information is missing or True if all is well
@@ -600,7 +599,6 @@ class Repair():
             return True
             self.parent.debug(end="check_column_presence")
 
-
         def add_update(self, update, user=False, notify=False):
             self.parent.debug(start="add_update")
             if user == 'error':
@@ -622,13 +620,11 @@ class Repair():
                 self.send_notification(sender=client, message=notify, user_id=self.user_id)
             self.parent.debug(end="add_update")
 
-
         def send_notification(self, sender, message, user_id):
             self.parent.debug(start="send_notifcation")
             sender.create_notification(text=message, user_id=user_id, target_id=349212843, target_type=NotificationTargetType.Project)
             self.parent.debug(message)
             self.parent.debug(end="send_notifcation")
-
 
         def adjust_stock(self):
             self.parent.debug(start="adjust stock")
@@ -657,7 +653,6 @@ class Repair():
                         self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
             self.parent.debug(end="adjust stock")
 
-
         def convert_to_vend_codes(self):
             self.parent.debug(start="convert_to_vend_codes")
             for repair in self.repairs:
@@ -682,6 +677,21 @@ class Repair():
                     name = name.replace('\\"', "")
                     self.repair_names[product_id] = [name]
             self.parent.debug(end="convert_to_vend_codes")
+
+        def dropdown_value_webhook_comparison(self, webhook_data):
+            self.parent.debug(start="dropdown_value_webhook_comparison")
+            previous_values = []
+            new_values = []
+            for value_type in data["event"]["chosenValues"]:
+                for value in value_type:
+                    new_values.append(value["id"])
+            for value_type in data["event"]["previousValue"]:
+                for value in value_type:
+                    new_values.append(value["id"])
+            added_id = int(list(set(new_values) - set(previous_values)))
+            self.parent.debug(end="dropdown_value_webhook_comparison")
+            return added_id
+
 
     class ZendeskRepair():
 

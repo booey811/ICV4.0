@@ -152,7 +152,9 @@ def monday_notifications_column():
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     repair.debug("Notifications Column Route")
 
-    print(data)
+    new_notification = repair.monday.dropdown_value_webhook_comparison(data)
+
+    print(new_notification)
 
     # Select New Value in Column
     # Query notifications board
