@@ -158,8 +158,9 @@ def monday_notifications_column():
     else:
         new_notification = repair.monday.dropdown_value_webhook_comparison(data)
         repair.zendesk.notifications_check_and_send(new_notification)
-        repair.debug_print()
-        return "Monday Notificaions Column Chnage Route Complete"
+
+    repair.debug_print()
+    return "Monday Notificaions Column Change Route Complete"
 
 
 # End of Day Column
