@@ -873,7 +873,7 @@ class Repair():
                 self.parent.monday.add_update(update="Cannot Send Macro - This ticket has already received this macro", user="error")
             elif not tag:
                 self.parent.debug("No Macro Sent - Cannot find notification ID in dropdown_column_dictionary")
-                self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know", user="error")
+                self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know (Notification ID not found in dropdown_column_dictionary)", user="error")
             else:
                 col_val = create_column_value(id="numbers8", column_type=ColumnType.numbers, value=int(notification_id))
                 results = self.parent.boards["macros"].get_items_by_column_values(col_val)
@@ -889,7 +889,7 @@ class Repair():
                 self.parent.zendesk_client.tickets.update(self.ticket)
                 self.parent.debug("Macro Sent: {}".format(name))
             else:
-                self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know", user="error")
+                self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know (No Macro On Macro Board)", user="error")
                 self.parent.debug("Could Not Get Macro ID from Macro Board\nNotication ID: {}\nService: {}\nClient: {}\nType: {}".format(notification_id, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type))
             self.parent.debug(end="notifcations_check_and_send")
 
