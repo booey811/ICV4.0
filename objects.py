@@ -25,8 +25,8 @@ class Repair():
         )
 
     zendesk_client = Zenpy(
-        email='zendesk@icorrect.co.uk',
-        token=os.environ["ZENDESK"],
+        email='admin@icorrect.co.uk',
+        token=os.environ["ZENDESKADMIN"],
         subdomain="icorrect"
         )
 
