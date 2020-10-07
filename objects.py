@@ -753,6 +753,8 @@ class Repair():
             self.repair_type = None
             self.notifications = []
 
+            self.associated_pulse_results = None
+
 
             self.parent = repair_object
 
@@ -890,10 +892,58 @@ class Repair():
                 self.ticket.tags.extend([tag])
                 self.parent.zendesk_client.tickets.update(self.ticket)
                 self.parent.debug("Macro Sent: {}".format(name))
+                self.update_monday_notification_column(notification_id)
             else:
                 self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know (No Macro On Macro Board)", user="error")
                 self.parent.debug("Could Not Get Macro ID from Macro Board\nNotication ID: {}\nService: {}\nClient: {}\nType: {}".format(notification_id, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type))
             self.parent.debug(end="notifcations_check_and_send")
+
+
+        def multiple_pulse_check(self, check_type):
+            self.parent.debug(start="multiple_pulse_check")
+            col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.ticket_id))
+            results = self.parent.boards["main"].get_items_by_column_values(col_val)
+            if len(results) == 0:
+                answer = True
+                self.parent.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(self.ticket_id))
+            elif len(results) == 1:
+                answer = True
+                self.parent.debug("Only one pulse found (RETURNING TRUE)")
+            else:
+                self.associated_pulse_results = results
+                if check_type == "status":
+                    count = 1
+                    while count < len(results):
+                        if results[count - 1].get_column_value(id="status4").index != results[count].get_column_value(id="status4").index:
+                            self.parent.debug("Statuses do not match (RETURNING FALSE)")
+                            answer = False
+                            break
+                        else:
+                            self.parent.debug("Two Statuses Match")
+                            answer = True
+                            count += 1
+                            continue
+            self.parent.debug(end="multiple_pulse_check")
+            return answer
+
+        def update_monday_notification_column(self, notification_id):
+            self.parent.debug(start="update_monday_notification_column")
+            if not self.associated_pulse_results:
+                self.parent.debug("multiple_pulse_check returned False - Nothing Done")
+                return
+            else:
+                for pulse in self.associated_pulse_results:
+                    current = pulse.get_column_value(id="dropdown8").ids
+                    if current:
+                        if notification_id in current:
+                            continue
+                        else:
+                            current.append(notification_id)
+                    else:
+                        current = [notification_id]
+                    pulse.change_multiple_column_values({"dropdown8": {"ids": current}})
+
+            self.parent.debug(end="update_monday_notification_column")
 
 class MondayColumns():
 

@@ -161,7 +161,7 @@ def monday_notifications_column():
         repair.monday.add_update(update="Unable to send Macro - No Zendesk Ticket Exists", user="error", notify="error")
     else:
         new_notification = repair.monday.dropdown_value_webhook_comparison(data)
-        if new_notification:
+        if new_notification and repair.zendesk.multiple_pulse_check(check_type="status"):
             repair.zendesk.notifications_check_and_send(new_notification)
         else:
             pass
@@ -225,7 +225,7 @@ def zendesk_comment_sent():
     repair.debug_print()
     return "Zendesk Commments Route Completed Successfully"
 
-
+# Ticket Creates Pulse on Monday
 @app.route("/zendesk/creation", methods=["POST"])
 def zendesk_to_monday():
     data = request.get_data().decode()
