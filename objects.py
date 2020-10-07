@@ -929,7 +929,8 @@ class Repair():
         def update_monday_notification_column(self, notification_id):
             self.parent.debug(start="update_monday_notification_column")
             if not self.associated_pulse_results:
-                self.parent.debug("multiple_pulse_check returned False - Nothing Done")
+                self.associated_pulse_results = [self.parent.monday.item]
+                self.parent.debug("multiple_pulse_check returned False - only one pulse adjusted")
                 return
             else:
                 for pulse in self.associated_pulse_results:
