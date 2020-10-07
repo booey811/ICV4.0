@@ -970,15 +970,7 @@ class Repair():
                 return
             else:
                 for pulse in self.parent.associated_pulse_results:
-                    current = pulse.get_column_value(id="dropdown8").ids
-                    if current:
-                        if notification_id in current:
-                            continue
-                        else:
-                            current.append(notification_id)
-                    else:
-                        current = [notification_id]
-                    pulse.change_multiple_column_values({"dropdown8": {"ids": current}})
+                    pulse.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
 
             self.parent.debug(end="update_monday_notification_column")
 
