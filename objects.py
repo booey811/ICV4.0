@@ -747,7 +747,7 @@ class Repair():
                         previous_ids.append(value["id"])
                 for value in webhook_data["event"]["value"]["chosenValues"]:
                     new_ids.append(value["id"])
-                if len(new_ids) <= len(previous_ids):
+                if len(new_ids) <= len(previous_ids) or len(new_ids) == 0:
                     self.parent.debug("Notification ID Deleted - Nothing Done")
                 else:
                     added_id = list(set(new_ids) - set(previous_ids))[0]
@@ -941,7 +941,7 @@ class Repair():
                 self.parent.debug("multiple_pulse_check returned False - only one pulse adjusted")
                 return
             else:
-                notifications = self.parent.monday.m_notifications + [notification_id]
+                notifications = list(set(self.parent.monday.m_notifications + [notification_id]))
                 for pulse in self.parent.associated_pulse_results:
                     print(pulse.name)
                     print(notifications)
