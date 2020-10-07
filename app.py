@@ -161,15 +161,16 @@ def monday_notifications_column():
         repair.debug("Unable to send macro - no zendesk ticket exists")
         repair.monday.add_update(update="Unable to send Macro - No Zendesk Ticket Exists", user="error", notify="error")
     else:
-        new_notification = repair.monday.dropdown_value_webhook_comparison(data)
-        if new_notification and repair.zendesk.multiple_pulse_check(check_type="status"):
-            repair.zendesk.notifications_check_and_send(new_notification)
-        elif not new_notification:
-            print("new notification returned false")
-        elif not epair.zendesk.multiple_pulse_check(check_type="status"):
-            print("multiple pulse check false")
+        multiple = repair.zendesk.multiple_pulse_check(check_type="status")
+        if multiple:
+            new_notification = repair.monday.dropdown_value_webhook_comparison(data)
+            if new_notification:
+                repair.zendesk.notifications_check_and_send(new_notification)
+            else:
+                print("new notification returned false")
         else:
-            print("else route")
+            print("multiple pulse check false")
+
     repair.debug_print(console=os.environ["DEBUG"])
     return "Monday Notificaions Column Change Route Complete"
 
