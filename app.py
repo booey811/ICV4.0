@@ -169,8 +169,9 @@ def monday_notifications_column():
             else:
                 print("new notification returned false")
         else:
-            repair.monday.item.change_multiple_column_values({"dropdown8": {"ids": repair.monday.m_notifications.remove(new_notification)}})
-            print("multiple pulse check false")
+            if new_notification:
+                repair.monday.item.change_multiple_column_values({"dropdown8": {"ids": repair.monday.m_notifications.remove(new_notification)}})
+                print("multiple pulse check false")
 
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday Notificaions Column Change Route Complete"
