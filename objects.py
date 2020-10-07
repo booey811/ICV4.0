@@ -173,8 +173,8 @@ class Repair():
             for message in args:
                 self.debug_string.append(message)
 
-    def debug_print(self, console=False):
-        if not console:
+    def debug_print(self, debug=False):
+        if debug == "monday":
             now = datetime.now() + timedelta(hours=1)
             col_vals = {"status5": {"label": self.source.capitalize()}}
             if self.monday:
@@ -186,8 +186,10 @@ class Repair():
             time = str(now.strftime("%X"))
             log = self.boards["logging"].add_item(item_name=time + " // " + str(self.name) + " -- FROM APPV4", column_values=col_vals)
             log.add_update("\n".join(self.debug_string))
-        else:
+        elif debug == "console":
             print("\n".join(self.debug_string))
+        else:
+            print("DEBUGGING ELSE ROUTE")
 
     class VendRepair():
 
@@ -481,9 +483,7 @@ class Repair():
                     self.user_id = self.parent.payload["event"]["userId"]
 
                 self.retreive_column_data()
-                print("INIT2 {}".format(self.m_notifications))
                 self.translate_column_data()
-                print("INIT3 {}".format(self.m_notifications))
 
             if created:
 
