@@ -26,6 +26,6 @@ if multiple:
 else:
     print("multiple pulse check false")
 
-test.debug_print(console=os.environ["DEBUG"])
+test.debug_print(debug=os.environ["DEBUG"])
 
 pprint(test.monday.__dict__)

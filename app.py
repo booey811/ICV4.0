@@ -120,7 +120,7 @@ def monday_status_change():
 
             # Check the required information has been filled out
             if not repair.monday.check_column_presence():
-                repair.debug_print(console=os.environ["DEBUG"])
+                repair.debug_print(debug=os.environ["DEBUG"])
                 return "Status Change Route Complete - Returning Early"
 
             # Check for corporate repairs
@@ -140,7 +140,7 @@ def monday_status_change():
         elif repair.monday.status == "!! See Updates !!":
             pass
 
-    repair.debug_print(console=os.environ["DEBUG"])
+    repair.debug_print(debug=os.environ["DEBUG"])
 
     return "Status Change Route Completed Successfully"
 
@@ -172,7 +172,7 @@ def monday_notifications_column():
             repair.monday.item.change_multiple_column_values({"dropdown8": {"ids": repair.monday.m_notifications.remove(new_notification)}})
             print("multiple pulse check false")
 
-    repair.debug_print(console=os.environ["DEBUG"])
+    repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday Notificaions Column Change Route Complete"
 
 
@@ -189,7 +189,7 @@ def monday_eod_column_do_now():
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     repair.debug("End of Day Column --> Do Now")
     repair.monday.adjust_stock()
-    repair.debug_print(console=os.environ["DEBUG"])
+    repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday End of Day Route Completed Successfully"
 
 
@@ -207,7 +207,7 @@ def vend_sale_update():
 
         # 'Update Monday' Product in Sale
 
-        repair.debug_print(console=os.environ["DEBUG"])
+        repair.debug_print(debug=os.environ["DEBUG"])
 
     thread = Thread(target=process, kwargs={"sale": request.get_data()})
     thread.start()
@@ -229,7 +229,7 @@ def zendesk_comment_sent():
     else:
         repair.monday.add_update(update=data["latest_comment"], user="email")
 
-    repair.debug_print(console=os.environ["DEBUG"])
+    repair.debug_print(debug=os.environ["DEBUG"])
     return "Zendesk Commments Route Completed Successfully"
 
 # Ticket Creates Pulse on Monday
@@ -242,7 +242,7 @@ def zendesk_to_monday():
     repair.zendesk.convert_to_monday()
     repair.add_to_monday()
 
-    repair.debug_print(console=os.environ["DEBUG"])
+    repair.debug_print(debug=os.environ["DEBUG"])
     return "Zendesk to Monday Route Completed Successfully"
 
 # Top Line Driver Code
