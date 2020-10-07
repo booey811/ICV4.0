@@ -10,22 +10,4 @@ from objects import Repair
 
 repair = Repair(monday=783827869)
 
-
-
-
-
-
-
-multiple = repair.zendesk.multiple_pulse_check(check_type="status")
-if multiple:
-    # new_notification = repair.monday.dropdown_value_webhook_comparison(data)
-    if new_notification:
-        repair.zendesk.notifications_check_and_send(new_notification)
-    else:
-        print("new notification returned false")
-else:
-    print("multiple pulse check false")
-
-test.debug_print(debug=os.environ["DEBUG"])
-
-pprint(test.monday.__dict__)
+repair.zendesk.notifications_check_and_send(2)

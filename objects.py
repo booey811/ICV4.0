@@ -46,6 +46,8 @@ class Repair():
         self.vend = None
         self.monday = None
         self.zendesk = None
+        self.associated_pulse_results = None
+
         if webhook_payload:
             self.payload = webhook_payload
         else:
@@ -786,7 +788,6 @@ class Repair():
             self.service = None
             self.repair_type = None
             self.notifications = []
-
             self.associated_pulse_results = None
 
 
@@ -932,34 +933,6 @@ class Repair():
                 self.parent.debug("Could Not Get Macro ID from Macro Board\nNotication ID: {}\nService: {}\nClient: {}\nType: {}".format(notification_id, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type))
             self.parent.debug(end="notifcations_check_and_send")
 
-
-        def multiple_pulse_check_zendesk(self, check_type):
-            self.parent.debug(start="multiple_pulse_check")
-            col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.ticket_id))
-            results = self.parent.boards["main"].get_items_by_column_values(col_val)
-            if len(results) == 0:
-                answer = True
-                self.parent.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(self.ticket_id))
-            elif len(results) == 1:
-                answer = True
-                self.parent.debug("Only one pulse found (RETURNING TRUE)")
-            else:
-                self.associated_pulse_results = results
-                if check_type == "status":
-                    count = 1
-                    while count < len(results):
-                        if results[count - 1].get_column_value(id="status4").index != results[count].get_column_value(id="status4").index:
-                            self.parent.debug("Statuses do not match (RETURNING FALSE)")
-                            answer = False
-                            break
-                        else:
-                            self.parent.debug("Two Statuses Match")
-                            answer = True
-                            count += 1
-                            continue
-            self.parent.debug(end="multiple_pulse_check")
-            return answer
-
         def update_monday_notification_column(self, notification_id):
             self.parent.debug(start="update_monday_notification_column")
             self.parent.multiple_pulse_check_repair(check_type="status")
@@ -968,9 +941,11 @@ class Repair():
                 self.parent.debug("multiple_pulse_check returned False - only one pulse adjusted")
                 return
             else:
+                notifications = self.parent.monday.m_notifications + [notification_id]
                 for pulse in self.parent.associated_pulse_results:
                     print(pulse.name)
-                    pulse.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
+                    print(notifications)
+                    pulse.change_multiple_column_values({"dropdown8": {"ids": notifications}})
 
             self.parent.debug(end="update_monday_notification_column")
 
