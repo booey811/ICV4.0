@@ -727,7 +727,7 @@ class Repair():
             notification_ids = {
                 "Booking Confirmed": 1,
                 "Courier Booked": 6,
-                "Device Received": 2,
+                "Received": 2,
                 "Returned": 5,
                 "Repaired": 3,
                 "Invoiced": 4,
