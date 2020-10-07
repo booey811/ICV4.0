@@ -191,6 +191,36 @@ class Repair():
         else:
             print("DEBUGGING ELSE ROUTE")
 
+
+        def multiple_pulse_check_repair(self, check_type):
+            self.debug(start="multiple_pulse_check")
+            col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
+            results = self.boards["main"].get_items_by_column_values(col_val)
+            if len(results) == 0:
+                answer = True
+                self.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(self.zendesk.ticket_id))
+            elif len(results) == 1:
+                answer = True
+                self.debug("Only one pulse found (RETURNING TRUE)")
+            else:
+                self.associated_pulse_results = results
+                if check_type == "status":
+                    count = 1
+                    while count < len(results):
+                        if results[count - 1].get_column_value(id="status4").index != results[count].get_column_value(id="status4").index:
+                            self.debug("Statuses do not match (RETURNING FALSE)")
+                            answer = False
+                            break
+                        else:
+                            self.debug("Two Statuses Match")
+                            answer = True
+                            count += 1
+                            continue
+            self.debug(end="multiple_pulse_check")
+            return answer
+
+
+
     class VendRepair():
 
         def __init__(self, repair_object, vend_sale_id=False):
@@ -421,6 +451,7 @@ class Repair():
                 self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
 
                 self.vend_parent.parent.debug(end="get_pricing_info")
+
 
     class MondayRepair():
 
@@ -734,11 +765,15 @@ class Repair():
                 "Return Booked": 7
             }
 
-            if status_label in notification_ids:
+            multiple_pulses = self.parent.multiple_pulse_check_repair(check_type="status")
+
+            if status_label in notification_ids and multiple_pulses:
                 self.m_notifications.append(notification_ids[status_label])
                 self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
+            elif not multiple_pulses:
+                print("Pulse Statuses not matching - nothing Done")
             else:
-                print("No Automated Notification")
+                print("No Automated Macro")
 
     class ZendeskRepair():
 
@@ -899,7 +934,7 @@ class Repair():
             self.parent.debug(end="notifcations_check_and_send")
 
 
-        def multiple_pulse_check(self, check_type):
+        def multiple_pulse_check_zendesk(self, check_type):
             self.parent.debug(start="multiple_pulse_check")
             col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.ticket_id))
             results = self.parent.boards["main"].get_items_by_column_values(col_val)
@@ -928,12 +963,13 @@ class Repair():
 
         def update_monday_notification_column(self, notification_id):
             self.parent.debug(start="update_monday_notification_column")
-            if not self.associated_pulse_results:
-                self.associated_pulse_results = [self.parent.monday.item]
+            self.parent.multiple_pulse_check_repair(check_type="status")
+            if not self.parent.associated_pulse_results:
+                self.parent.associated_pulse_results = [self.parent.monday.item]
                 self.parent.debug("multiple_pulse_check returned False - only one pulse adjusted")
                 return
             else:
-                for pulse in self.associated_pulse_results:
+                for pulse in self.parent.associated_pulse_results:
                     current = pulse.get_column_value(id="dropdown8").ids
                     if current:
                         if notification_id in current:
