@@ -220,7 +220,6 @@ class Repair():
         return answer
 
 
-
     class VendRepair():
 
         def __init__(self, repair_object, vend_sale_id=False):
@@ -970,6 +969,7 @@ class Repair():
                 return
             else:
                 for pulse in self.parent.associated_pulse_results:
+                    print(pulse.name)
                     pulse.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
 
             self.parent.debug(end="update_monday_notification_column")
