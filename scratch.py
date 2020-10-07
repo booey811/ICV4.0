@@ -8,7 +8,9 @@ from moncli import create_column_value, ColumnType
 import settings
 from objects import Repair
 
-test = Repair(monday=765530679)
+test = Repair(zendesk=5798)
 
-test.monday.status_to_notification("Booking Confirmed")
+test.debug_print(console=True)
+
+pprint(test.monday.__dict__)
 

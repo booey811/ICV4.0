@@ -116,6 +116,7 @@ class Repair():
             col_val = create_column_value(id='text88', column_type=ColumnType.text, value=str(self.vend.id))
             for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
+                break
 
             if self.monday:
                 if self.monday.z_ticket_id:
@@ -125,6 +126,7 @@ class Repair():
             col_val = create_column_value(id='text6', column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
             for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
+                break
 
             if self.monday:
                 if self.monday.v_id:
