@@ -8,6 +8,14 @@ from moncli import create_column_value, ColumnType
 import settings
 from objects import Repair
 
-repair = Repair(monday=783827869)
+repair = Repair(zendesk=5849)
 
-repair.zendesk.notifications_check_and_send(2)
+repair.zendesk.email = "iavdawdjhv@isefgjsfb.com"
+repair.zendesk.number = "iavdawdjhv@isefgjsfb.com"
+repair.zendesk.name = "iavdawdjhv@isefgjsfb.com"
+
+print(repair.search_user().name)
+
+
+
+

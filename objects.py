@@ -158,6 +158,15 @@ class Repair():
 
         self.debug(end="add_to_monday")
 
+    def add_to_zendesk(self):
+        self.debug(start="add_to_zendesk")
+
+        if not self.zendesk:
+            self.debug("No Zendesk object available -- Unable to add to Zendesk")
+        else:
+            pass
+        self.debug(end="add_to_zendesk")
+
     def debug(self, *args, start=False, end=False):
         """Adds to a list of strings that will eventaully be printed
 
@@ -192,6 +201,52 @@ class Repair():
             print("\n".join(self.debug_string))
         else:
             print("DEBUGGING ELSE ROUTE")
+
+
+
+    def search_user(self):
+
+        email = None
+        number = None
+        name = None
+
+
+        if self.monday:
+            self.debug("Retrieving from Monday Object")
+            email = self.monday.email
+            number = self.monday.number
+            name = self.monday.name
+        elif self.vend:
+            self.debug("Retrieving from Vend Object")
+            email = self.vend.email
+            number = self.vend.number
+            name = self.vend.name
+        elif self.zendesk:
+            self.debug("Retrieving from Zendesk Object")
+            email = self.zendesk.email
+            number = self.zendesk.number
+            name = self.zendesk.name
+        else:
+            print("Cannot Find any Objects with Email, Number or Name")
+
+        terms = [email, number, name]
+
+        for term in terms:
+            if term:
+                search = self.zendesk_client.search(term, type="user")
+                if len(search) == 1:
+                    self.debug("Found User Through {}".format(term))
+                    for item in search:
+                        return item
+                elif len(search) > 1:
+                    self.debug("Too Many Users Found During {} Search".format(term))
+                elif len(search) < 1:
+                    self.debug("Too Few Users Found During {} Search".format(term))
+                else:
+                    self.debug("Else Route Taken During {} Search".format(term))
+
+        return False
+
 
 
     def multiple_pulse_check_repair(self, check_type):
@@ -776,6 +831,8 @@ class Repair():
             else:
                 print("No Automated Macro")
 
+
+
     class ZendeskRepair():
 
         def __init__(self, repair_object, zendesk_ticket_number, created=False):
@@ -819,6 +876,42 @@ class Repair():
             else:
                 pass
 
+
+        def address_extractor(self):
+
+            self.parent.debug(start="address_extractor")
+
+            fields = {
+                "address1": [360006582778, "street_address", "street_address"],
+                "address2": [360006582798, "company_flat_number", "company_flat_number"],
+                "postcode": [360006582758, "post_code", "postcode"]
+            }
+
+            for attribute in fields:
+                value = None
+
+                for field in self.ticket.custom_fields:
+                    if field["id"] == fields[attribute][0] and field["value"]:
+                        value = field["value"]
+                        self.parent.debug("got {} from ticket".format(attribute))
+
+                if not value:
+                    if self.user.user_fields[fields[attribute][1]]:
+                        value = self.user.user_fields[fields[attribute][1]]
+                        self.parent.debug("got {} from user".format(attribute))
+
+                if not value:
+                    if self.ticket.organization.organization_fields[fields[attribute][2]]:
+                        value = self.ticket.organization.organization_fields[fields[attribute][2]]
+                        self.parent.debug("got {} from org".format(attribute))
+
+                if value:
+                    setattr(self, attribute, value)
+                else:
+                    self.parent.debug("No address found")
+
+            self.parent.debug(end="address_extractor")
+
         def convert_to_attributes(self):
 
             self.parent.debug(start="convert_to_attributes")
@@ -829,9 +922,6 @@ class Repair():
                 "imei_sn": 360004242638,
                 "monday_id": 360004570218,
                 "passcode": 360005102118,
-                "postcode": 360006582758,
-                "address1": 360006582778,
-                "address2": 360006582798,
                 "monday_id": 360004570218
             }
 
@@ -840,6 +930,8 @@ class Repair():
                     if field["value"]:
                         if field["id"] == custom_fields[attribute]:
                             setattr(self, attribute, field["value"])
+
+            self.address_extractor()
 
             self.parent.debug(end="convert_to_attributes")
 
