@@ -1,6 +1,7 @@
 from threading import Thread
 import json
 import os
+from urllib.parse import parse_qs
 
 from flask import Flask, request
 
@@ -273,6 +274,17 @@ def zendesk_to_monday():
 
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Zendesk to Monday Route Completed Successfully"
+
+
+# ROUTES // GOPHR
+# Callback Function
+@app.route("/gophr")
+def gophr_webhook():
+    info = request.get_data().decode("utf-8")
+    info = parse_qs(info)
+    print(info)
+
+    return "Gophr Webhook Route Completed Successfully"
 
 # Top Line Driver Code
 if __name__ == "__main__":
