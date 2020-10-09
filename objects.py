@@ -8,7 +8,7 @@ from moncli import MondayClient, create_column_value, ColumnType, NotificationTa
 from moncli.api_v2.exceptions import MondayApiError
 from zenpy import Zenpy
 from zenpy.lib import exception as zenpyExceptions
-from zenpy.lib.api_objects import CustomField
+from zenpy.lib.api_objects import CustomField, Ticket, User
 
 import settings
 import keys.vend
@@ -125,10 +125,8 @@ class Repair():
                     self.include_zendesk(self.monday.z_ticket_id)
 
         elif self.source == 'zendesk':
-            col_val = create_column_value(id='text6', column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
-            for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
-                self.include_monday(item.id)
-                break
+            if self.zendesk.monday_id:
+                self.include_monday(self.zendesk.monday_id)
 
             if self.monday:
                 if self.monday.v_id:
@@ -202,9 +200,7 @@ class Repair():
         else:
             print("DEBUGGING ELSE ROUTE")
 
-
-
-    def search_user(self):
+    def search_zendesk_user(self):
 
         email = None
         number = None
@@ -246,8 +242,6 @@ class Repair():
                     self.debug("Else Route Taken During {} Search".format(term))
 
         return False
-
-
 
     def multiple_pulse_check_repair(self, check_type):
         self.debug(start="multiple_pulse_check")
@@ -670,7 +664,8 @@ class Repair():
                 self.add_update(
                     "You have selected a placeholder repair - please select the repair you have completed and try again",
                     user="error",
-                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
+                    status="!! See Updates !!"
                 )
                 return False
             # Check if some type of screen repair has been completed
@@ -680,7 +675,8 @@ class Repair():
                     self.add_update(
                         "You have not selected a screen condition for this repair - please select an option from the dropdown menu and try again",
                         user="error",
-                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
+                        status="!! See Updates !!"
                     )
                     return False
                 # Check that colour has been selected/not left blank
@@ -688,7 +684,8 @@ class Repair():
                     self.add_update(
                         "You have not selected a colour for the screen of this device - please select a colour option and try again",
                         user="error",
-                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
+                        status="!! See Updates !!"
                     )
                     return False
                 # Check that a refurb type has been selected/not left blank
@@ -696,7 +693,8 @@ class Repair():
                     self.add_update(
                         "You have not selected what refurb variety of screen was used with this repair - please select a refurbishmnet option and try again",
                         user="error",
-                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
+                        status="!! See Updates !!"
                     )
                     return False
             # Check that IMEI has been recorded
@@ -704,19 +702,28 @@ class Repair():
                 self.add_update(
                     "This device does not have an IMEI or SN given - please input this and try again",
                     user="error",
-                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name)
+                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
+                    status="!! See Updates !!"
                 )
                 return False
             return True
             self.parent.debug(end="check_column_presence")
 
-        def add_update(self, update, user=False, notify=False):
+        def add_update(self, update, user=False, notify=False, status=False):
+            """Adds Updates to oulses and aids with adjusting status or notifying users
+
+            Args:
+                update (str): The body of the update to be posted to Monday Pulse
+                user (str, optional): Used to select which User the API should post as. Defaults to False.
+                notify (bool, optional): Used to send a notification from the selected API Client to the user who made the change on this webhook. Defaults to False.
+                status (str, optional): Used to adjust the status of a pulse (if required). Defaults to False.
+            """
+
             self.parent.debug(start="add_update")
             if user == 'error':
                 client =  MondayClient(user_name='admin@icorrect.co.uk', api_key_v1=os.environ["MONV1ERR"], api_key_v2=os.environ["MONV2ERR"])
                 for item in client.get_items(ids=[int(self.id)], limit=1):
                     monday_object = item
-                    item.change_column_value(column_id="status4", column_value={"label": "!! See Updates !!"})
                     break
             elif user == 'email':
                 client =  MondayClient(user_name='icorrectltd@gmail.com', api_key_v1=os.environ["MONV1EML"], api_key_v2=os.environ["MONV2EML"])
@@ -727,6 +734,8 @@ class Repair():
                 monday_object = self.item
                 client = self.parent.monday_client
             monday_object.add_update(update)
+            if status:
+                item.change_column_value(column_id="status4", column_value={"label": status})
             if notify:
                 self.send_notification(sender=client, message=notify, user_id=self.user_id)
             self.parent.debug(end="add_update")
@@ -742,7 +751,7 @@ class Repair():
             self.convert_to_vend_codes()
             if len(self.vend_codes) != len(self.repairs):
                 self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
-                self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error")
+                self.add_update("Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error", status="!! See Updates !!")
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
@@ -831,6 +840,14 @@ class Repair():
             else:
                 print("No Automated Macro")
 
+        def convert_to_zendesk(self):
+
+            user = self.parent.search_zendesk_user()
+
+            if not user:
+                self.parent.debug("Unable to find a User on Zendesk")
+            else:
+                pass
 
 
     class ZendeskRepair():
@@ -846,6 +863,8 @@ class Repair():
             self.repair_type = None
             self.notifications = []
             self.associated_pulse_results = None
+
+            self.monday_id = None
 
 
             self.parent = repair_object
@@ -1000,8 +1019,8 @@ class Repair():
                 if option["ids"] == notification_id:
                     tag = option["z_tag"]
             if tag and tag in self.ticket.tags:
-                self.parent.debug("No macro sent - macro has already been applied to this ticket")
-                self.parent.monday.add_update(update="Cannot Send Macro - This ticket has already received this macro", user="error")
+                self.parent.debug("No Macro Sent - macro has already been applied to this ticket")
+                self.parent.monday.add_update(update="no Macro Sent - This ticket has already received this macro", user="email")
             elif not tag:
                 self.parent.debug("No Macro Sent - Cannot find notification ID in dropdown_column_dictionary")
                 self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know (Notification ID not found in dropdown_column_dictionary)", user="error")
