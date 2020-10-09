@@ -22,7 +22,7 @@ col_ids_to_attributes = {
     'text2': {'title': 'DCPS', 'value_type': ['text'], 'attribute': None},
     'text93': {'title': 'Post Code', 'value_type': ['text'], 'attribute': 'postcode'},
     'date4': {'title': 'Date Received', 'value_type': ['date', 'time'], 'attribute': "date_received"},
-    'text00': {'title': 'Tel.No', 'value_type': ['text'], 'attribute': 'phone'},
+    'text00': {'title': 'Tel.No', 'value_type': ['text'], 'attribute': 'number'},
     'text5': {'title': 'Email', 'value_type': ['text'], 'attribute': 'email'},
     'repair_complete': {'title': 'Repaired Date', 'value_type': ['date', 'time'], 'attribute': "date_repaired"},
     'date3': {'title': 'Collection Date', 'value_type': ['date', 'time'], 'attribute': "date_collected"},
@@ -307,22 +307,15 @@ status_column_dictionary = {
             {"title": "End User",
                 "index": 16,
                 "label": "End User",
-
-                "z_tag": "enduser",
-                "v_register": "02dcd191-aeab-11e8-ed44-5430fcb18594",
-                "v_outlet": "02dcd191-aeab-11e8-ed44-53a67f2405f0"},
+                "z_tag": "end_user"},
             {"title": "Corporate",
                 "index": 0,
                 "label": "Corporate",
-                "z_tag": "corporate",
-                "v_register": "02dcd191-aeab-11e8-ed44-54315eafa0b5",
-                "v_outlet": "02dcd191-aeab-11e8-ed44-54314d2215be"},
+                "z_tag": "corporate"},
             {"title": "Warranty",
              "index": 19,
              "label": "Warranty",
-             "z_tag": "warranty",
-            "v_register": "02dcd191-aeab-11e8-ed44-8c05daf03628",
-            "v_outlet": "02dcd191-aeab-11e8-ed44-868426f262b9"}
+             "z_tag": "warranty"}
         ]
     },
 

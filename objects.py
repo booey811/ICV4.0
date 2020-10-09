@@ -37,7 +37,8 @@ class Repair():
         "main": monday_client.get_board_by_id(id=349212843),
         "usage": monday_client.get_board_by_id(id=722437885),
         "zendesk_tags": monday_client.get_board_by_id(id=765453815),
-        "macros": monday_client.get_board_by_id(id=762417852)
+        "macros": monday_client.get_board_by_id(id=762417852),
+        "gophr": monday_client.get_board_by_id(id=538565672)
     }
 
     def __init__(self, webhook_payload=False, vend=False, monday=False, zendesk=False, test=False):
@@ -72,7 +73,7 @@ class Repair():
             self.source = "monday"
             self.name = self.monday.name
             self.email = self.monday.email
-            self.number = self.monday.phone
+            self.number = self.monday.number
 
         elif zendesk:
             self.source = "zendesk"
@@ -155,15 +156,6 @@ class Repair():
                 self.zendesk_client.tickets.update(self.zendesk.ticket)
 
         self.debug(end="add_to_monday")
-
-    def add_to_zendesk(self):
-        self.debug(start="add_to_zendesk")
-
-        if not self.zendesk:
-            self.debug("No Zendesk object available -- Unable to add to Zendesk")
-        else:
-            pass
-        self.debug(end="add_to_zendesk")
 
     def debug(self, *args, start=False, end=False):
         """Adds to a list of strings that will eventaully be printed
@@ -269,7 +261,6 @@ class Repair():
                         continue
         self.debug(end="multiple_pulse_check")
         return answer
-
 
     class VendRepair():
 
@@ -502,7 +493,6 @@ class Repair():
 
                 self.vend_parent.parent.debug(end="get_pricing_info")
 
-
     class MondayRepair():
 
         def __init__(self, repair_object, monday_id=False, created=False):
@@ -640,16 +630,15 @@ class Repair():
                             if value.id == col_id:
                                 try:
                                     if keys.monday.col_ids_to_attributes[item]["value_type"][0] == "ids":
-                                        print(getattr(self, keys.monday.col_ids_to_attributes[item]['attribute']))
                                         setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'], getattr(self, keys.monday.col_ids_to_attributes[item]['attribute']) + (getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0])))
                                     else:
                                         setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'],
                                                 getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0]))
                                 except KeyError:
-                                    print(
+                                    self.parent.debug(
                                         "*811*ERROR: KEY: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
                                 except TypeError:
-                                    print(
+                                    self.parent.debug(
                                         "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
             self.parent.debug(end="retreive_column_data")
 
@@ -735,7 +724,7 @@ class Repair():
                 client = self.parent.monday_client
             monday_object.add_update(update)
             if status:
-                item.change_column_value(column_id="status4", column_value={"label": status})
+                monday_object.change_column_value(column_id="status4", column_value={"label": status})
             if notify:
                 self.send_notification(sender=client, message=notify, user_id=self.user_id)
             self.parent.debug(end="add_update")
@@ -840,15 +829,190 @@ class Repair():
             else:
                 print("No Automated Macro")
 
-        def convert_to_zendesk(self):
-
+        def add_to_zendesk(self):
+            self.parent.debug(start="add_to_zendesk")
+            tag_options = [
+                "Status",
+                "Service",
+                "Client",
+                "Type"
+            ]
+            fields= {
+                "imei_sn": 360004242638,
+                "id": 360004570218,
+                "passcode": 360005102118,
+                "address1": 360006582778,
+                "address2": 360006582798,
+                "postcode": 360006582758
+            }
             user = self.parent.search_zendesk_user()
-
             if not user:
-                self.parent.debug("Unable to find a User on Zendesk")
+                self.parent.debug("Cannot Find User -- Must Create One")
             else:
-                pass
+                custom_fields =[]
+                for item in fields:
+                    value = getattr(self, item, None)
+                    addition = CustomField(id=fields[item], value=value)
+                    custom_fields.append(addition)
+                tags = ["mondayactive"]
+                for option in tag_options:
+                    category = keys.monday.status_column_dictionary[option]
+                    attribute = getattr(self, category["attribute"])
+                    for value in category["values"]:
+                        if value["label"] == attribute:
+                            tags.append(value["z_tag"])
+                        else:
+                            continue
+                ticket_audit = self.parent.zendesk_client.tickets.create(
+                    Ticket(
+                        subject='Your Repair with iCorrect',
+                        description="iCorrect Ltd",
+                        public=False,
+                        requester_id=user.id,
+                        custom_fields=custom_fields,
+                        tags=tags
+                    )
+                )
+                self.parent.include_zendesk(ticket_audit.ticket.id)
+                self.parent.zendesk.address_extractor()
+                self.item.change_multiple_column_values({
+                    "text6": str(ticket_audit.ticket.id),
+                    "status5": {"label": "Active"},
+                    "text00": user.phone,
+                    "text5": user.email,
+                    "text93": self.parent.zendesk.postcode,
+                    "dup__of_passcode": self.parent.zendesk.address2,
+                    "passcode": self.parent.zendesk.address1
+                    })
+            self.parent.debug(end="add_to_zendesk")
 
+
+
+        def gophr_booking(self, from_client=True):
+
+            self.parent.debug(start="gophr_booking")
+
+            url = "https://api.gophr.com/v1/commercial-api/create-job"
+
+            headers = {
+                'content-type': "application/x-www-form-urlencoded"}
+
+            pickup_info = {
+                "pickup_person_name": ["name", "Gabriel"],
+                "pickup_address1": ["address1", "12 Margaret Street"],
+                "pickup_address2": ["address2", "iCorrect Ltd"],
+                "pickup_postcode": ["postcode", "W1W 8JQ"],
+                "pickup_mobile_number": ["number", "02070998517"],
+                "pickup_email": ["email", "support@icorrect.co.uk"]
+            }
+            delivery_info = {
+                "delivery_person_name": ["name", "Gabriel"],
+                "delivery_address1": ["address1", "12 Margaret Street"],
+                "delivery_address2": ["address2", "iCorrect Ltd"],
+                "delivery_postcode": ["postcode", "W1W 8JQ"],
+                "delivery_mobile_number": ["number", "02070998517"],
+                "delivery_email": ["email", "support@icorrect.co.uk"]
+            }
+            info = {
+                'api_key': os.environ["GOPHR"],
+                "pickup_city": "London",
+                "pickup_country_code": "GB",
+                "delivery_city": "London",
+                "delivery_country_code": "GB",
+                "size_x": float(25),
+                "size_y": float(16),
+                "size_z": float(5),
+                "weight": float(3),
+                "delivery_deadline": "",
+                "external_id": self.id,
+                "team_id": "820",
+                "callback_url": "https://icv4.herokuapp.com/gophr"
+            }
+
+            if from_client:
+                for item in pickup_info:
+                    info[item] = getattr(self, pickup_info[item][0], None)
+                for item in delivery_info:
+                    info[item] = delivery_info[item][1]
+
+            elif not from_client:
+                for item in pickup_info:
+                    info[item] = pickup_info[item][1]
+                for item in delivery_info:
+                    info[item] = getattr(self, delivery_info[item][0], None)
+
+            pprint(info)
+
+            send_info = json.dumps(info)
+
+            response = requests.request("POST", url, data=send_info, headers=headers)
+
+            text_response = json.loads(response.text)
+
+            pprint(text_response)
+
+            if text_response["success"]:
+                self.parent.debug("Booking Successful -- Job ID: {}".format(text_response["data"]["job_id"]))
+                if self.status == "Book Courier":
+                    status = "Courier Booked"
+                elif self.status == "Book Return Courier":
+                    status = "Return Booked"
+                else:
+                    status = self.status
+                self.add_update(
+                    update="Booking Successful\nJob ID: {}\nPrice: £{}\nPickup ETA: {}\nClick to Confirm Booking: {}".format(
+                        text_response["data"]["job_id"], text_response["data"]["price_gross"],
+                        text_response["data"]["pickup_eta"][11:19], text_response["data"]["private_job_url"]),
+                    status=status
+                )
+                self.parent.zendesk.ticket.custom_fields.append(CustomField(id=360006704157, value=text_response["data"]["public_tracker_url"]))
+                self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
+                if from_client:
+                    self.capture_gophr_data(info["pickup_postcode"], info["delivery_postcode"], text_response["data"])
+                else:
+                    self.capture_gophr_data(info["pickup_postcode"], info["delivery_postcode"], text_response["data"], collect=False)
+                result = True
+            else:
+                # error_code = text_response["error"]["code"].replace('\"', "|")
+                notes = text_response["error"]["message"].replace('\"', "|")
+                self.add_update(update="""Booking Failed\n\nNotes: {}""".format(notes), user="error", status="!! See Updates !!")
+                result = False
+            self.parent.debug(end="gophr_booking")
+            return result
+
+        def capture_gophr_data(self, collect_postcode, deliver_postcode, gophr_response, collect=True):
+            self.parent.debug(start="capture_gophr_data")
+            if collect:
+                name = "{} Collection".format(self.name)
+            else:
+                name = "{} Return".format(self.name)
+            print(type(gophr_response))
+            pprint(gophr_response)
+
+            column_values = {"text": collect_postcode,
+                            "text4": deliver_postcode,
+                            "distance": str(gophr_response["distance"]),
+                            "price__ex_vat_": str(gophr_response["price_net"]),
+                            "text0": str(gophr_response["job_id"]),
+                            "text9": str(gophr_response["min_realistic_time"]),
+                            "text5": self.id
+                            }
+
+            values = ["pickup_eta", "delivery_eta"]
+
+            for option in values:
+                date = gophr_response[option].split("T")[0]
+                time = gophr_response[option].split("T")[1]
+                time = time[:-6]
+                # date_column = moncli.create_column_value(id=column_id, column_type=moncli.ColumnType.date, date=date, time=time)
+                if option == "pickup_eta":
+                    column_values["date1"] = {"date": date, "time": time}
+                else:
+                    column_values["date5"] = {"date": date, "time": time}
+
+            new_item = self.parent.boards["gophr"].add_item(item_name=name, column_values=column_values)
+
+            self.parent.debug(end="capture_gophr_data")
 
     class ZendeskRepair():
 
@@ -875,7 +1039,7 @@ class Repair():
                 try:
                     ticket = self.parent.zendesk_client.tickets(id=self.ticket_id)
                 except zenpyExceptions.RecordNotFoundException:
-                    self.debug("Ticket {} Does Not Exist".format(zendesk_ticket_number))
+                    self.parent.debug("Ticket {} Does Not Exist".format(zendesk_ticket_number))
                     ticket = False
 
                 if ticket:
@@ -891,7 +1055,7 @@ class Repair():
                     self.convert_to_attributes()
 
                 else:
-                    self.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
+                    self.parent.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
             else:
                 pass
 
@@ -920,9 +1084,10 @@ class Repair():
                         self.parent.debug("got {} from user".format(attribute))
 
                 if not value:
-                    if self.ticket.organization.organization_fields[fields[attribute][2]]:
-                        value = self.ticket.organization.organization_fields[fields[attribute][2]]
-                        self.parent.debug("got {} from org".format(attribute))
+                    if self.ticket.organization:
+                        if self.ticket.organization.organization_fields[fields[attribute][2]]:
+                            value = self.ticket.organization.organization_fields[fields[attribute][2]]
+                            self.parent.debug("got {} from org".format(attribute))
 
                 if value:
                     setattr(self, attribute, value)
@@ -1054,14 +1219,11 @@ class Repair():
             else:
                 notifications = list(set(self.parent.monday.m_notifications + [notification_id]))
                 for pulse in self.parent.associated_pulse_results:
-                    print(pulse.name)
-                    print(notifications)
                     pulse.change_multiple_column_values({"dropdown8": {"ids": notifications}})
 
             self.parent.debug(end="update_monday_notification_column")
 
 class MondayColumns():
-
 
     """Object that contains relevant column information for when repairs are added to Monday.
 

@@ -29,6 +29,37 @@ def monday_handshake(webhook):
 
 
 # ROUTES // MONDAY
+# Zenlink Column
+@app.route("/monday/zenlink", methods=["POST", "GET"])
+def monday_zenlink_column():
+    webhook = request.get_data()
+    # Authenticate & Create Object
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+    new_status = data["event"]["value"]["label"]["text"]
+
+    if new_status == "Active":
+        pass
+
+    elif new_status == "Create Connection":
+        repair.monday.add_to_zendesk()
+
+    elif new_status == "Unable to Connect":
+        pass
+
+    elif new_status == "Error":
+        pass
+
+    elif new_status == "Severed":
+        pass
+
+    return "Zenlink Change Route Completed Successfully"
+
+
 # Status Change
 @app.route("/monday/status", methods=["POST", "GET"])
 def monday_status_change():
@@ -66,7 +97,8 @@ def monday_status_change():
             pass
 
         elif repair.monday.status == "Book Courier":
-            pass
+            repair.debug("STATUS - BOOK COURIER")
+            repair.monday.gophr_booking(from_client=True)
 
         elif repair.monday.status == "Courier Booked":
             pass
@@ -102,7 +134,8 @@ def monday_status_change():
             pass
 
         elif repair.monday.status == "Book Return Courier":
-            pass
+            repair.debug("STATUS - BOOK RETURN COURIER")
+            repair.monday.gophr_booking(from_client=False)
 
         elif repair.monday.status == "Return Booked":
             pass

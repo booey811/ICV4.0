@@ -8,10 +8,10 @@ from moncli import create_column_value, ColumnType
 import settings
 from objects import Repair
 
-repair = Repair(zendesk=5751)
+repair = Repair(monday=783827869)
 
-print(repair.zendesk.__dict__)
+pprint(repair.monday.__dict__)
 
-repair.monday.add_update("TESTER", user="email", status="Awaiting Confirmation")
+repair.monday.gophr_booking()
 
-repair.debug_print(debug='console')
+repair.debug_print(debug="console")
