@@ -3,6 +3,8 @@ import os
 import requests
 from datetime import datetime, timedelta
 from pprint import pprint
+from urllib import request as urlrequest
+from urllib import parse
 
 from moncli import MondayClient, create_column_value, ColumnType, NotificationTargetType
 from moncli.api_v2.exceptions import MondayApiError
@@ -934,36 +936,20 @@ class Repair():
                     info[item] = getattr(self, pickup_info[item][0], None)
                 for item in delivery_info:
                     info[item] = delivery_info[item][1]
-
             elif not from_client:
                 for item in pickup_info:
                     info[item] = pickup_info[item][1]
                 for item in delivery_info:
                     info[item] = getattr(self, delivery_info[item][0], None)
-
-            pprint(info)
-
             send_info = json.dumps(info)
-
             response = requests.request("POST", url, data=send_info, headers=headers)
-
             text_response = json.loads(response.text)
-
-            pprint(text_response)
-
             if text_response["success"]:
                 self.parent.debug("Booking Successful -- Job ID: {}".format(text_response["data"]["job_id"]))
-                if self.status == "Book Courier":
-                    status = "Courier Booked"
-                elif self.status == "Book Return Courier":
-                    status = "Return Booked"
-                else:
-                    status = self.status
                 self.add_update(
                     update="Booking Successful\nJob ID: {}\nPrice: £{}\nPickup ETA: {}\nClick to Confirm Booking: {}".format(
                         text_response["data"]["job_id"], text_response["data"]["price_gross"],
-                        text_response["data"]["pickup_eta"][11:19], text_response["data"]["private_job_url"]),
-                    status=status
+                        text_response["data"]["pickup_eta"][11:19], text_response["data"]["private_job_url"])
                 )
                 self.parent.zendesk.ticket.custom_fields.append(CustomField(id=360006704157, value=text_response["data"]["public_tracker_url"]))
                 self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
@@ -986,7 +972,6 @@ class Repair():
                 name = "{} Collection".format(self.name)
             else:
                 name = "{} Return".format(self.name)
-            print(type(gophr_response))
             pprint(gophr_response)
 
             column_values = {"text": collect_postcode,
@@ -999,12 +984,10 @@ class Repair():
                             }
 
             values = ["pickup_eta", "delivery_eta"]
-
             for option in values:
                 date = gophr_response[option].split("T")[0]
                 time = gophr_response[option].split("T")[1]
                 time = time[:-6]
-                # date_column = moncli.create_column_value(id=column_id, column_type=moncli.ColumnType.date, date=date, time=time)
                 if option == "pickup_eta":
                     column_values["date1"] = {"date": date, "time": time}
                 else:
@@ -1013,6 +996,46 @@ class Repair():
             new_item = self.parent.boards["gophr"].add_item(item_name=name, column_values=column_values)
 
             self.parent.debug(end="capture_gophr_data")
+
+        def textlocal_notification(self):
+
+            message = self.textmessage_select_and_parse()
+            if message:
+                details = {
+                    'apikey': os.environ["TEXTLOCAL"],
+                    'numbers': str(self.number),
+                    'message': message,
+                    'sender': "iCorrect"
+                }
+                if self.repair_type == "Diagnostic" and self.status == "Received":
+                    details["simple_reply"] = "true"
+
+                data =  parse.urlencode(details)
+                data = data.encode('utf-8')
+                request = urlrequest.Request("https://api.txtlocal.com/send/?")
+                f = urlrequest.urlopen(request, data)
+                fr = f.read()
+                self.parent.debug("Text Message Sent")
+                return True
+            else:
+                return False
+
+        def textmessage_select_and_parse(self):
+            key = [
+                self.client,
+                self.service,
+                self.status
+            ]
+            if self.repair_type == "Diagnostic" and self.status != "Repaired":
+                key.insert(2, self.repair_type)
+            string = " ".join(key)
+            try:
+                message = keys.messages.messages[string].format(self.name.split()[0])
+            except KeyError:
+                self.parent.debug("Text Message Template Does Not Exist")
+                message = False
+
+            return message
 
     class ZendeskRepair():
 

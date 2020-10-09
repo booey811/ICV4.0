@@ -7,11 +7,9 @@ from moncli import create_column_value, ColumnType
 
 import settings
 from objects import Repair
+import keys.messages
 
 repair = Repair(monday=783827869)
 
-pprint(repair.monday.__dict__)
+print(repair.monday.textlocal_notification())
 
-repair.monday.gophr_booking()
-
-repair.debug_print(debug="console")

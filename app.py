@@ -33,6 +33,7 @@ def monday_handshake(webhook):
 # Zenlink Column
 @app.route("/monday/zenlink", methods=["POST", "GET"])
 def monday_zenlink_column():
+    print("Zenlink Column Adjustment")
     webhook = request.get_data()
     # Authenticate & Create Object
     data = monday_handshake(webhook)
@@ -75,9 +76,9 @@ def monday_status_change():
     # Declare type of webhook
     new_status = data["event"]["value"]["label"]["text"]
     try:
-        repair.debug("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], new_status))
+        print("Status Change: {} ==> {}".format(data["event"]["previousValue"]["label"]["text"], new_status))
     except TypeError:
-        repair.debug("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
+        print("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
     #Check Whether monday.com user is System
     if data["event"]["userId"] in [12304876, 15365289, 11581083]:
@@ -181,6 +182,7 @@ def monday_status_change():
 # Notifications Column
 @app.route("/monday/notifications", methods=["POST"])
 def monday_notifications_column():
+    print("Notification Column Webhook")
     webhook = request.get_data()
     data = monday_handshake(webhook)
     if data[0] is False:
@@ -189,7 +191,6 @@ def monday_notifications_column():
         data = data[1]
 
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-    repair.debug("Notifications Column Route")
     # Check Zendesk Exists
     if not repair.zendesk:
         repair.debug("Unable to send macro - no zendesk ticket exists")
@@ -198,6 +199,7 @@ def monday_notifications_column():
         new_notification = repair.monday.dropdown_value_webhook_comparison(data)
         if new_notification:
             repair.zendesk.notifications_check_and_send(new_notification)
+            repair.monday.textlocal_notification()
         else:
             print("new notification returned false")
 
@@ -227,6 +229,7 @@ def monday_eod_column_do_now():
 # Sale Update
 @app.route("/vend/sale_update")
 def vend_sale_update():
+    print("Vend Sale Update")
 
     def process(sale):
 
@@ -250,10 +253,11 @@ def vend_sale_update():
 # New Comment
 @app.route("/zendesk/comments", methods=["POST"])
 def zendesk_comment_sent():
+    print("Zendesk Comment Webhook")
     data = request.get_data().decode()
     data = json.loads(data)
     repair = Repair(zendesk=data["z_id"])
-    repair.debug("Zendesk Commment Webhook Received")
+
     if not repair.monday:
         repair.debug("No Associated Monday Pulse - Unable to add comment to Monday")
     else:
@@ -265,6 +269,7 @@ def zendesk_comment_sent():
 # Ticket Creates Pulse on Monday
 @app.route("/zendesk/creation", methods=["POST"])
 def zendesk_to_monday():
+    print("Zendesk Creation Webhook")
     data = request.get_data().decode()
     data = json.loads(data)
     repair = Repair(zendesk=data["z_id"])
@@ -280,6 +285,7 @@ def zendesk_to_monday():
 # Callback Function
 @app.route("/gophr")
 def gophr_webhook():
+    print("Gophr Webhook")
     info = request.get_data().decode("utf-8")
     info = parse_qs(info)
     print(info)
