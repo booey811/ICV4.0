@@ -11,4 +11,11 @@ import keys.messages
 
 test = Repair(monday=783827869)
 
-test.zendesk.add_comment("TEST COMMENT")
+
+
+if test.multiple_pulse_check_repair("general"):
+    for obj in test.associated_pulse_results:
+        pulse = Repair(monday=obj.id)
+        pulse.monday.add_update(update="TEST FROM SCRATCH", user="email")
+
+test.debug_print(debug="console")

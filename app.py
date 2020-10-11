@@ -288,7 +288,12 @@ def zendesk_comment_sent():
     if not repair.monday:
         repair.debug("No Associated Monday Pulse - Unable to add comment to Monday")
     else:
-        repair.monday.add_update(update=data["latest_comment"], user="email")
+        if repair.multiple_pulse_check_repair("general"):
+            for obj in repair.associated_pulse_results:
+                pulse = Repair(monday=obj.id)
+                pulse.monday.add_update(update=data["latest_comment"], user="email")
+        else:
+            repair.monday.add_update(update=data["latest_comment"], user="email")
 
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Zendesk Commments Route Completed Successfully"

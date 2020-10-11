@@ -261,6 +261,11 @@ class Repair():
                         answer = True
                         count += 1
                         continue
+            elif check_type == "general":
+                answer = True
+            else:
+                self.debug("Else Route Taken During multiple_pulse_check")
+                answer = True
         self.debug(end="multiple_pulse_check")
         return answer
 
@@ -787,7 +792,7 @@ class Repair():
             return added_id
 
         def status_to_notification(self, status_label):
-
+            self.parent.debug(start="status_to_notification")
             notification_ids = {
                 "Booking Confirmed": 1,
                 "Courier Booked": 6,
@@ -797,16 +802,18 @@ class Repair():
                 "Invoiced": 4,
                 "Return Booked": 7
             }
-
             multiple_pulses = self.parent.multiple_pulse_check_repair(check_type="status")
-
             if status_label in notification_ids and multiple_pulses:
-                self.m_notifications.append(notification_ids[status_label])
-                self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
+                if notification_ids[status_label] in self.m_notifications:
+                    self.parent.debug("Notification ID already present on Pulse - Nothing Done")
+                else:
+                    self.m_notifications.append(notification_ids[status_label])
+                    self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
             elif not multiple_pulses:
                 print("Pulse Statuses not matching - nothing Done")
             else:
                 print("No Automated Macro")
+            self.parent.debug(end="status_to_notification")
 
         def add_to_zendesk(self):
             self.parent.debug(start="add_to_zendesk")
