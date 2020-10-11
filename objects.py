@@ -793,26 +793,29 @@ class Repair():
 
         def status_to_notification(self, status_label):
             self.parent.debug(start="status_to_notification")
-            notification_ids = {
-                "Booking Confirmed": 1,
-                "Courier Booked": 6,
-                "Received": 2,
-                "Returned": 5,
-                "Repaired": 3,
-                "Invoiced": 4,
-                "Return Booked": 7
-            }
-            multiple_pulses = self.parent.multiple_pulse_check_repair(check_type="status")
-            if status_label in notification_ids and multiple_pulses:
-                if notification_ids[status_label] in self.m_notifications:
-                    self.parent.debug("Notification ID already present on Pulse - Nothing Done")
-                else:
-                    self.m_notifications.append(notification_ids[status_label])
-                    self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
-            elif not multiple_pulses:
-                print("Pulse Statuses not matching - nothing Done")
+            if not self.zendesk:
+                self.parent.debug("No Zendesk Object Found - No Notifications to be sent")
             else:
-                print("No Automated Macro")
+                notification_ids = {
+                    "Booking Confirmed": 1,
+                    "Courier Booked": 6,
+                    "Received": 2,
+                    "Returned": 5,
+                    "Repaired": 3,
+                    "Invoiced": 4,
+                    "Return Booked": 7
+                }
+                multiple_pulses = self.parent.multiple_pulse_check_repair(check_type="status")
+                if status_label in notification_ids and multiple_pulses:
+                    if notification_ids[status_label] in self.m_notifications:
+                        self.parent.debug("Notification ID already present on Pulse - Nothing Done")
+                    else:
+                        self.m_notifications.append(notification_ids[status_label])
+                        self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
+                elif not multiple_pulses:
+                    print("Pulse Statuses not matching - nothing Done")
+                else:
+                    print("No Automated Macro")
             self.parent.debug(end="status_to_notification")
 
         def add_to_zendesk(self):
