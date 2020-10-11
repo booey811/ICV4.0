@@ -226,17 +226,23 @@ def monday_eod_column_do_now():
 # Updates Posted
 @app.route("/monday/updates", methods=["POST"])
 def monday_update_added():
+    print("Monday Update Posted")
+    # Monday Handshake
     webhook = request.get_data()
     data = monday_handshake(webhook)
     if data[0] is False:
         return data[1]
     else:
         data = data[1]
-    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-    if repair.zendesk:
-        repair.zendesk.add_comment(data["event"]["textBody"])
+    # Check update is not system-created
+    if data["event"]["userId"] in [12304876, 15365289, 11581083]:
+        print("Update Created By System - Ignored")
     else:
-        repair.debug("Cannot Add Comment - No Zendesk OBject Available")
+        repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+        if repair.zendesk:
+            repair.zendesk.add_comment(data["event"]["textBody"])
+        else:
+            repair.debug("Cannot Add Comment - No Zendesk OBject Available")
     return "Monday Update Posted Route Complete"
 
 
