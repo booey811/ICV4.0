@@ -10,7 +10,7 @@ from moncli import MondayClient, create_column_value, ColumnType, NotificationTa
 from moncli.api_v2.exceptions import MondayApiError
 from zenpy import Zenpy
 from zenpy.lib import exception as zenpyExceptions
-from zenpy.lib.api_objects import CustomField, Ticket, User
+from zenpy.lib.api_objects import CustomField, Ticket, User, Comment
 
 import settings
 import keys.vend
@@ -1219,8 +1219,13 @@ class Repair():
                 notifications = list(set(self.parent.monday.m_notifications + [notification_id]))
                 for pulse in self.parent.associated_pulse_results:
                     pulse.change_multiple_column_values({"dropdown8": {"ids": notifications}})
-
             self.parent.debug(end="update_monday_notification_column")
+
+        def add_comment(self, message_body):
+            self.parent.debug(start="add_comment")
+            self.ticket.comment = Comment(body=message_body, public=False)
+            self.parent.zendesk_client.tickets.update(self.ticket)
+            self.parent.debug(start="add_comment")
 
 class MondayColumns():
 

@@ -224,9 +224,32 @@ def monday_eod_column_do_now():
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday End of Day Route Completed Successfully"
 
+# Updates Posted
+@app.route("/monday/updates", methods=["POST"])
+def monday_update_added():
+    print("Monday Update Posted")
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+    if repair.zendesk:
+        repair.zendesk.add_comment(data["event"]["textBody"])
+    else:
+        repair.debug("Cannot Add Comment - No Zendesk OBject Available")
+    return "Monday Update Posted Route Complete"
+
+
 
 # ROUTES // VEND
 # Sale Update
+# TODO: Correct Object Instantiation
+# TODO: Check for Update Monday Product
+# TODO: Add To Monday
+# TODO: Ignore EOD Sales
+
 @app.route("/vend/sale_update")
 def vend_sale_update():
     print("Vend Sale Update")

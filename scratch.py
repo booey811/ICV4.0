@@ -11,4 +11,4 @@ import keys.messages
 
 test = Repair(monday=783827869)
 
-print(test.monday.textmessage_select_and_parse())
+test.zendesk.add_comment("TEST COMMENT")
