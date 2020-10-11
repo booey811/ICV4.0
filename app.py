@@ -211,7 +211,6 @@ def monday_notifications_column():
 # End of Day Column
 @app.route("/monday/eod/do_now", methods=["POST"])
 def monday_eod_column_do_now():
-
     webhook = request.get_data()
     data = monday_handshake(webhook)
     if data[0] is False:
@@ -227,7 +226,6 @@ def monday_eod_column_do_now():
 # Updates Posted
 @app.route("/monday/updates", methods=["POST"])
 def monday_update_added():
-    print("Monday Update Posted")
     webhook = request.get_data()
     data = monday_handshake(webhook)
     if data[0] is False:
