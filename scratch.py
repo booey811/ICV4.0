@@ -9,7 +9,6 @@ import settings
 from objects import Repair
 import keys.messages
 
-repair = Repair(monday=783827869)
+test = Repair(monday=783827869)
 
-print(repair.monday.textlocal_notification())
-
+print(test.monday.textmessage_select_and_parse())

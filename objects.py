@@ -15,11 +15,11 @@ from zenpy.lib.api_objects import CustomField, Ticket, User
 import settings
 import keys.vend
 import keys.monday
+import keys.messages
 
 
 class Repair():
 
-    # Application Clients
     monday_client = MondayClient(
         user_name='systems@icorrect.co.uk',
         api_key_v1=os.environ["MONV1SYS"],
@@ -370,11 +370,8 @@ class Repair():
                     self.products.append(product["product_id"])
 
         def convert_to_monday_codes(self):
-
             inv_board = self.parent.monday_client.get_board_by_id(id=703218230)
-
             monday_object = MondayRepair(created=self.name)
-
             for item in self.products:
                 col_val = create_column_value(id="text", column_type=ColumnType.text, value=item)
                 for item in inv_board.get_items_by_column_values(col_val):
@@ -386,47 +383,33 @@ class Repair():
                     monday_object.repairs.append(repair)
                     if not monday_object.colour and colour:
                         monday_object.colour = colour
-
             self.parent.monday = monday_object
 
         def create_eod_sale(self):
-
             self.parent.debug(start="create_eod_sale")
-
             if not self.parent.monday:
                 self.parent.debug("No Monday Object to Generate Repairs From")
             else:
                 self.sale_to_post = self.VendSale(self)
                 self.sale_to_post.create_register_sale_products(self.parent.monday.vend_codes)
                 self.sale_to_post.sale_attributes["status"] = "ONACCOUNT_CLOSED"
-
                 if self.id:
                     self.sale_to_post.sale_attributes["id"] = self.id
-
             self.parent.debug(end="create_eod_sale")
 
         def post_sale(self, vend_sale):
-
             self.parent.debug(start="post_sale")
-
             url = "https://icorrect.vendhq.com/api/register_sales"
-
             payload = vend_sale.sale_attributes
             payload = json.dumps(payload)
-
             headers = {
                 'content-type': "application/json",
                 'authorization': os.environ["VENDSYS"]
                 }
-
             response = requests.request("POST", url, data=payload, headers=headers)
-
             sale = json.loads(response.text)
-
             self.sale_info = sale["register_sale"]
-
             self.id = sale["register_sale"]["id"]
-
             self.parent.debug(end="post_sale")
 
         class VendSale():
@@ -453,11 +436,8 @@ class Repair():
                 Args:
                     product_ids (list): List of product ids to be added to the sale
                 """
-
                 self.vend_parent.parent.debug(start="create_register_sale_products")
-
                 for product in product_ids:
-
                     dictionary = {
                         "product_id": product,
                         "quantity": 1,
@@ -465,11 +445,8 @@ class Repair():
                         "tax": False,
                         "tax_id": "647087e0-b318-11e5-9667-02d59481b67d"
                     }
-
                     self.get_pricing_info(dictionary)
-
                     self.sale_attributes["register_sale_products"].append(dictionary)
-
                 self.vend_parent.parent.debug(end="create_register_sale_products")
 
             def get_pricing_info(self, dictionary):
@@ -1034,7 +1011,6 @@ class Repair():
             except KeyError:
                 self.parent.debug("Text Message Template Does Not Exist")
                 message = False
-
             return message
 
     class ZendeskRepair():
