@@ -876,7 +876,7 @@ class Repair():
                     else:
                         self.m_notifications.append(notification_ids[status_label])
                         self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
-                elif not multiple_pulses:
+                elif not self.parent.associated_pulse_results:
                     print("Pulse Statuses not matching - nothing Done")
                 else:
                     print("No Automated Macro")
