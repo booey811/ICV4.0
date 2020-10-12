@@ -870,8 +870,7 @@ class Repair():
                     "Invoiced": 4,
                     "Return Booked": 7
                 }
-                multiple_pulses = self.parent.multiple_pulse_check_repair(check_type="status")
-                if status_label in notification_ids and multiple_pulses:
+                if status_label in notification_ids and self.parent.associated_pulse_results:
                     if notification_ids[status_label] in self.m_notifications:
                         self.parent.debug("Notification ID already present on Pulse - Nothing Done")
                     else:
