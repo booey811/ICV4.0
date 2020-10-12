@@ -327,7 +327,7 @@ def zendesk_to_monday():
 
 # ROUTES // GOPHR
 # Callback Function
-@app.route("/gophr")
+@app.route("/gophr", methods=["POST"])
 def gophr_webhook():
     print("Gophr Webhook")
     info = request.get_data().decode("utf-8")
