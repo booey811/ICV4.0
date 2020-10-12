@@ -288,7 +288,7 @@ def zendesk_comment_sent():
     if not repair.monday:
         repair.debug("No Associated Monday Pulse - Unable to add comment to Monday")
     else:
-        repair.multiple_pulse_check_repair("general"):
+        repair.multiple_pulse_check_repair("general")
         if repair.associated_pulse_results:
             for obj in repair.associated_pulse_results:
                 pulse = Repair(monday=obj.id)
