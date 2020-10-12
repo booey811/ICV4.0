@@ -15,4 +15,10 @@ import keys.messages
 
 test = Repair(monday=791382431)
 
+test.monday.email="blahblah@blah.com"
+test.monday.number="06564728104"
+test.monday.name="ERICA BADU"
+
 test.monday.add_to_zendesk()
+
+test.debug_print(debug='console')

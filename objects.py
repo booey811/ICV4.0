@@ -151,7 +151,7 @@ class Repair():
             if self.source == "zendesk":
                 self.monday.columns.column_values["status5"] = {"label": "Active"}
                 self.monday.columns.column_values["text6"] = str(self.zendesk.ticket_id)
-                self.monday.columns.column_values["status5"] = str("https://icorrect.zendesk.com/agent/tickets/{}".format(self.zendesk.ticket_id))
+                #//// self.monday.columns.column_values["status5"] = str("https://icorrect.zendesk.com/agent/tickets/{}".format(self.zendesk.ticket_id))
             elif self.source == "vend":
                 self.monday.columns.column_values["blocker"] = {"label": "Complete"}
                 self.monday.columns.column_values["text88"] = str(self.vend.id)
@@ -860,42 +860,46 @@ class Repair():
             user = self.parent.search_zendesk_user()
             if not user:
                 self.parent.debug("Cannot Find User -- Must Create One")
-            else:
-                custom_fields =[]
-                for item in fields:
-                    value = getattr(self, item, None)
-                    addition = CustomField(id=fields[item], value=value)
-                    custom_fields.append(addition)
-                tags = ["mondayactive"]
-                for option in tag_options:
-                    category = keys.monday.status_column_dictionary[option]
-                    attribute = getattr(self, category["attribute"])
-                    for value in category["values"]:
-                        if value["label"] == attribute:
-                            tags.append(value["z_tag"])
-                        else:
-                            continue
-                ticket_audit = self.parent.zendesk_client.tickets.create(
-                    Ticket(
-                        subject='Your Repair with iCorrect',
-                        description="iCorrect Ltd",
-                        public=False,
-                        requester_id=user.id,
-                        custom_fields=custom_fields,
-                        tags=tags
-                    )
+                if not self.email:
+                    self.add_update(update="Unable to Create a Zendesk User -- Please provide an email address", user="error")
+                else:
+                    info = User(name=self.name, email=self.email, phone=self.number)
+                    user = self.parent.zendesk_client.users.create(info)
+            custom_fields =[]
+            for item in fields:
+                value = getattr(self, item, None)
+                addition = CustomField(id=fields[item], value=value)
+                custom_fields.append(addition)
+            tags = ["mondayactive"]
+            for option in tag_options:
+                category = keys.monday.status_column_dictionary[option]
+                attribute = getattr(self, category["attribute"])
+                for value in category["values"]:
+                    if value["label"] == attribute:
+                        tags.append(value["z_tag"])
+                    else:
+                        continue
+            ticket_audit = self.parent.zendesk_client.tickets.create(
+                Ticket(
+                    subject='Your Repair with iCorrect',
+                    description="iCorrect Ltd",
+                    public=False,
+                    requester_id=user.id,
+                    custom_fields=custom_fields,
+                    tags=tags
                 )
-                self.parent.include_zendesk(ticket_audit.ticket.id)
-                self.parent.zendesk.address_extractor()
-                self.item.change_multiple_column_values({
-                    "text6": str(ticket_audit.ticket.id),
-                    "status5": {"label": "Active"},
-                    "text00": user.phone,
-                    "text5": user.email,
-                    "text93": self.parent.zendesk.postcode,
-                    "dup__of_passcode": self.parent.zendesk.address2,
-                    "passcode": self.parent.zendesk.address1
-                    })
+            )
+            self.parent.include_zendesk(ticket_audit.ticket.id)
+            self.parent.zendesk.address_extractor()
+            self.item.change_multiple_column_values({
+                "text6": str(ticket_audit.ticket.id),
+                "status5": {"label": "Active"},
+                "text00": user.phone,
+                "text5": user.email,
+                "text93": self.parent.zendesk.postcode,
+                "dup__of_passcode": self.parent.zendesk.address2,
+                "passcode": self.parent.zendesk.address1
+                })
             self.parent.debug(end="add_to_zendesk")
 
 
