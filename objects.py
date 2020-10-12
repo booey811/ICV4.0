@@ -248,33 +248,37 @@ class Repair():
 
     def multiple_pulse_check_repair(self, check_type):
         self.debug(start="multiple_pulse_check")
-        col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
-        results = self.boards["main"].get_items_by_column_values(col_val)
-        if len(results) == 0:
+        if not self.zendesk:
+            self.debug("Unable to Check for Multiple Pulses - No Zendesk Object Exists")
             answer = True
-            self.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(self.zendesk.ticket_id))
-        elif len(results) == 1:
-            answer = True
-            self.debug("Only one pulse found (RETURNING TRUE)")
         else:
-            self.associated_pulse_results = results
-            if check_type == "status":
-                count = 1
-                while count < len(results):
-                    if results[count - 1].get_column_value(id="status4").index != results[count].get_column_value(id="status4").index:
-                        self.debug("Statuses do not match (RETURNING FALSE)")
-                        answer = False
-                        break
-                    else:
-                        self.debug("Two Statuses Match")
-                        answer = True
-                        count += 1
-                        continue
-            elif check_type == "general":
+            col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
+            results = self.boards["main"].get_items_by_column_values(col_val)
+            if len(results) == 0:
                 answer = True
+                self.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(self.zendesk.ticket_id))
+            elif len(results) == 1:
+                answer = True
+                self.debug("Only one pulse found (RETURNING TRUE)")
             else:
-                self.debug("Else Route Taken During multiple_pulse_check")
-                answer = True
+                self.associated_pulse_results = results
+                if check_type == "status":
+                    count = 1
+                    while count < len(results):
+                        if results[count - 1].get_column_value(id="status4").index != results[count].get_column_value(id="status4").index:
+                            self.debug("Statuses do not match (RETURNING FALSE)")
+                            answer = False
+                            break
+                        else:
+                            self.debug("Two Statuses Match")
+                            answer = True
+                            count += 1
+                            continue
+                elif check_type == "general":
+                    answer = True
+                else:
+                    self.debug("Else Route Taken During multiple_pulse_check")
+                    answer = True
         self.debug(end="multiple_pulse_check")
         return answer
 
