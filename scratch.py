@@ -6,13 +6,13 @@ from pprint import pprint
 from moncli import create_column_value, ColumnType
 
 import settings
-from objects import Repair
+from objects import Repair, MondayColumns
 import keys.messages
 
 # test = Repair(vend=5901)
 
 # test.vend.sale_closed()
 
-test = Repair(zendesk=5916)
+test = Repair(zendesk=5901)
 
-pprint(test.zendesk.ticket.organization)
+test.compare_app_objects("zendesk")

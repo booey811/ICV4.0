@@ -209,17 +209,17 @@ status_column_dictionary = {
                 "index": 1,
                 "label": "Walk-In",
                 "z_tag": "walk-in"
-             },
+            },
             {"title": "Courier",
                 "index": 0,
                 "label": "Courier",
                 "z_tag": "courier"
-             },
+            },
             {"title": "Mail-In",
                 "index": 14,
                 "label": "Mail-In",
-                "z_tag": "walk-in"
-             }
+                "z_tag": "mail-in"
+            }
         ]
     },
 

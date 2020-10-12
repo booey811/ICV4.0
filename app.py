@@ -80,9 +80,12 @@ def monday_status_change():
     except TypeError:
         print("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
-    #Check Whether monday.com user is System
+    # Check Whether monday.com user is System
     if data["event"]["userId"] in [12304876, 15365289, 11581083]:
         repair.debug("Change made by System -- Ignored")
+        repair.multiple_pulse_check_repair("general")
+        if (repair.zendesk) and not repair.associated_pulse_results:
+            repair.compare_app_objects("monday")
 
     else:
         # Add to notification column
@@ -252,7 +255,6 @@ def monday_update_added():
 
 # ROUTES // VEND
 # Sale Update
-# TODO: Ignore EOD Sales
 
 @app.route("/vend/sale_update")
 def vend_sale_update():
@@ -308,6 +310,7 @@ def zendesk_comment_sent():
                 pulse = Repair(monday=obj.id)
                 pulse.monday.add_update(update=data["latest_comment"], user="email")
         else:
+            repair.compare_app_objects("zendesk")
             repair.monday.add_update(update=data["latest_comment"], user="email")
 
     repair.debug_print(debug=os.environ["DEBUG"])

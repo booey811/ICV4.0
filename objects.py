@@ -278,6 +278,38 @@ class Repair():
         self.debug(end="multiple_pulse_check")
         return answer
 
+    def compare_app_objects(self, source_of_truth):
+
+        if not self.monday:
+            self.debug("Cannot Compare Monday and Zendesk Objects - Monday does not exist")
+        elif not self.zendesk:
+            self.debug("Cannot Compare Monday and Zendesk Objects - Zendes does not exist")
+        else:
+            updated_item = Repair.MondayRepair(self, created=self.name)
+            for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+                monday = getattr(self.monday, attribute, None)
+                zendesk = getattr(self.zendesk, attribute, None)
+
+                if source_of_truth == "zendesk":
+                    correct = zendesk
+                    incorrect = monday
+                elif source_of_truth == "monday":
+                    correct = monday
+                    incorrect = zendesk
+                    pass
+
+                if ((incorrect == None) or (correct != incorrect)) and source_of_truth == "monday":
+                    self.zendesk.update_custom_field(attribute, correct)
+
+                elif ((incorrect == None) or (correct != incorrect)) and (source_of_truth == "zendesk"):
+                    setattr(updated_item, attribute, correct)
+
+            if source_of_truth == "zendesk":
+                columns = MondayColumns(updated_item)
+                columns.update_item(self.monday)
+
+
+
     class VendRepair():
 
         def __init__(self, repair_object, vend_sale_id=False):
@@ -747,6 +779,8 @@ class Repair():
 
         def adjust_stock(self):
             self.parent.debug(start="adjust stock")
+            if len(self.m_repairs) == 0:
+                self.parent.debug_print("No Repairs on Monday")
             self.convert_to_vend_codes()
             if len(self.vend_codes) != len(self.repairs):
                 self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
@@ -770,6 +804,7 @@ class Repair():
                         self.parent.debug("Experienced Parse Error While Adding to Usage")
                     finally:
                         self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
+                        self.add_update(update="")
             self.parent.debug(end="adjust stock")
 
         def convert_to_vend_codes(self):
@@ -794,7 +829,7 @@ class Repair():
                     self.vend_codes.append(product_id)
                     name = product.name.replace('"', "")
                     name = name.replace('\\"', "")
-                    self.repair_names[product_id] = [name]
+                    self.repair_names[product_id] = name
             self.parent.debug(end="convert_to_vend_codes")
 
         def dropdown_value_webhook_comparison(self, webhook_data):
@@ -1264,6 +1299,50 @@ class Repair():
             self.parent.zendesk_client.tickets.update(self.ticket)
             self.parent.debug(start="add_comment")
 
+
+        def compare_with_monday(self):
+            if not self.parent.monday:
+                self.parent.debug("Cannot Compare Monday and Zendesk Objects - Monday does not exist")
+            else:
+                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+                    monday = getattr(self.parent.monday, attribute, None)
+                    zendesk = getattr(self, attribute, None)
+
+                    print("M:{} == Z:{}".format(monday, zendesk))
+
+        def update_custom_field(self, field, value):
+
+            text_fields = {
+                "address1": 360006582778,
+                "address2": 360006582798,
+                "postcode": 360006582758,
+                "imei_sn": 360004242638,
+                "passcode": 360005102118,
+            }
+
+            tag_fields = {
+                "status": keys.monday.status_column_dictionary["Status"]["values"],
+                "service": keys.monday.status_column_dictionary["Service"]["values"],
+                "client": keys.monday.status_column_dictionary["Client"]["values"],
+                "repair_type": keys.monday.status_column_dictionary["Type"]["values"]
+            }
+
+            if field in text_fields:
+                self.ticket.custom_fields.append(CustomField(id=text_fields[field], value=value))
+                self.parent.zendesk_client.tickets.update(self.ticket)
+
+            elif field in tag_fields:
+                for option in tag_fields[field]:
+                    if option["title"] == value:
+                        self.ticket.tags.extend([option["z_tag"]])
+                        self.parent.zendesk_client.tickets.update(self.ticket)
+
+            else:
+                print("field not found in method")
+
+
+
+
 class MondayColumns():
 
     """Object that contains relevant column information for when repairs are added to Monday.
@@ -1369,3 +1448,29 @@ class MondayColumns():
                 diction = structure(values[column], getattr(monday_object, column))
                 self.column_values[diction[0]] = diction[1]
 
+    def update_item(self, monday_object):
+
+        values_to_change = {}
+
+        for column in self.column_values:
+
+            if self.column_values[column] is None:
+                continue
+            elif type(self.column_values[column]) == dict:
+                try:
+                    if self.column_values[column]["label"]:
+                        values_to_change[column] = self.column_values[column]
+                        continue
+                except KeyError:
+                    try:
+                        if self.column_values[column]["index"]:
+                            values_to_change[column] = self.column_values[column]
+                            continue
+                    except KeyError:
+                        if self.column_values[column]["ids"]:
+                            values_to_change[column] = self.column_values[column]
+                            continue
+            else:
+                values_to_change[column] = self.column_values[column]
+
+        monday_object.item.change_multiple_column_values(values_to_change)
