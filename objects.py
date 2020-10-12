@@ -793,7 +793,7 @@ class Repair():
 
         def status_to_notification(self, status_label):
             self.parent.debug(start="status_to_notification")
-            if not self.zendesk:
+            if not self.parent.zendesk:
                 self.parent.debug("No Zendesk Object Found - No Notifications to be sent")
             else:
                 notification_ids = {
