@@ -9,13 +9,10 @@ import settings
 from objects import Repair
 import keys.messages
 
-test = Repair(monday=783827869)
+# test = Repair(vend=5901)
 
+# test.vend.sale_closed()
 
+test = Repair(monday=791382431)
 
-if test.multiple_pulse_check_repair("general"):
-    for obj in test.associated_pulse_results:
-        pulse = Repair(monday=obj.id)
-        pulse.monday.add_update(update="TEST FROM SCRATCH", user="email")
-
-test.debug_print(debug="console")
+test.monday.add_to_zendesk()

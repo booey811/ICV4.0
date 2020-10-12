@@ -63,7 +63,7 @@ class Repair():
             self.email = self.vend.customer_info["email"]
             self.number = None
             self.alt_numbers = []
-            for number in [self.vend.mobile, self.vend.phone, self.vend.fax]:
+            for number in [self.vend.all_numbers]:
                 if number:
                     if self.number:
                         self.alt_numbers.append(number)
@@ -151,11 +151,17 @@ class Repair():
             if self.source == "zendesk":
                 self.monday.columns.column_values["status5"] = {"label": "Active"}
                 self.monday.columns.column_values["text6"] = str(self.zendesk.ticket_id)
+                self.monday.columns.column_values["status5"] = str("https://icorrect.zendesk.com/agent/tickets/{}".format(self.zendesk.ticket_id))
+            elif self.source == "vend":
+                self.monday.columns.column_values["blocker"] = {"label": "Complete"}
+                self.monday.columns.column_values["text88"] = str(self.vend.id)
             item = self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
 
             if self.zendesk:
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
                 self.zendesk_client.tickets.update(self.zendesk.ticket)
+            elif self.source == "vend" and self.vend.all_numbers:
+                item.add_update("Alternative Numbers:\n".format("\n".join(self.vend.all_numbers)))
 
         self.debug(end="add_to_monday")
 
@@ -291,9 +297,12 @@ class Repair():
                 self.customer_info = self.query_for_customer()
 
                 self.name = "{} {}".format(self.customer_info["first_name"], self.customer_info["last_name"])
-                self.phone = self.customer_info["phone"]
-                self.mobile = self.customer_info["mobile"]
-                self.fax = self.customer_info["fax"]
+                self.number = self.customer_info["mobile"]
+                self.all_numbers = [
+                    self.customer_info["mobile"],
+                    self.customer_info["fax"],
+                    self.customer_info["phone"]
+                ]
                 self.email = self.customer_info["email"]
 
                 self.client = "End User"
@@ -376,7 +385,7 @@ class Repair():
 
         def convert_to_monday_codes(self):
             inv_board = self.parent.monday_client.get_board_by_id(id=703218230)
-            monday_object = MondayRepair(created=self.name)
+            monday_object = Repair.MondayRepair(self.parent, created=self.name)
             for item in self.products:
                 col_val = create_column_value(id="text", column_type=ColumnType.text, value=item)
                 for item in inv_board.get_items_by_column_values(col_val):
@@ -388,6 +397,18 @@ class Repair():
                     monday_object.repairs.append(repair)
                     if not monday_object.colour and colour:
                         monday_object.colour = colour
+            info_attributes = [
+                "email",
+                "number",
+                "client",
+                "service",
+                "repair_type",
+                "passcode",
+                "imei_sn"
+            ]
+            for attribute in info_attributes:
+                setattr(monday_object, attribute, getattr(self, attribute))
+
             self.parent.monday = monday_object
 
         def create_eod_sale(self):
@@ -416,6 +437,17 @@ class Repair():
             self.sale_info = sale["register_sale"]
             self.id = sale["register_sale"]["id"]
             self.parent.debug(end="post_sale")
+
+        def sale_closed(self):
+            self.parent.debug(start="sale_closed")
+            if self.monday:
+                self.monday.change_multiple_column_values({
+                    "status4": {"label": "Returned"}
+                })
+            if self.zendesk:
+                self.parent.zendesk.ticket.status = "closed"
+                self.parent.zendesk_client.tickets.update(slef.parent.zendesk.ticket)
+            self.parent.debug(end="sale_closed")
 
         class VendSale():
 
@@ -478,11 +510,8 @@ class Repair():
                 self.vend_parent.parent.debug(end="get_pricing_info")
 
     class MondayRepair():
-
         def __init__(self, repair_object, monday_id=False, created=False):
-
             self.parent = repair_object
-
 
             self.v_id = None
             self.z_ticket_id = None
@@ -526,22 +555,16 @@ class Repair():
             self.z_notification_tags = []
 
             if monday_id:
-
                 for item in self.parent.monday_client.get_items(limit=1, ids=[int(monday_id)]):
                     self.item = item
                     self.id = item.id
                     break
-
                 self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
-
                 if self.parent.payload:
                     self.user_id = self.parent.payload["event"]["userId"]
-
                 self.retreive_column_data()
                 self.translate_column_data()
-
             if created:
-
                 self.name = created
                 self.id = None
 
@@ -878,11 +901,8 @@ class Repair():
 
 
         def gophr_booking(self, from_client=True):
-
             self.parent.debug(start="gophr_booking")
-
             url = "https://api.gophr.com/v1/commercial-api/create-job"
-
             headers = {
                 'content-type': "application/x-www-form-urlencoded"}
 
@@ -960,7 +980,6 @@ class Repair():
             else:
                 name = "{} Return".format(self.name)
             pprint(gophr_response)
-
             column_values = {"text": collect_postcode,
                             "text4": deliver_postcode,
                             "distance": str(gophr_response["distance"]),
@@ -969,7 +988,6 @@ class Repair():
                             "text9": str(gophr_response["min_realistic_time"]),
                             "text5": self.id
                             }
-
             values = ["pickup_eta", "delivery_eta"]
             for option in values:
                 date = gophr_response[option].split("T")[0]
@@ -979,13 +997,10 @@ class Repair():
                     column_values["date1"] = {"date": date, "time": time}
                 else:
                     column_values["date5"] = {"date": date, "time": time}
-
             new_item = self.parent.boards["gophr"].add_item(item_name=name, column_values=column_values)
-
             self.parent.debug(end="capture_gophr_data")
 
         def textlocal_notification(self):
-
             message = self.textmessage_select_and_parse()
             if message:
                 details = {
@@ -996,7 +1011,6 @@ class Repair():
                 }
                 if self.repair_type == "Diagnostic" and self.status == "Received":
                     details["simple_reply"] = "true"
-
                 data =  parse.urlencode(details)
                 data = data.encode('utf-8')
                 request = urlrequest.Request("https://api.txtlocal.com/send/?")
@@ -1038,6 +1052,10 @@ class Repair():
             self.associated_pulse_results = None
 
             self.monday_id = None
+
+            self.address1 = None
+            self.address2 = None
+            self.postcode = None
 
 
             self.parent = repair_object

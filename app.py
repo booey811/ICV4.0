@@ -249,9 +249,6 @@ def monday_update_added():
 
 # ROUTES // VEND
 # Sale Update
-# TODO: Correct Object Instantiation
-# TODO: Check for Update Monday Product
-# TODO: Add To Monday
 # TODO: Ignore EOD Sales
 
 @app.route("/vend/sale_update")
@@ -265,7 +262,21 @@ def vend_sale_update():
         sale = json.loads(sale['payload'][0])
         repair = Repair(vend=sale["id"])
 
+        # Ignore EOD Sales
+        if any(option in sale["status"] for option in ["ONACCOUNT", "ONACCOUNT_CLOSED"]):
+            repair.debug("Sale Processed for End of Day - Nothing Done")
+            repair.debug("END OF ROUTE")
+
+        # Closed Sales
+        elif sale["status"] == "CLOSED":
+            repair.debug("Sale Closed")
+            repair.vend.sale_closed()
+            repair.debug("END OF ROUTE")
+
         # 'Update Monday' Product in Sale
+        elif sale["status"] == "SAVED" and repair.vend.update_monday:
+            repair.vend.convert_to_monday_codes()
+            repair.add_to_monday()
 
         repair.debug_print(debug=os.environ["DEBUG"])
 
