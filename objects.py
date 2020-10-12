@@ -148,9 +148,12 @@ class Repair():
             self.debug("No Monday Object Available - Unable to Add to Monday")
         else:
             self.monday.columns = MondayColumns(self.monday)
+            name = self.name
             if self.source == "zendesk":
                 self.monday.columns.column_values["status5"] = {"label": "Active"}
                 self.monday.columns.column_values["text6"] = str(self.zendesk.ticket_id)
+                if self.zendesk.ticket.organization:
+                    name = self.name + " ({})".format(self.zendesk.ticket.organization.name)
                 #//// self.monday.columns.column_values["status5"] = str("https://icorrect.zendesk.com/agent/tickets/{}".format(self.zendesk.ticket_id))
             elif self.source == "vend":
                 self.monday.columns.column_values["blocker"] = {"label": "Complete"}
