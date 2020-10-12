@@ -240,7 +240,10 @@ def monday_update_added():
     else:
         repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
         if repair.zendesk:
-            repair.zendesk.add_comment(data["event"]["textBody"])
+            if repair.zendesk.ticket:
+                repair.zendesk.add_comment(data["event"]["textBody"])
+            else:
+                repair.debug("Ticket Does Not Exist")
         else:
             repair.debug("Cannot Add Comment - No Zendesk OBject Available")
     return "Monday Update Posted Route Complete"

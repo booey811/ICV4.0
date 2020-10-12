@@ -1214,9 +1214,11 @@ class Repair():
             for option in keys.monday.dropdown_column_dictionary["Notifications"]["values"]:
                 if option["ids"] == notification_id:
                     tag = option["z_tag"]
-            if tag and tag in self.ticket.tags:
+            if not self.ticket:
+                self.parent.debug("No Ticket Generated on Zendesk Object -- Cannot Process Zendesk Features")
+            elif tag and tag in self.ticket.tags:
                 self.parent.debug("No Macro Sent - macro has already been applied to this ticket")
-                self.parent.monday.add_update(update="no Macro Sent - This ticket has already received this macro", user="email")
+                self.parent.monday.add_update(update="No Macro Sent - This ticket has already received this macro", user="email")
             elif not tag:
                 self.parent.debug("No Macro Sent - Cannot find notification ID in dropdown_column_dictionary")
                 self.parent.monday.add_update("Cannot Send Macro - Please Let Gabe Know (Notification ID not found in dropdown_column_dictionary)", user="error")
