@@ -255,7 +255,7 @@ class Repair():
             self.debug("Funtion Already Performed - Pulses Already Added")
             answer = True
         else:
-            col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
+            col_val = create_column_value(id="text6", column_type=ColumnType.text, value=int(self.zendesk.ticket_id))
             results = self.boards["main"].get_items_by_column_values(col_val)
             if len(results) == 0:
                 answer = False
