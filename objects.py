@@ -792,7 +792,7 @@ class Repair():
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
-                self.parent.vend.post_sale(self.parent.vend.sale_to_post)
+                # self.parent.vend.post_sale(self.parent.vend.sale_to_post)
                 for repair in self.repair_names:
                     col_vals = {
                         "text": self.name,
@@ -802,6 +802,7 @@ class Repair():
                         "numbers_1": self.repair_names[repair][1]
                     }
                     try:
+                        print("try")
                         self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
                     except MondayApiError:
                         self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage", column_values=col_vals)
@@ -810,8 +811,11 @@ class Repair():
                         self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
                         update = []
                         for repair in self.repair_names:
-                            update.append(repair[0])
-                        self.add_update(update="Repairs Processed:\n{}".format("\n".join(update)))
+                            update.append(self.repair_names[repair][0])
+                        try:
+                            self.add_update(update="Repairs Processed:\n{}".format("\n".join(update)))
+                        except MondayApiError:
+                            self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here")
             self.parent.debug(end="adjust stock")
 
         def convert_to_vend_codes(self):

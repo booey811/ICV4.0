@@ -9,5 +9,7 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-test = Repair(vend=5901)
+test = Repair(monday=791447966)
+
+test.monday.adjust_stock()
 
