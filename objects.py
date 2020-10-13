@@ -271,26 +271,25 @@ class Repair():
 
     def pulse_comparison(self, comparison_type):
         self.debug(start="pulse_comparison")
-        if not self.associated_pulse_results:
-            if not self.multiple_pulse_check_repair():
-                self.debug("No Additional Pulses Associated with Repair - Nothing Done")
-                answer = True
+        if not self.multiple_pulse_check_repair():
+            self.debug("No Additional Pulses Associated with Repair - Nothing Done")
+            answer = True
+        else:
+            if comparison_type == "status":
+                count = 1
+                while count < len(self.associated_pulse_results):
+                    if self.associated_pulse_results[count - 1].get_column_value(id="status4").index != self.associated_pulse_results[count].get_column_value(id="status4").index:
+                        self.debug("Statuses do not match (RETURNING FALSE)")
+                        answer = False
+                        break
+                    else:
+                        self.debug("Two Statuses Match")
+                        answer = True
+                        count += 1
+                        continue
             else:
-                if comparison_type == "status":
-                    count = 1
-                    while count < len(self.associated_pulse_results):
-                        if self.associated_pulse_results[count - 1].get_column_value(id="status4").index != self.associated_pulse_results[count].get_column_value(id="status4").index:
-                            self.debug("Statuses do not match (RETURNING FALSE)")
-                            answer = False
-                            break
-                        else:
-                            self.debug("Two Statuses Match")
-                            answer = True
-                            count += 1
-                            continue
-                else:
-                    self.debug("Else Route Taken During pulse_comparison")
-                    answer = False
+                self.debug("Else Route Taken During pulse_comparison")
+                answer = False
         self.debug(end="pulse_comparison")
         return answer
 
