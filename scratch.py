@@ -9,13 +9,6 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-test = Repair(monday=794035075)
+test = Repair(monday=794284778)
 
-test.zendesk.execute_macro(360049146357)
-
-
-
-
-
-
-
+test.monday.status_to_notification("Repaired")

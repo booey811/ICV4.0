@@ -28,7 +28,6 @@ def monday_handshake(webhook):
     else:
         return [True, data]
 
-
 # ROUTES // MONDAY
 # Zenlink Column
 @app.route("/monday/zenlink", methods=["POST", "GET"])
@@ -60,7 +59,6 @@ def monday_zenlink_column():
         pass
 
     return "Zenlink Change Route Completed Successfully"
-
 
 # Status Change
 @app.route("/monday/status", methods=["POST", "GET"])
@@ -209,10 +207,8 @@ def monday_notifications_column():
         else:
             print("new notification returned false")
 
-
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday Notificaions Column Change Route Complete"
-
 
 # End of Day Column
 @app.route("/monday/eod/do_now", methods=["POST"])
@@ -254,17 +250,12 @@ def monday_update_added():
             repair.debug("Cannot Add Comment - No Zendesk OBject Available")
     return "Monday Update Posted Route Complete"
 
-
-
 # ROUTES // VEND
 # Sale Update
-
 @app.route("/vend/sale_update", methods=["POST"])
 def vend_sale_update():
     print("Vend Sale Update")
-
     def process(sale):
-
         sale = sale.decode('utf-8')
         sale = parse_qs(sale)
         sale = json.loads(sale['payload'][0])
@@ -290,8 +281,6 @@ def vend_sale_update():
 
     thread = Thread(target=process, kwargs={"sale": request.get_data()})
     thread.start()
-
-
     return "Vend Sale Update Route Completed Successfully"
 
 
@@ -307,8 +296,7 @@ def zendesk_comment_sent():
     if not repair.monday:
         repair.debug("No Associated Monday Pulse - Unable to add comment to Monday")
     else:
-        repair.multiple_pulse_check_repair("general")
-        if repair.associated_pulse_results:
+        if repair.multiple_pulse_check_repair():
             for obj in repair.associated_pulse_results:
                 pulse = Repair(monday=obj.id)
                 pulse.monday.add_update(update=data["latest_comment"], user="email")
