@@ -9,7 +9,13 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-test = Repair(monday=791447966)
+test = Repair(monday=794035075)
 
-test.monday.adjust_stock()
+test.zendesk.execute_macro(360049146357)
+
+
+
+
+
+
 

@@ -293,7 +293,6 @@ class Repair():
             for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
                 monday = getattr(self.monday, attribute, None)
                 zendesk = getattr(self.zendesk, attribute, None)
-
                 if source_of_truth == "zendesk":
                     correct = zendesk
                     incorrect = monday
@@ -802,7 +801,6 @@ class Repair():
                         "numbers_1": self.repair_names[repair][1]
                     }
                     try:
-                        print("try")
                         self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
                     except MondayApiError:
                         self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage", column_values=col_vals)
@@ -883,7 +881,7 @@ class Repair():
                     else:
                         self.m_notifications.append(notification_ids[status_label])
                         self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
-                elif not self.parent.associated_pulse_results:
+                elif not self.parent.associated_pulse_results: # ! Need to correct this function
                     print("Pulse Statuses not matching - nothing Done")
                 else:
                     print("No Automated Macro")
