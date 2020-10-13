@@ -792,7 +792,7 @@ class Repair():
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
-                # self.parent.vend.post_sale(self.parent.vend.sale_to_post)
+                self.parent.vend.post_sale(self.parent.vend.sale_to_post)
                 for repair in self.repair_names:
                     col_vals = {
                         "text": self.name,
