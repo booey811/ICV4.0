@@ -260,7 +260,7 @@ def monday_update_added():
 # ROUTES // VEND
 # Sale Update
 
-@app.route("/vend/sale_update")
+@app.route("/vend/sale_update", methods=["POST"])
 def vend_sale_update():
     print("Vend Sale Update")
 
