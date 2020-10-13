@@ -1298,12 +1298,9 @@ class Repair():
         def update_monday_notification_column(self, notification_id):
             self.parent.debug(start="update_monday_notification_column")
             if self.parent.multiple_pulse_check_repair():
-                if self.parent.pulse_comparison("status"):
-                    notifications = list(set(self.parent.monday.m_notifications + [notification_id]))
-                    for pulse in self.parent.associated_pulse_results:
-                        pulse.change_multiple_column_values({"dropdown8": {"ids": notifications}})
-                else:
-                    self.parent.debug("Statuses Do Not Match - No Notification Sent")
+                notifications = list(set(self.parent.monday.m_notifications + [notification_id]))
+                for pulse in self.parent.associated_pulse_results:
+                    pulse.change_multiple_column_values({"dropdown8": {"ids": notifications}})
             else:
                 self.parent.debug("Only One Pulse Found - Nothing Done")
             self.parent.debug(end="update_monday_notification_column")
