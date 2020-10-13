@@ -246,40 +246,49 @@ class Repair():
 
         return False
 
-    def multiple_pulse_check_repair(self, check_type):
+    def multiple_pulse_check_repair(self):
         self.debug(start="multiple_pulse_check")
         if not self.zendesk:
             self.debug("Unable to Check for Multiple Pulses - No Zendesk Object Exists")
+            answer = False
+        elif self.associated_pulse_results:
+            self.debug("Funtion Already Performed - Pulses Already Added")
             answer = True
         else:
             col_val = create_column_value(id="text6", column_type=ColumnType.text, value=str(self.zendesk.ticket_id))
             results = self.boards["main"].get_items_by_column_values(col_val)
             if len(results) == 0:
-                answer = True
+                answer = False
                 self.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(self.zendesk.ticket_id))
             elif len(results) == 1:
-                answer = True
+                answer = False
                 self.debug("Only one pulse found (RETURNING TRUE)")
             else:
                 self.associated_pulse_results = results
-                if check_type == "status":
-                    count = 1
-                    while count < len(results):
-                        if results[count - 1].get_column_value(id="status4").index != results[count].get_column_value(id="status4").index:
-                            self.debug("Statuses do not match (RETURNING FALSE)")
-                            answer = False
-                            break
-                        else:
-                            self.debug("Two Statuses Match")
-                            answer = True
-                            count += 1
-                            continue
-                elif check_type == "general":
-                    answer = True
-                else:
-                    self.debug("Else Route Taken During multiple_pulse_check")
-                    answer = True
+                answer = True
         self.debug(end="multiple_pulse_check")
+        return answer
+
+    def pulse_comparison(self, comparison_type):
+        self.debug(start="pulse_comparison")
+        if not self.associated_pulse_results:
+            self.debug("Unable to Compare - No Associated Pulses Found")
+            answer = False
+        elif comparison_type == "status":
+            count = 1
+            while count < len(self.associated_pulse_results):
+                if self.associated_pulse_results[count - 1].get_column_value(id="status4").index != self.associated_pulse_results[count].get_column_value(id="status4").index:
+                    self.debug("Statuses do not match (RETURNING FALSE)")
+                    answer = False
+                    break
+                else:
+                    self.debug("Two Statuses Match")
+                    answer = True
+                    count += 1
+                    continue
+        else:
+            self.debug("Else Route Taken During pulse_comparison")
+        self.debug(end="pulse_comparison")
         return answer
 
     def compare_app_objects(self, source_of_truth):
@@ -875,13 +884,13 @@ class Repair():
                     "Invoiced": 4,
                     "Return Booked": 7
                 }
-                if status_label in notification_ids and self.parent.associated_pulse_results:
+                if (status_label in notification_ids) and (self.parent.associated_pulse_results) and (self.parent.pulse_comparison("status")):
                     if notification_ids[status_label] in self.m_notifications:
                         self.parent.debug("Notification ID already present on Pulse - Nothing Done")
                     else:
                         self.m_notifications.append(notification_ids[status_label])
                         self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
-                elif not self.parent.associated_pulse_results: # ! Need to correct this function
+                elif not self.parent.pulse_comparison("status"): # ! Need to correct this function
                     print("Pulse Statuses not matching - nothing Done")
                 else:
                     print("No Automated Macro")

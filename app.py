@@ -73,7 +73,6 @@ def monday_status_change():
     else:
         data = data[1]
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-    repair.multiple_pulse_check_repair("general")
 
     # Declare type of webhook
     new_status = data["event"]["value"]["label"]["text"]
@@ -85,14 +84,14 @@ def monday_status_change():
     # Check Whether monday.com user is System
     if data["event"]["userId"] in [12304876, 15365289, 11581083]:
         repair.debug("Change made by System -- Ignored")
-        if repair.zendesk and not repair.associated_pulse_results:
+        if repair.zendesk and not repair.multiple_pulse_check_repair():
             repair.compare_app_objects("monday")
 
     else:
         # Add to notification column
         if repair.zendesk:
             repair.monday.status_to_notification(data["event"]["value"]["label"]["text"])
-            if not repair.associated_pulse_results:
+            if not repair.multiple_pulse_check_repair():
                 repair.compare_app_objects("monday")
 
         # Filter By Status
