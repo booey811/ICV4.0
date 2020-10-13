@@ -808,7 +808,10 @@ class Repair():
                         self.parent.debug("Experienced Parse Error While Adding to Usage")
                     finally:
                         self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
-                        self.add_update(update="")
+                        update = []
+                        for repair in self.repair_names:
+                            update.append(repair[0])
+                        self.add_update(update="Repairs Processed:\n{}".format("\n".join(update)))
             self.parent.debug(end="adjust stock")
 
         def convert_to_vend_codes(self):
@@ -833,7 +836,7 @@ class Repair():
                     self.vend_codes.append(product_id)
                     name = product.name.replace('"', "")
                     name = name.replace('\\"', "")
-                    self.repair_names[product_id] = name
+                    self.repair_names[product_id] = [name]
             self.parent.debug(end="convert_to_vend_codes")
 
         def dropdown_value_webhook_comparison(self, webhook_data):
