@@ -162,7 +162,7 @@ class Repair():
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
                 self.zendesk_client.tickets.update(self.zendesk.ticket)
             elif self.source == "vend" and self.vend.all_numbers:
-                item.add_update("Alternative Numbers:\n".format(vend.all_numbers))
+                item.add_update("Alternative Numbers:\n".format(self.vend.all_numbers))
 
         self.debug(end="add_to_monday")
 
@@ -539,6 +539,8 @@ class Repair():
             if self.zendesk:
                 self.parent.zendesk.ticket.status = "closed"
                 self.parent.zendesk_client.tickets.update(slef.parent.zendesk.ticket)
+            for product in self.products:
+                self.add_to_usage(product)
             self.parent.debug(end="sale_closed")
 
         def parked_sale_adjustment(self):
@@ -557,6 +559,28 @@ class Repair():
             self.post_sale(return_sale, sale_update=True)
 
             self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}".format("\n".join(self.pre_checks), "\n".join(self.notes)))
+
+
+        def add_to_usage(self, product_id):
+            url = "https://icorrect.vendhq.com/api/products/{}".format(product_id)
+            headers = {'authorization': os.environ["VENDSYS"]}
+            response = requests.request("GET", url, headers=headers)
+            info = json.loads(response.text)["products"][0]
+            name = info["name"]
+            name = name.replace('"', "")
+            name = name.replace('\\"', "")
+            col_vals = {
+                "text2": "Vend",
+                "numbers_1": info["price"],
+                "numbers_1": info["tax"],
+                "numbers": info["supply_price"],
+                "text": self.name
+            }
+            try:
+                self.parent.boards["usage"].add_item(item_name=name, column_values=col_vals)
+            except MondayApiError:
+                self.parent.boards["usage"].add_item(item_name="Parse Error While Adding", column_values=col_vals)
+
 
         class VendSale():
 
@@ -596,35 +620,26 @@ class Repair():
                 self.vend_parent.parent.debug(end="create_register_sale_products")
 
             def get_pricing_info(self, dictionary):
-
                 self.vend_parent.parent.debug(start="get_pricing_info")
-
                 url = "https://icorrect.vendhq.com/api/products/{}".format(dictionary["product_id"])
-
                 headers = {'authorization': os.environ["VENDSYS"]}
-
                 response = requests.request("GET", url, headers=headers)
-
                 info = json.loads(response.text)["products"][0]
-
                 dictionary["price"] = info["price"]
                 dictionary["tax"] = info["price_book_entries"][0]["tax"]
-
                 if self.vend_parent.parent.monday.client == "Warranty" or self.vend_parent.parent.monday.client == "Refurb":
                     self.vend_parent.parent.debug("Warranty/Refurb Product - Sale and Tax Set to 0")
                     dictionary["price"] = dictionary["tax"] = 0
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(0)
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(0)
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["supply_price"])
-
                 else:
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["price"])
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["tax"])
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["supply_price"])
-
                     self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
-
                 self.vend_parent.parent.debug(end="get_pricing_info")
+
 
     class MondayRepair():
         def __init__(self, repair_object, monday_id=False, created=False):
