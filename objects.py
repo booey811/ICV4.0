@@ -463,7 +463,10 @@ class Repair():
             else:
                 self.sale_to_post = self.VendSale(self)
                 self.sale_to_post.create_register_sale_products(self.parent.monday.vend_codes)
-                self.sale_to_post.sale_attributes["status"] = "ONACCOUNT_CLOSED"
+                if self.parent.monday.client == "Warranty":
+                    self.sale_to_post.sale_attributes["status"] = "CLOSED"
+                else:
+                    self.sale_to_post.sale_attributes["status"] = "ONACCOUNT_CLOSED"
                 if self.id:
                     self.sale_to_post.sale_attributes["id"] = self.id
             self.parent.debug(end="create_eod_sale")
@@ -527,7 +530,11 @@ class Repair():
                         "tax": False,
                         "tax_id": "647087e0-b318-11e5-9667-02d59481b67d"
                     }
-                    self.get_pricing_info(dictionary)
+                    if self.vend_parent.parent.monday.client == "Warranty":
+                        dictionary["price"] = 0
+                        dictionary["tax"] = 0
+                    else:
+                        self.get_pricing_info(dictionary)
                     self.sale_attributes["register_sale_products"].append(dictionary)
                 self.vend_parent.parent.debug(end="create_register_sale_products")
 
