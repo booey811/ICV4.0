@@ -504,7 +504,7 @@ class Repair():
             else:
                 self.sale_to_post = self.VendSale(self)
                 self.sale_to_post.create_register_sale_products(self.parent.monday.vend_codes)
-                if self.parent.monday.client == "Warranty":
+                if self.parent.monday.client == "Warranty" or self.parent.monday.client == "Refurb":
                     self.sale_to_post.sale_attributes["status"] = "CLOSED"
                 else:
                     self.sale_to_post.sale_attributes["status"] = "ONACCOUNT_CLOSED"
@@ -610,8 +610,8 @@ class Repair():
                 dictionary["price"] = info["price"]
                 dictionary["tax"] = info["price_book_entries"][0]["tax"]
 
-                if self.vend_parent.parent.monday.client == "Warranty":
-                    self.vend_parent.parent.debug("Warranty Product - Sale and Tax Set to 0")
+                if self.vend_parent.parent.monday.client == "Warranty" or self.vend_parent.parent.monday.client == "Refurb":
+                    self.vend_parent.parent.debug("Warranty/Refurb Product - Sale and Tax Set to 0")
                     dictionary["price"] = dictionary["tax"] = 0
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(0)
                     self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(0)
@@ -873,6 +873,7 @@ class Repair():
                         "numbers_1": self.repair_names[repair][1]
                     }
                     try:
+                        usage_name = "{} - {}".format(self.repair_names[repair][0], self.client)
                         self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
                     except MondayApiError:
                         self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage", column_values=col_vals)

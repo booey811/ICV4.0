@@ -315,7 +315,11 @@ status_column_dictionary = {
             {"title": "Warranty",
              "index": 19,
              "label": "Warranty",
-             "z_tag": "warranty"}
+             "z_tag": "warranty"},
+            {"title": "Refurb",
+             "index": 3,
+             "label": "Refurb",
+             "z_tag": "refurb"}
         ]
     },
 

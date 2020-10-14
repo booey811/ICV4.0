@@ -9,8 +9,7 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-repair = Repair(vend="6ffc7cac-fb7b-8ad3-11eb-0e10e2c3c77a")
+repair = Repair(monday=796559335)
 
 
-repair.compare_app_objects("vend", "monday")
-repair.vend.parked_sale_adjustment()
+pprint(repair.monday.__dict__)
