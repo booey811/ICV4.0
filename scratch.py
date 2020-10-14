@@ -9,14 +9,9 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-repair = Repair(monday=794401438)
+repair = Repair(monday=794402584)
 
+repair.monday.adjust_stock()
 
+repair.debug_print(debug="console")
 
-if repair.multiple_pulse_check_repair():
-    for obj in repair.associated_pulse_results:
-        pulse = Repair(monday=obj.id)
-        pulse.monday.add_update(update="LATEST COMMENT", user="email")
-else:
-    repair.compare_app_objects("zendesk")
-    repair.monday.add_update(update="LATEST COMMENT ELSE ROUTE", user="email")
