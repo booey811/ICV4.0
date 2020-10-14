@@ -276,6 +276,7 @@ def vend_sale_update():
         elif sale["status"] == "SAVED":
             if repair.vend.update_monday:
                 if not repair.monday:
+                    repair.vend.convert_to_monday_codes()
                     repair.add_to_monday()
                 else:
                     repair.compare_app_objects("vend", "monday")
