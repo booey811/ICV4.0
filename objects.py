@@ -162,7 +162,7 @@ class Repair():
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
                 self.zendesk_client.tickets.update(self.zendesk.ticket)
             elif self.source == "vend" and self.vend.all_numbers:
-                item.add_update("Alternative Numbers:\n".format("\n".join(self.vend.all_numbers)))
+                item.add_update("Alternative Numbers:\n".format(vend.all_numbers))
 
         self.debug(end="add_to_monday")
 
