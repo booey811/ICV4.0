@@ -530,11 +530,7 @@ class Repair():
                         "tax": False,
                         "tax_id": "647087e0-b318-11e5-9667-02d59481b67d"
                     }
-                    if self.vend_parent.parent.monday.client == "Warranty":
-                        dictionary["price"] = 0
-                        dictionary["tax"] = 0
-                    else:
-                        self.get_pricing_info(dictionary)
+                    self.get_pricing_info(dictionary)
                     self.sale_attributes["register_sale_products"].append(dictionary)
                 self.vend_parent.parent.debug(end="create_register_sale_products")
 
@@ -553,11 +549,19 @@ class Repair():
                 dictionary["price"] = info["price"]
                 dictionary["tax"] = info["price_book_entries"][0]["tax"]
 
-                self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["price"])
-                self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["tax"])
-                self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["supply_price"])
+                if self.vend_parent.parent.monday.client == "Warranty":
+                    self.vend_parent.parent.debug("Warranty Product - Sale and Tax Set to 0")
+                    dictionary["price"] = dictionary["tax"] = 0
+                    self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(0)
+                    self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(0)
+                    self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["supply_price"])
 
-                self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
+                else:
+                    self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["price"])
+                    self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["tax"])
+                    self.vend_parent.parent.monday.repair_names[dictionary["product_id"]].append(info["supply_price"])
+
+                    self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
 
                 self.vend_parent.parent.debug(end="get_pricing_info")
 

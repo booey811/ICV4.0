@@ -11,10 +11,7 @@ import keys.messages
 
 repair = Repair(monday=794402584)
 
-repair.monday.convert_to_vend_codes()
-repair.vend = Repair.VendRepair(repair)
-repair.vend.create_eod_sale()
-
-pprint(repair.vend.sale_to_post.__dict__)
+repair.monday.adjust_stock()
 
 repair.debug_print(debug="console")
+
