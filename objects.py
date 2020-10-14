@@ -141,9 +141,7 @@ class Repair():
         self.debug(end="query_applications")
 
     def add_to_monday(self):
-
         self.debug(start="add_to_monday")
-
         if not self.monday:
             self.debug("No Monday Object Available - Unable to Add to Monday")
         else:
@@ -293,7 +291,47 @@ class Repair():
         self.debug(end="pulse_comparison")
         return answer
 
-    def compare_app_objects(self, source_of_truth):
+
+    def compare_app_objects(self, source, upstream):
+
+        if source == "monday" and upstream == "vend":
+            pass
+        elif (source == "monday" and upstream == "zendesk"):
+            if not self.monday or not self.zendesk:
+                self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
+            else:
+                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+                    monday = getattr(self.monday, attribute, None)
+                    zendesk = getattr(self.zendesk, attribute, None)
+                    correct = monday
+                    incorrect = zendesk
+                    if ((incorrect == None) or (correct != incorrect)):
+                        self.zendesk.update_custom_field(attribute, correct)
+        elif source == "zendesk" and upstream == "monday":
+            if not self.monday or not self.zendesk:
+                self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
+            else:
+                updated_item = Repair.MondayRepair(self, created=self.name)
+                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+                    monday = getattr(self.monday, attribute, None)
+                    zendesk = getattr(self.zendesk, attribute, None)
+                    correct = monday
+                    incorrect = zendesk
+                    if ((incorrect == None) or (correct != incorrect)):
+                        setattr(updated_item, attribute, correct)
+                columns = MondayColumns(updated_item)
+                columns.update_item(self.monday)
+        elif source == "vend" and upstream == "monday":
+            if not self.monday or not self.vend:
+                self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
+            else:
+                updated_item = self.vend.convert_to_monday_codes(True)
+                pprint(updated_item.__dict__)
+                columns = MondayColumns(updated_item)
+                columns.update_item(self.monday)
+
+
+    def compare_app_objects_alt(self, source_of_truth):
         if not self.monday:
             self.debug("Cannot Compare Monday and Zendesk Objects - Monday does not exist")
         elif not self.zendesk:
@@ -321,9 +359,7 @@ class Repair():
 
 
     class VendRepair():
-
         def __init__(self, repair_object, vend_sale_id=False):
-
             self.parent = repair_object
             self.id = None
             self.passcode = None
@@ -334,8 +370,9 @@ class Repair():
             self.products = []
             self.notes = []
 
-            if vend_sale_id:
+            self.return_products = []
 
+            if vend_sale_id:
                 self.id = vend_sale_id
                 self.sale_info = self.query_for_sale()
                 self.customer_id = str(self.sale_info["customer_id"])
@@ -357,7 +394,6 @@ class Repair():
                 self.update_monday = False
 
                 self.get_and_organise_product_codes()
-
             else:
                 pass
 
@@ -388,6 +424,8 @@ class Repair():
         def get_and_organise_product_codes(self):
 
             """Go through products on sale organise into pre-checks, actual repairs, extract passcode/data/notification preferences"""
+            if self.sale_info["note"]:
+                self.notes.append(self.sale_info["note"])
 
             for product in self.sale_info["line_items"]:
 
@@ -428,7 +466,7 @@ class Repair():
                 else:
                     self.products.append(product["product_id"])
 
-        def convert_to_monday_codes(self):
+        def convert_to_monday_codes(self, comparison=False):
             inv_board = self.parent.monday_client.get_board_by_id(id=703218230)
             monday_object = Repair.MondayRepair(self.parent, created=self.name)
             for item in self.products:
@@ -454,7 +492,10 @@ class Repair():
             for attribute in info_attributes:
                 setattr(monday_object, attribute, getattr(self, attribute))
 
-            self.parent.monday = monday_object
+            if not comparison:
+                self.parent.monday = monday_object
+            else:
+                return monday_object
 
         def create_eod_sale(self):
             self.parent.debug(start="create_eod_sale")
@@ -471,10 +512,13 @@ class Repair():
                     self.sale_to_post.sale_attributes["id"] = self.id
             self.parent.debug(end="create_eod_sale")
 
-        def post_sale(self, vend_sale):
+        def post_sale(self, vend_sale, sale_update=False):
             self.parent.debug(start="post_sale")
             url = "https://icorrect.vendhq.com/api/register_sales"
-            payload = vend_sale.sale_attributes
+            if sale_update:
+                payload = vend_sale
+            else:
+                payload = vend_sale.sale_attributes
             payload = json.dumps(payload)
             headers = {
                 'content-type': "application/json",
@@ -496,6 +540,23 @@ class Repair():
                 self.parent.zendesk.ticket.status = "closed"
                 self.parent.zendesk_client.tickets.update(slef.parent.zendesk.ticket)
             self.parent.debug(end="sale_closed")
+
+        def parked_sale_adjustment(self):
+
+            # TODO: Iterate through products
+            # TODO: Remove Pre-Checks & 'Update Monday'
+            # TODO: Adjust Monday Pulse to Reflect Any Changes
+
+            return_sale = self.sale_info.copy()
+            return_sale.pop("line_items")
+            print(return_sale)
+            return_sale["register_sale_products"] = []
+            for item in self.sale_info["line_items"]:
+                if item["product_id"] not in keys.vend.pre_checks:
+                    return_sale["register_sale_products"].append(item)
+            self.post_sale(return_sale, sale_update=True)
+
+            self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}".format("\n".join(self.pre_checks), "\n".join(self.notes)))
 
         class VendSale():
 
@@ -627,9 +688,7 @@ class Repair():
             # self.columns = MondayColumns(self)
 
         def translate_column_data(self):
-
             self.parent.debug(start="translate_column_data")
-
             status_attributes = [
                 ["Status", "m_status", "status"],
                 ["Service", "m_service", "service"],
@@ -641,24 +700,19 @@ class Repair():
                 ["Has Case", "m_has_case", "case"],
                 ["Colour", "m_colour", "colour"]
             ]
-
             for column, m_attribute, attribute in status_attributes:
-
                 # Check in status column dictionary for the corresponding column
                 for option in keys.monday.status_column_dictionary[column]["values"]:
-
                     # Take title from column dictionary and add it to the Repair object
                     if option["index"] == getattr(self, m_attribute):
                         setattr(self, attribute, option["title"])
                         self.parent.debug("{}: {}".format(column, option["title"]))
-
             dropdown_attributes = [
                 ["Device", "m_device", "device"],
                 ["Repairs", "m_repairs", "repairs"],
                 ["Screen Condition", "m_screen_condition", "screen_condition"],
                 ["Notifications", "m_notifications", "notifications"]
             ]
-
             for column, m_attribute, attribute in dropdown_attributes:
 
                 if column == "Notifications":
@@ -1238,7 +1292,6 @@ class Repair():
                 self.parent.debug("Monday Object Already Exists - Cannot Create")
             else:
                 self.parent.monday = Repair.MondayRepair(repair_object=self.parent, created=self.name)
-
                 attributes = [
                     "status",
                     "client",
@@ -1253,7 +1306,6 @@ class Repair():
                     "name",
                     "repair_type"
                 ]
-
                 for attribute in attributes:
                     value = getattr(self, attribute, None)
                     if value:
@@ -1334,7 +1386,6 @@ class Repair():
                     print("M:{} == Z:{}".format(monday, zendesk))
 
         def update_custom_field(self, field, value):
-
             text_fields = {
                 "address1": 360006582778,
                 "address2": 360006582798,
@@ -1342,24 +1393,20 @@ class Repair():
                 "imei_sn": 360004242638,
                 "passcode": 360005102118,
             }
-
             tag_fields = {
                 "status": keys.monday.status_column_dictionary["Status"]["values"],
                 "service": keys.monday.status_column_dictionary["Service"]["values"],
                 "client": keys.monday.status_column_dictionary["Client"]["values"],
                 "repair_type": keys.monday.status_column_dictionary["Type"]["values"]
             }
-
             if field in text_fields:
                 self.ticket.custom_fields.append(CustomField(id=text_fields[field], value=value))
                 self.parent.zendesk_client.tickets.update(self.ticket)
-
             elif field in tag_fields:
                 for option in tag_fields[field]:
                     if option["title"] == value:
                         self.ticket.tags.extend([option["z_tag"]])
                         self.parent.zendesk_client.tickets.update(self.ticket)
-
             else:
                 print("field not found in method")
 

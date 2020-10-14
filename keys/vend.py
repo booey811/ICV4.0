@@ -24,7 +24,10 @@ pre_checks = {
     "d9df4e08-e995-db62-217d-449d497733f7": "UNABLE TO TEST: Passcode Unknown",
     "b0c9e041-446a-fd37-f9ab-ea1074c6f416": "DATA: Important",
     "549e099d-a641-7141-c907-cdd9d0266175": "Update Monday",
-    "02dcd191-aeab-11ea-f336-15c354a5a72d": "Has Case"
+    "02dcd191-aeab-11ea-f336-15c354a5a72d": "Has Case",
+    "10df241d-ac51-ccdd-47a5-229cff8c25f7": "MICROPHONE: Working",
+    "087b33fc-b84d-4879-d310-1945f3cf9dd6": "MICROPHONE: Not Working",
+    "d52a55ec-31bf-1a69-a8c9-e9cdadb3209f": "Does Not Have Case"
 }
 
 post_checks = {

@@ -9,9 +9,8 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-repair = Repair(monday=794402584)
+repair = Repair(vend="6ffc7cac-fb7b-8ad3-11eb-0e10e2c3c77a")
 
-repair.monday.adjust_stock()
 
-repair.debug_print(debug="console")
-
+repair.compare_app_objects("vend", "monday")
+repair.vend.parked_sale_adjustment()

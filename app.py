@@ -83,14 +83,14 @@ def monday_status_change():
     if data["event"]["userId"] in [12304876, 15365289, 11581083]:
         repair.debug("Change made by System -- Ignored")
         if repair.zendesk and not repair.multiple_pulse_check_repair():
-            repair.compare_app_objects("monday")
+            repair.compare_app_objects("monday", "zendesk")
 
     else:
         # Add to notification column
         if repair.zendesk:
             repair.monday.status_to_notification(data["event"]["value"]["label"]["text"])
             if not repair.multiple_pulse_check_repair():
-                repair.compare_app_objects("monday")
+                repair.compare_app_objects("monday", "zendesk")
 
         # Filter By Status
         if repair.monday.status == "Received":
@@ -273,10 +273,13 @@ def vend_sale_update():
             repair.debug("END OF ROUTE")
 
         # 'Update Monday' Product in Sale
-        elif sale["status"] == "SAVED" and repair.vend.update_monday:
+        elif sale["status"] == "SAVED":
             repair.vend.convert_to_monday_codes()
-            repair.add_to_monday()
-
+            if not repair.vend.update_monday:
+                repair.add_to_monday()
+            else:
+                repair.compare_app_objects("vend", "monday")
+                repair.vend.parked_sale_adjustment()
         repair.debug_print(debug=os.environ["DEBUG"])
 
     thread = Thread(target=process, kwargs={"sale": request.get_data()})
@@ -301,7 +304,7 @@ def zendesk_comment_sent():
                 pulse = Repair(monday=obj.id)
                 pulse.monday.add_update(update=data["latest_comment"], user="email")
         else:
-            repair.compare_app_objects("zendesk")
+            repair.compare_app_objects("zendesk", "monday")
             repair.monday.add_update(update=data["latest_comment"], user="email")
 
     repair.debug_print(debug=os.environ["DEBUG"])
