@@ -274,12 +274,12 @@ def vend_sale_update():
 
         # 'Update Monday' Product in Sale
         elif sale["status"] == "SAVED":
-            repair.vend.convert_to_monday_codes()
-            if not repair.vend.update_monday:
-                repair.add_to_monday()
-            else:
-                repair.compare_app_objects("vend", "monday")
-                repair.vend.parked_sale_adjustment()
+            if repair.vend.update_monday:
+                if not repair.monday:
+                    repair.add_to_monday()
+                else:
+                    repair.compare_app_objects("vend", "monday")
+                    repair.vend.parked_sale_adjustment()
         repair.debug_print(debug=os.environ["DEBUG"])
 
     thread = Thread(target=process, kwargs={"sale": request.get_data()})
