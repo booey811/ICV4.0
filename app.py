@@ -334,7 +334,26 @@ def gophr_webhook():
     print("Gophr Webhook")
     info = request.get_data().decode("utf-8")
     info = parse_qs(info)
-    print(info)
+
+    status = info["status"][0]
+
+    # TODO Adjust Main Board Status on Confirmation
+    # TODO Add To Gophr Data Board (Courier Name, Booking Time, Actual Collection, Actual Delivery)
+
+    repair = Repair(monday=info["external_id"][0])
+
+    if status == "ACCEPTED_BY_COURIER":
+        repair.monday.adjust_gophr_data(info["external_id"][0], name=info["courier_name"][0], booking=True)
+        if repair.monday.status == "Book Courier":
+            repair.monday.item.change_column_value(id="status4": {"label": "Courier Booked"})
+        elif repair.monday.status == "Book Return Courier":
+            repair.monday.item.change_column_value(id="status4": {"label": "Return Booked"})
+
+    elif status == "AT_PICKUP":
+        repair.monday.adjust_gophr_data(collection=True)
+
+    elif status == "AT_DELIVERY":
+        repair.monday.adjust_gophr_data(delivery=True)
 
     return "Gophr Webhook Route Completed Successfully"
 

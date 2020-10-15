@@ -86,6 +86,7 @@ class Repair():
 
         elif test:
             self.name = "Jeremiah Bullfrog"
+            self.source = "Created"
 
         self.query_applications()
 
@@ -1135,6 +1136,31 @@ class Repair():
                     column_values["date5"] = {"date": date, "time": time}
             new_item = self.parent.boards["gophr"].add_item(item_name=name, column_values=column_values)
             self.parent.debug(end="capture_gophr_data")
+
+        def adjust_gophr_data(self, monday_id, name=False, booking=False, collection=False, delivery=False):
+            col_val = create_column_value(id="text5", column_type=ColumnType.text, value = str(monday_id))
+            results = self.parent.boards["gophr"].get_items_by_column_values(col_val)
+            if len(results) != 1:
+                self.debug("Cannot Find Gophr Data Object")
+            else:
+                for item in results:
+                    pulse = item
+                    break
+                if name:
+                    pulse.change_column_value(column_id="text56", column_value=str(name))
+                adjust = [[booking, "hour89"], [collection, "hour4"], [delivery, "hour_1"]]
+                for column in adjust:
+                    if column[0]:
+                        hour = datetime.now().hour
+                        print(hour)
+                        minute = datetime.now().minute
+                        print(minute)
+                        col_val = create_column_value(id=column[1], column_type=ColumnType.hour, hour=hour, minute=minute)
+                        print(col_val)
+                        pulse.change_multiple_column_values([col_val])
+
+
+
 
         def textlocal_notification(self):
             message = self.textmessage_select_and_parse()
