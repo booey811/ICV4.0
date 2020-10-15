@@ -530,8 +530,8 @@ class Repair():
 
         def sale_closed(self):
             self.parent.debug(start="sale_closed")
-            if self.monday:
-                self.monday.change_multiple_column_values({
+            if self.parent.monday:
+                self.parent.monday.change_multiple_column_values({
                     "status4": {"label": "Returned"}
                 })
             if self.zendesk:
