@@ -156,13 +156,11 @@ class Repair():
             elif self.source == "vend":
                 self.monday.columns.column_values["blocker"] = {"label": "Complete"}
                 self.monday.columns.column_values["text88"] = str(self.vend.id)
-            item = self.boards["main"].add_item(item_name=self.name, column_values=self.monday.columns.column_values)
+            item = self.monday.item = self.boards["main"].add_item(item_name=name, column_values=self.monday.columns.column_values)
 
             if self.zendesk:
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
                 self.zendesk_client.tickets.update(self.zendesk.ticket)
-            elif self.source == "vend" and self.vend.all_numbers:
-                item.add_update("Alternative Numbers:\n".format(self.vend.all_numbers))
 
         self.debug(end="add_to_monday")
 
@@ -558,7 +556,7 @@ class Repair():
                     return_sale["register_sale_products"].append(item)
             self.post_sale(return_sale, sale_update=True)
 
-            self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}".format("\n".join(self.pre_checks), "\n".join(self.notes)))
+            self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}\n\nALT NUMBERS: {}".format("\n".join(self.pre_checks), "\n".join(self.notes), self.all_numbers))
 
 
         def add_to_usage(self, product_id):

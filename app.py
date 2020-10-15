@@ -278,6 +278,7 @@ def vend_sale_update():
                 if not repair.monday:
                     repair.vend.convert_to_monday_codes()
                     repair.add_to_monday()
+                    repair.parked_sale_adjustment()
                 else:
                     repair.compare_app_objects("vend", "monday")
                     repair.vend.parked_sale_adjustment()
