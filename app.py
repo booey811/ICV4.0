@@ -345,9 +345,9 @@ def gophr_webhook():
     if status == "ACCEPTED_BY_COURIER":
         repair.monday.adjust_gophr_data(info["external_id"][0], name=info["courier_name"][0], booking=True)
         if repair.monday.status == "Book Courier":
-            repair.monday.item.change_column_value(id="status4": {"label": "Courier Booked"})
+            repair.monday.item.change_column_value(column_id="status4", column_value={"label": "Courier Booked"})
         elif repair.monday.status == "Book Return Courier":
-            repair.monday.item.change_column_value(id="status4": {"label": "Return Booked"})
+            repair.monday.item.change_column_value(column_id="status4", column_value={"label": "Return Booked"})
 
     elif status == "AT_PICKUP":
         repair.monday.adjust_gophr_data(collection=True)
