@@ -575,7 +575,7 @@ class Repair():
             col_vals = {
                 "text2": "Vend",
                 "numbers_1": info["price"],
-                "numbers_1": info["tax"],
+                "numbers4": info["tax"],
                 "numbers": info["supply_price"],
                 "text": self.name
             }
