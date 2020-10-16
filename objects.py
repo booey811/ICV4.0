@@ -51,6 +51,8 @@ class Repair():
         self.zendesk = None
         self.associated_pulse_results = None
 
+        self.category = None
+
         if webhook_payload:
             self.payload = webhook_payload
         else:
@@ -686,6 +688,7 @@ class Repair():
 
             self.vend_codes = []
             self.repair_names = {}
+            self.category = None
 
             self.z_notification_tags = []
 
@@ -759,6 +762,9 @@ class Repair():
                 if keys.monday.col_ids_to_attributes[item]['attribute'] is not None:
                     col_id = item
                     for value in column_values:
+                        if value.id == "device0":
+                            if value.ids:
+                                self.set_device_category(value.text)
                         if value is None:
                             continue
                         else:
@@ -776,6 +782,20 @@ class Repair():
                                     self.parent.debug(
                                         "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
             self.parent.debug(end="retreive_column_data")
+
+        def set_device_category(self, dropdown_text):
+            dictionary = {
+                "iPhone": "iPhone",
+                "iPad": "iPad",
+                "Watch": "Apple Watch"
+            }
+            for key in dictionary:
+                if key in dropdown_text:
+                    self.category = self.parent.category = dictionary[key]
+                    break
+            if not self.category:
+                if (dropdown_text[0] == "A") and ("Watch" not in dropdown_text):
+                    self.category = self.parent.category = "MacBook"
 
         def check_column_presence(self):
             """Goes through monday columns to make sure essential data has been filled out for this repair

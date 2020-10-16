@@ -9,6 +9,6 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-repair = Repair(monday=801017744)
+repair = Repair(monday=798423274)
 
-repair.monday.add_to_zendesk()
+print(repair.category)
