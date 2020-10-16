@@ -153,7 +153,7 @@ class Repair():
                 self.monday.columns.column_values["text6"] = str(self.zendesk.ticket_id)
                 if self.zendesk.ticket.organization:
                     name = self.name + " ({})".format(self.zendesk.ticket.organization.name)
-                #//// self.monday.columns.column_values["status5"] = str("https://icorrect.zendesk.com/agent/tickets/{}".format(self.zendesk.ticket_id))
+                self.monday.columns.column_values["text410"] = str("https://icorrect.zendesk.com/agent/tickets/{}".format(self.zendesk.ticket_id))
             elif self.source == "vend":
                 self.monday.columns.column_values["blocker"] = {"label": "Complete"}
                 self.monday.columns.column_values["text88"] = str(self.vend.id)
@@ -1026,6 +1026,7 @@ class Repair():
             self.parent.zendesk.address_extractor()
             self.item.change_multiple_column_values({
                 "text6": str(ticket_audit.ticket.id),
+                "text410": str("https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id)),
                 "status5": {"label": "Active"},
                 "text00": user.phone,
                 "text5": user.email,
@@ -1141,7 +1142,7 @@ class Repair():
             col_val = create_column_value(id="text5", column_type=ColumnType.text, value = str(monday_id))
             results = self.parent.boards["gophr"].get_items_by_column_values(col_val)
             if len(results) != 1:
-                self.debug("Cannot Find Gophr Data Object")
+                self.parent.debug("Cannot Find Gophr Data Object")
             else:
                 for item in results:
                     pulse = item
