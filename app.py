@@ -355,10 +355,10 @@ def gophr_webhook():
     elif status == "AT_DELIVERY":
         repair.monday.adjust_gophr_data(repair.monday.id, delivery=True)
 
-    elif status = "DELIVERED":
-        if repair.monday.status = "Courier Booked":
+    elif status == "DELIVERED":
+        if repair.monday.status == "Courier Booked":
             repair.monday.item.change_column_value(column_id="status4", column_value={"label": "Received"})
-        elif repair.monday.status = "Return Booked":
+        elif repair.monday.status == "Return Booked":
             repair.monday.item.change_column_value(column_id="status4", column_value={"label": "Returned"})
 
     return "Gophr Webhook Route Completed Successfully"
