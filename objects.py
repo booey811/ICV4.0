@@ -1582,11 +1582,8 @@ class MondayColumns():
 
 
     def update_item(self, monday_object):
-
         values_to_change = {}
-
         for column in self.column_values:
-
             if column == "link1":
                 continue
             if self.column_values[column] is None:
@@ -1607,5 +1604,4 @@ class MondayColumns():
                             continue
             else:
                 values_to_change[column] = self.column_values[column]
-
         monday_object.item.change_multiple_column_values(values_to_change)
