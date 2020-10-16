@@ -350,10 +350,10 @@ def gophr_webhook():
             repair.monday.item.change_column_value(column_id="status4", column_value={"label": "Return Booked"})
 
     elif status == "AT_PICKUP":
-        repair.monday.adjust_gophr_data(collection=True)
+        repair.monday.adjust_gophr_data(repair.monday.id, collection=True)
 
     elif status == "AT_DELIVERY":
-        repair.monday.adjust_gophr_data(delivery=True)
+        repair.monday.adjust_gophr_data(repair.monday.id, delivery=True)
 
     return "Gophr Webhook Route Completed Successfully"
 
