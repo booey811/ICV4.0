@@ -59,7 +59,7 @@ class Repair():
         if vend:
             self.include_vend(vend)
             self.source = "vend"
-            self.name = self.vend.customer_info["first_name"] + " " + self.vend.customer_info["last_name"]
+            self.name = "{} {}".format(self.vend.customer_info["first_name"], self.vend.customer_info["last_name"])
             self.email = self.vend.customer_info["email"]
             self.number = None
             self.alt_numbers = []
