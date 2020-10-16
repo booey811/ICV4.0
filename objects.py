@@ -535,9 +535,9 @@ class Repair():
                 self.parent.monday.item.change_multiple_column_values({
                     "status4": {"label": "Returned"}
                 })
-            if self.zendesk:
+            if self.parent.zendesk:
                 self.parent.zendesk.ticket.status = "closed"
-                self.parent.zendesk_client.tickets.update(slef.parent.zendesk.ticket)
+                self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
             for product in self.products:
                 self.add_to_usage(product)
             self.parent.debug(end="sale_closed")
@@ -1153,11 +1153,8 @@ class Repair():
                 for column in adjust:
                     if column[0]:
                         hour = datetime.now().hour
-                        print(hour)
                         minute = datetime.now().minute
-                        print(minute)
                         col_val = create_column_value(id=column[1], column_type=ColumnType.hour, hour=hour, minute=minute)
-                        print(col_val)
                         pulse.change_multiple_column_values([col_val])
 
 
