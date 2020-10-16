@@ -1587,6 +1587,8 @@ class MondayColumns():
 
         for column in self.column_values:
 
+            if column == "link1":
+                continue
             if self.column_values[column] is None:
                 continue
             elif type(self.column_values[column]) == dict:
