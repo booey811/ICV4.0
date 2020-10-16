@@ -540,7 +540,10 @@ class Repair():
                 self.parent.zendesk.ticket.status = "closed"
                 self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
             for product in self.products:
-                self.add_to_usage(product)
+                if (product in keys.vend.post_checks) or (product in keys.vend.pre_checks):
+                    continue
+                else:
+                    self.add_to_usage(product)
             self.parent.debug(end="sale_closed")
 
         def parked_sale_adjustment(self):
