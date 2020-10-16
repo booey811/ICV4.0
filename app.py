@@ -80,7 +80,7 @@ def monday_status_change():
         print("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
     # Check Whether monday.com user is System
-    if data["event"]["userId"] in [12304876, 15365289, 11581083]:
+    if (data["event"]["userId"] in [15365289, 11581083]):
         repair.debug("Change made by System -- Ignored")
         if repair.zendesk and not repair.multiple_pulse_check_repair():
             repair.compare_app_objects("monday", "zendesk")

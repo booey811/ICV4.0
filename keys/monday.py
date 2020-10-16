@@ -4,7 +4,7 @@ user_ids = {
 
 col_ids_to_attributes = {
     'check': {'title': 'Invoiced?', 'value_type': ['checked'], 'attribute': "invoiced"},
-    'text410': {'title': 'Link to Ticket', 'value_type': ['text'], 'attribute': "zendesk_url"},
+    'link1': {'title': 'Ticket', 'value_type': ['url', 'text'], 'attribute': "zendesk_url"},
     'status5': {'title': 'ZenLink', 'value_type': ["index", "label"], 'attribute': "m_zenlink"},
     'status4': {'title': 'Status', 'value_type': ["index", "label"], 'attribute': "m_status"},
     'service': {'title': 'Service', 'value_type': ["index", "label"], 'attribute': "m_service"},

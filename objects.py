@@ -117,6 +117,7 @@ class Repair():
 
             if self.monday.z_ticket_id:
                 self.include_zendesk(self.monday.z_ticket_id)
+                self.monday.zendesk_url = "https://icorrect.zendesk.com/agent/tickets/{}".format(self.monday.z_ticket_id)
 
         elif self.source == 'vend':
             col_val = create_column_value(id='text88', column_type=ColumnType.text, value=str(self.vend.id))
@@ -1026,7 +1027,7 @@ class Repair():
             self.parent.zendesk.address_extractor()
             self.item.change_multiple_column_values({
                 "text6": str(ticket_audit.ticket.id),
-                "text410": str("https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id)),
+                "link1": {"url": str("https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id)), "text": str(ticket_audit.ticket.id)},
                 "status5": {"label": "Active"},
                 "text00": user.phone,
                 "text5": user.email,
@@ -1233,6 +1234,7 @@ class Repair():
                     self.ticket = ticket
                     self.user = self.ticket.requester
                     self.user_id = self.user.id
+                    self.zendesk_url = "https://icorrect.zendesk.com/agent/tickets/{}".format(self.ticket.id)
 
                     self.name = self.user.name
                     self.email = self.user.email
@@ -1342,7 +1344,8 @@ class Repair():
                     "number",
                     "email",
                     "name",
-                    "repair_type"
+                    "repair_type",
+                    "zendesk_url"
                 ]
                 for attribute in attributes:
                     value = getattr(self, attribute, None)
@@ -1498,7 +1501,6 @@ class MondayColumns():
 
         "text": {
             "values": {
-                "zendesk_url": "text410", # Zenlink Column
                 "email": "text5", # Email Column
                 "number": "text00", # Tel. No. Column
                 "z_ticket_id": "text6", # Zendesk ID Column
@@ -1511,6 +1513,15 @@ class MondayColumns():
             },
 
             "structure": lambda id, value: [id, value]
+        },
+
+        "link": {
+            "values": {
+                "zendesk_url": "link1" # Zenlink URL Column
+            },
+
+            "structure": lambda id, url, text: [id, {"url": url, "text": text}]
+
         },
 
         "dropdown": {
@@ -1553,8 +1564,19 @@ class MondayColumns():
             structure = self.attributes_to_ids[category]["structure"]
 
             for column in values:
-                diction = structure(values[column], getattr(monday_object, column))
-                self.column_values[diction[0]] = diction[1]
+                if category == "link":
+                    diction = structure(values[column], getattr(monday_object, column), getattr(monday_object, "z_ticket_id"))
+                    print(column)
+                    print(diction)
+                    self.column_values[diction[0]] = diction[1]
+                else:
+                    diction = structure(values[column], getattr(monday_object, column))
+                    print(column)
+                    print(diction)
+                    self.column_values[diction[0]] = diction[1]
+
+        pprint(self.column_values)
+
 
     def update_item(self, monday_object):
 
