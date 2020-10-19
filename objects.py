@@ -916,7 +916,7 @@ class Repair():
                     }
                     try:
                         usage_name = "{} - {}".format(self.repair_names[repair][0], self.client)
-                        self.parent.boards["usage"].add_item(item_name=self.repair_names[repair][0], column_values=col_vals)
+                        self.parent.boards["usage"].add_item(item_name=usage_name, column_values=col_vals)
                     except MondayApiError:
                         self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage", column_values=col_vals)
                         self.parent.debug("Experienced Parse Error While Adding to Usage")
