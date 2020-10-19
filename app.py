@@ -267,7 +267,7 @@ def vend_sale_update():
             repair.debug("END OF ROUTE")
 
         # Closed Sales
-        elif sale["status"] == "CLOSED":
+        elif sale["status"] == "CLOSED" and repair.monday.client != "Refurb":
             repair.debug("Sale Closed")
             repair.vend.sale_closed()
             repair.debug("END OF ROUTE")

@@ -531,6 +531,7 @@ class Repair():
             self.sale_info = sale["register_sale"]
             self.id = sale["register_sale"]["id"]
             self.parent.debug(end="post_sale")
+            return sale["register_sale"]["id"]
 
         def sale_closed(self):
             self.parent.debug(start="sale_closed")
@@ -903,14 +904,15 @@ class Repair():
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
-                self.parent.vend.post_sale(self.parent.vend.sale_to_post)
+                sale_id = str(self.parent.vend.post_sale(self.parent.vend.sale_to_post))
                 for repair in self.repair_names:
                     col_vals = {
                         "text": self.name,
                         "text2": self.parent.source.capitalize(),
                         "numbers": self.repair_names[repair][3],
                         "numbers4": self.repair_names[repair][2],
-                        "numbers_1": self.repair_names[repair][1]
+                        "numbers_1": self.repair_names[repair][1],
+                        "text6": sale_id
                     }
                     try:
                         usage_name = "{} - {}".format(self.repair_names[repair][0], self.client)
