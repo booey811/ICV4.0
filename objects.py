@@ -815,7 +815,7 @@ class Repair():
             # Check if some type of screen repair has been completed
             if any(repair in self.m_repairs for repair in [69, 74, 84, 89, 90, 83]):
                 # Check that screen condition has been selected/not left blank
-                if not self.m_screen_condition:
+                if not self.m_screen_condition and self.client != "Refurb":
                     self.add_update(
                         "You have not selected a screen condition for this repair - please select an option from the dropdown menu and try again",
                         user="error",
@@ -842,7 +842,7 @@ class Repair():
                     )
                     return False
             # Check that IMEI has been recorded
-            if not self.imei_sn:
+            if not self.imei_sn and self.client != "Refurb":
                 self.add_update(
                     "This device does not have an IMEI or SN given - please input this and try again",
                     user="error",

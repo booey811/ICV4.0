@@ -9,6 +9,6 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-repair = Repair(monday=798423274)
+repair = Repair(monday=794754139)
 
-print(repair.category)
+print(repair.monday.client)
