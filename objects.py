@@ -579,8 +579,10 @@ class Repair():
                 "numbers_1": info["price"],
                 "numbers4": info["tax"],
                 "numbers": info["supply_price"],
-                "text": self.name
+                "text": self.name,
             }
+            if self.id:
+                col_vals["text6"] = self.id
             try:
                 self.parent.boards["usage"].add_item(item_name=name, column_values=col_vals)
             except MondayApiError:
