@@ -542,7 +542,7 @@ class Repair():
                 if item["product_id"] not in keys.vend.pre_checks:
                     return_sale["register_sale_products"].append(item)
             self.post_sale(return_sale, sale_update=True)
-            if self.add_notes and not self.parent.monday.imei_sn:
+            if add_notes and not self.parent.monday.imei_sn:
                 self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}\n\nALT NUMBERS: {}".format("\n".join(self.pre_checks), "\n".join(self.notes), self.all_numbers))
 
 
