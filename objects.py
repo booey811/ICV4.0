@@ -327,7 +327,7 @@ class Repair():
             if not self.monday or not self.vend:
                 self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
             else:
-                updated_item = self.vend.convert_to_monday_codes(True)
+                updated_item = self.vend.convert_to_monday_codes(comparison=True)
                 pprint(updated_item.__dict__)
                 columns = MondayColumns(updated_item)
                 columns.update_item(self.monday)
@@ -357,7 +357,6 @@ class Repair():
             if source_of_truth == "zendesk":
                 columns = MondayColumns(updated_item)
                 columns.update_item(self.monday)
-
 
 
     class VendRepair():
@@ -400,70 +399,50 @@ class Repair():
                 pass
 
         def query_for_customer(self):
-
             url = "https://icorrect.vendhq.com/api/2.0/customers/{}".format(self.customer_id)
-
             headers = {'authorization': os.environ["VENDSYS"]}
-
             response = requests.request("GET", url, headers=headers)
-
             customer = json.loads(response.text)["data"]
-
             return customer
 
         def query_for_sale(self):
-
             url = "https://icorrect.vendhq.com/api/2.0/sales/{}".format(self.id)
-
             headers = {'authorization': os.environ["VENDSYS"]}
-
             response = requests.request("GET", url, headers=headers)
-
             sale = json.loads(response.text)["data"]
-
             return sale
 
         def get_and_organise_product_codes(self):
-
             """Go through products on sale organise into pre-checks, actual repairs, extract passcode/data/notification preferences"""
             if self.sale_info["note"]:
                 self.notes.append(self.sale_info["note"])
-
             for product in self.sale_info["line_items"]:
-
                 # Check if 'Update Monday Product is present'
                 if product["product_id"] == "549e099d-a641-7141-c907-cdd9d0266175":
                     self.update_monday = True
                     continue
-
                 # Check if Diagnostic Product is present, extract notes if so
                 if product["product_id"] == "02d59481-b6ab-11e5-f667-e9f1a04c6e04":
                     self.repair_type = "Diagnostic"
                     self.notes.append(product["note"])
                     continue
-
                 # Check if Warranty Product is present, extract notes if so
                 if product["product_id"] == "02dcd191-aeab-11e6-f485-aea7f2c0a90a":
                     self.client = "Warranty"
                     self.notes.append(product["note"])
                     continue
-
                 # Check if product is the password product
                 if product["product_id"] == "6ce9883a-dfd1-e137-1596-d7c3c97fb450":
                     self.passcode = product["note"]
                     continue
-
                 # Extract IMEI
                 if product["note"]:
                     if any(option in product["note"] for option in ["IMEI", "SN", "S/N"]):
                         self.imei_sn = product["note"].split(":")[1].strip()
-
-
                 # Check if product is a pre-check
                 if product["product_id"] in keys.vend.pre_checks:
                     self.pre_checks.append(keys.vend.pre_checks[product["product_id"]])
                     continue
-
                 # Add remaining codes to vend code attribute
                 else:
                     self.products.append(product["product_id"])
@@ -493,7 +472,6 @@ class Repair():
             ]
             for attribute in info_attributes:
                 setattr(monday_object, attribute, getattr(self, attribute))
-
             if not comparison:
                 self.parent.monday = monday_object
             else:
@@ -539,6 +517,7 @@ class Repair():
                 self.parent.monday.item.change_multiple_column_values({
                     "status4": {"label": "Returned"}
                 })
+                self.parent.monday.add_update(update="Vend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(self.id))
             if self.parent.zendesk:
                 self.parent.zendesk.ticket.status = "closed"
                 self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
@@ -549,7 +528,7 @@ class Repair():
                     self.add_to_usage(product)
             self.parent.debug(end="sale_closed")
 
-        def parked_sale_adjustment(self):
+        def parked_sale_adjustment(self, add_notes=True):
 
             # TODO: Iterate through products
             # TODO: Remove Pre-Checks & 'Update Monday'
@@ -563,8 +542,8 @@ class Repair():
                 if item["product_id"] not in keys.vend.pre_checks:
                     return_sale["register_sale_products"].append(item)
             self.post_sale(return_sale, sale_update=True)
-
-            self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}\n\nALT NUMBERS: {}".format("\n".join(self.pre_checks), "\n".join(self.notes), self.all_numbers))
+            if self.add_notes and not self.parent.monday.imei_sn:
+                self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}\n\nALT NUMBERS: {}".format("\n".join(self.pre_checks), "\n".join(self.notes), self.all_numbers))
 
 
         def add_to_usage(self, product_id):
@@ -926,9 +905,9 @@ class Repair():
                         for repair in self.repair_names:
                             update.append(self.repair_names[repair][0])
                         try:
-                            self.add_update(update="Repairs Processed:\n{}".format("\n".join(update)))
+                            self.add_update(update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/"{}.format(sale_id)))
                         except MondayApiError:
-                            self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here")
+                            self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/"{}.format(sale_id))
             self.parent.debug(end="adjust stock")
 
         def convert_to_vend_codes(self):
