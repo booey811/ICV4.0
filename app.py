@@ -268,6 +268,7 @@ def refurb_to_main():
     refurb.statuses_to_repairs()
     refurb.adjust_main_board_repairs()
 
+    return "Add Refurb to Main Board Route Complete"
 
 
 # ROUTES // VEND
