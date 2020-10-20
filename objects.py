@@ -905,7 +905,7 @@ class Repair():
                         for repair in self.repair_names:
                             update.append(self.repair_names[repair][0])
                         try:
-                            self.add_update(update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/"{}.format(sale_id)))
+                            self.add_update(update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id)))
                         except MondayApiError:
                             self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/"{}.format(sale_id))
             self.parent.debug(end="adjust stock")
