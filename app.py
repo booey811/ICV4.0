@@ -5,7 +5,7 @@ from urllib.parse import parse_qs
 
 from flask import Flask, request
 
-from objects import Repair
+from objects import Repair, RefurbUnit
 
 # APP SET UP
 app = Flask(__name__)
@@ -249,6 +249,23 @@ def monday_update_added():
         else:
             repair.debug("Cannot Add Comment - No Zendesk OBject Available")
     return "Monday Update Posted Route Complete"
+
+# Refurb Added to Main Board
+@app.route("/monday/refurb/add", methods=["POST"])
+def refurb_to_main():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    refurb = RefurbUnit(int(data["event"]["pulseId"]))
+
+    refurb.statuses_to_repairs()
+    refurb.adjust_main_board_repairs()
+
+
 
 # ROUTES // VEND
 # Sale Update

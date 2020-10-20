@@ -6,11 +6,28 @@ from pprint import pprint
 from moncli import create_column_value, ColumnType
 
 import settings
-from objects import Repair, MondayColumns
+from objects import Repair, MondayColumns, RefurbUnit
 import keys.messages
 
-repair = Repair(vend='6b530743-1938-ba07-11eb-12abe7f66b7e')
+# repair = Repair(test=True)
 
-repair.compare_app_objects("vend", "monday")
+# refurbs = repair.monday_client.get_items(ids=[806715006])
 
-repair.vend.parked_sale_adjustment()
+# for item in refurbs:
+#     pulse = item
+#     break
+
+# for column in item.get_column_values():
+#     print(column.title, column.id)
+#     if column.id == "connect_boards1":
+#         print(column.__dict__)
+
+# # col_val = create_column_value(id="repairs", column_type=ColumnType.dropdown, ids=[69])
+# col_val = {"repairs": {"ids": [69, 71]}}
+
+# item.change_column_value(col_val)
+
+test = RefurbUnit(806715006)
+
+test.statuses_to_repairs()
+test.adjust_main_board_repairs()

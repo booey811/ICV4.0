@@ -40,7 +40,8 @@ class Repair():
         "usage": monday_client.get_board_by_id(id=722437885),
         "zendesk_tags": monday_client.get_board_by_id(id=765453815),
         "macros": monday_client.get_board_by_id(id=762417852),
-        "gophr": monday_client.get_board_by_id(id=538565672)
+        "gophr": monday_client.get_board_by_id(id=538565672),
+        "refurbs": monday_client.get_board_by_id(id=757808757)
     }
 
     def __init__(self, webhook_payload=False, vend=False, monday=False, zendesk=False, test=False):
@@ -957,28 +958,27 @@ class Repair():
 
         def status_to_notification(self, status_label):
             self.parent.debug(start="status_to_notification")
-            if not self.parent.zendesk:
-                self.parent.debug("No Zendesk Object Found - No Notifications to be sent")
-            else:
-                notification_ids = {
-                    "Booking Confirmed": 1,
-                    "Courier Booked": 6,
-                    "Received": 2,
-                    "Returned": 5,
-                    "Repaired": 3,
-                    "Invoiced": 4,
-                    "Return Booked": 7
-                }
-                if (status_label in notification_ids):
-                    if notification_ids[status_label] in self.m_notifications:
-                        self.parent.debug("Notification ID already present on Pulse - Nothing Done")
-                    elif self.parent.pulse_comparison("status"):
-                        self.m_notifications.append(notification_ids[status_label])
-                        self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
-                    else:
-                        print("else route")
+            notification_ids = {
+                "Booking Confirmed": 1,
+                "Courier Booked": 6,
+                "Received": 2,
+                "Returned": 5,
+                "Repaired": 3,
+                "Invoiced": 4,
+                "Return Booked": 7
+            }
+            if (status_label in notification_ids):
+                if not self.parent.zendesk:
+                    self.add_to_zendesk()
+                if notification_ids[status_label] in self.m_notifications:
+                    self.parent.debug("Notification ID already present on Pulse - Nothing Done")
+                elif self.parent.pulse_comparison("status"):
+                    self.m_notifications.append(notification_ids[status_label])
+                    self.item.change_multiple_column_values({"dropdown8": {"ids": self.m_notifications}})
                 else:
-                    print("No Automated Macro")
+                    print("else route")
+            else:
+                print("No Automated Macro")
             self.parent.debug(end="status_to_notification")
 
         def add_to_zendesk(self):
@@ -1608,3 +1608,69 @@ class MondayColumns():
             else:
                 values_to_change[column] = self.column_values[column]
         monday_object.item.change_multiple_column_values(values_to_change)
+
+
+class RefurbUnit():
+
+    monday_client = MondayClient(
+        user_name='systems@icorrect.co.uk',
+        api_key_v1=os.environ["MONV1SYS"],
+        api_key_v2=os.environ["MONV2SYS"]
+        )
+
+    # Monday Boards
+    boards = {
+        "logging": monday_client.get_board_by_id(id=736027251),
+        "inventory": monday_client.get_board_by_id(id=703218230),
+        "main": monday_client.get_board_by_id(id=349212843),
+        "usage": monday_client.get_board_by_id(id=722437885),
+        "zendesk_tags": monday_client.get_board_by_id(id=765453815),
+        "macros": monday_client.get_board_by_id(id=762417852),
+        "gophr": monday_client.get_board_by_id(id=538565672),
+        "refurbs": monday_client.get_board_by_id(id=757808757)
+    }
+
+    def __init__(self, monday_id):
+
+        self.id = monday_id
+
+        for pulse in self.monday_client.get_items(ids=[monday_id], limit=1):
+            self.item = pulse
+            break
+
+        self.main_board_id = self.item.get_column_value(id="connect_boards1").value["linkedPulseIds"][0]["linkedPulseId"]
+
+        for item in self.monday_client.get_items(ids=[self.main_board_id], limit=1):
+            self.main_board_item = item
+            break
+
+
+    def statuses_to_repairs(self):
+        repairs = []
+        columns_to_use = {
+            "vol_buttons3": 75,
+            "mute_button": 36,
+            "power_button": 73,
+            "earpiece": 88,
+            "loudspeaker": 18,
+            "wifi3": 93,
+            "bluetooth22": 54,
+            "bluetooth2": 101,
+            "bluetooth1": 85,
+            "nfc4": 70,
+            "nfc5": 76,
+            "front_camera0": 66,
+            "front_camera9": 102,
+            "front_camera7": 78,
+            "haptic": 96,
+            "front_screen": 65
+        }
+        for column in self.item.get_column_values():
+            if column.id in columns_to_use and column.index == 2:
+                repairs.append(columns_to_use[column.id])
+
+        self.repairs_required = repairs
+
+    def adjust_main_board_repairs(self):
+
+        self.main_board_item.change_multiple_column_values({"repair": {"ids": self.repairs_required}})
