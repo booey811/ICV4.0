@@ -542,12 +542,24 @@ class Repair():
             if self.parent.zendesk:
                 self.parent.zendesk.ticket.status = "closed"
                 self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
+                self.customer_id_to_zendesk(self.id)
             for product in self.products:
                 if (product in keys.vend.post_checks) or (product in keys.vend.pre_checks):
                     continue
                 else:
                     self.add_to_usage(product)
             self.parent.debug(end="sale_closed")
+
+        def customer_id_to_zendesk(self, customer_id):
+            if not self.parent.zendesk:
+                return False
+            elif not self.parent.zendesk.ticket.requester.user_fields["vend_customer_id"]:
+                self.parent.zendesk.ticket.requester.user_fields["vend_customer_id"] = customer_id
+                self.parent.zendesk_client.users.update(self.parent.zendesk.ticket.requester)
+                return True
+            else:
+                return False
+
 
         def parked_sale_adjustment(self):
 
@@ -557,7 +569,6 @@ class Repair():
 
             return_sale = self.sale_info.copy()
             return_sale.pop("line_items")
-            print(return_sale)
             return_sale["register_sale_products"] = []
             for item in self.sale_info["line_items"]:
                 if item["product_id"] not in keys.vend.pre_checks:
