@@ -907,7 +907,7 @@ class Repair():
                         try:
                             self.add_update(update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id)))
                         except MondayApiError:
-                            self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/"{}.format(sale_id))
+                            self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id))
             self.parent.debug(end="adjust stock")
 
         def convert_to_vend_codes(self):
