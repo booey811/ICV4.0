@@ -2,6 +2,7 @@ from threading import Thread
 import json
 import os
 from urllib.parse import parse_qs
+from time import sleep
 
 from flask import Flask, request
 
@@ -259,6 +260,8 @@ def refurb_to_main():
         return data[1]
     else:
         data = data[1]
+
+    sleep(4)
 
     refurb = RefurbUnit(int(data["event"]["pulseId"]))
 
