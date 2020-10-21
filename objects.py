@@ -160,13 +160,10 @@ class Repair():
             elif self.source == "vend":
                 self.monday.columns.column_values["blocker"] = {"label": "Complete"}
                 self.monday.columns.column_values["text88"] = str(self.vend.id)
-            pprint(self.monday.columns.column_values)
             item = self.monday.item = self.boards["main"].add_item(item_name=name, column_values=self.monday.columns.column_values)
-
             if self.zendesk:
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
                 self.zendesk_client.tickets.update(self.zendesk.ticket)
-
         self.debug(end="add_to_monday")
 
     def debug(self, *args, start=False, end=False):
@@ -550,8 +547,16 @@ class Repair():
                 if item["product_id"] not in keys.vend.pre_checks:
                     return_sale["register_sale_products"].append(item)
             self.post_sale(return_sale, sale_update=True)
-            if add_notes and not self.parent.monday.imei_sn:
-                self.parent.monday.add_update("PRE-CHECKS:\n{}\n\nNOTES:\n{}\n\nALT NUMBERS: {}".format("\n".join(self.pre_checks), "\n".join(self.notes), self.all_numbers))
+            count = 1
+            key = {
+                1: "PRE-CHECKS",
+                2: "NOTES",
+                3: "ALTERNATE NUMBERS"
+            }
+            for info in [[self.pre_checks, "PRE-CHECKS"], [self.notes, "NOTES"]]:
+                if info[0]:
+                    self.parent.monday.add_update(update="{}:\n\n{}".format(info[1], "\n".join(info[0])))
+
 
 
         def add_to_usage(self, product_id):
