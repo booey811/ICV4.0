@@ -9,13 +9,6 @@ import settings
 from objects import Repair, MondayColumns
 import keys.messages
 
-repair = Repair(zendesk=5974)
-repair.vend = Repair.VendRepair(repair)
+repair = Repair(monday=809281487)
 
-pprint(repair.zendesk.ticket.requester.user_fields)
-
-
-repair.vend.customer_id_to_zendesk("blah bkah vlahd")
-
-
-# ! Adding V-ID to Zendesk TO SEE: VendRepair.customer_id_to_zendesk
+repair.monday.add_to_zendesk()
