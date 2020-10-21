@@ -1259,7 +1259,7 @@ class Repair():
 
 
             if not created:
-                self.ticket_id = zendesk_ticket_number
+                self.ticket_id = str(zendesk_ticket_number)
                 try:
                     ticket = self.parent.zendesk_client.tickets(id=self.ticket_id)
                 except zenpyExceptions.RecordNotFoundException:
@@ -1390,7 +1390,7 @@ class Repair():
                     value = getattr(self, attribute, None)
                     if value:
                         setattr(self.parent.monday, attribute, value)
-                self.parent.monday.z_ticket_id = self.ticket_id
+                self.parent.monday.z_ticket_id = str(self.ticket_id)
                 if self.ticket.organization:
                     self.parent.monday.name += " ({})".format(self.ticket.organization.name)
                 for notification in self.notifications:
