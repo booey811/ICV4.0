@@ -309,7 +309,6 @@ def vend_sale_update():
     thread.start()
     return "Vend Sale Update Route Completed Successfully"
 
-
 # ROUTES // ZENDESK
 # New Comment
 @app.route("/zendesk/comments", methods=["POST"])

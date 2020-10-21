@@ -157,10 +157,10 @@ class Repair():
                 self.monday.columns.column_values["text6"] = str(self.zendesk.ticket_id)
                 if self.zendesk.ticket.organization:
                     name = self.name + " ({})".format(self.zendesk.ticket.organization.name)
-                self.monday.columns.column_values["text410"] = str("https://icorrect.zendesk.com/agent/tickets/{}".format(self.zendesk.ticket_id))
             elif self.source == "vend":
                 self.monday.columns.column_values["blocker"] = {"label": "Complete"}
                 self.monday.columns.column_values["text88"] = str(self.vend.id)
+            pprint(self.monday.columns.column_values)
             item = self.monday.item = self.boards["main"].add_item(item_name=name, column_values=self.monday.columns.column_values)
 
             if self.zendesk:
@@ -311,6 +311,7 @@ class Repair():
                     if ((incorrect == None) or (correct != incorrect)):
                         self.zendesk.update_custom_field(attribute, correct)
         elif source == "zendesk" and upstream == "monday":
+            print("right place")
             if not self.monday or not self.zendesk:
                 self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
             else:
@@ -318,8 +319,8 @@ class Repair():
                 for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
                     monday = getattr(self.monday, attribute, None)
                     zendesk = getattr(self.zendesk, attribute, None)
-                    correct = monday
-                    incorrect = zendesk
+                    correct = zendesk
+                    incorrect = monday
                     if ((incorrect == None) or (correct != incorrect)):
                         setattr(updated_item, attribute, correct)
                 columns = MondayColumns(updated_item)
@@ -334,30 +335,30 @@ class Repair():
                 columns.update_item(self.monday)
 
 
-    def compare_app_objects_alt(self, source_of_truth):
-        if not self.monday:
-            self.debug("Cannot Compare Monday and Zendesk Objects - Monday does not exist")
-        elif not self.zendesk:
-            self.debug("Cannot Compare Monday and Zendesk Objects - Zendesk does not exist")
-        else:
-            updated_item = Repair.MondayRepair(self, created=self.name)
-            for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
-                monday = getattr(self.monday, attribute, None)
-                zendesk = getattr(self.zendesk, attribute, None)
-                if source_of_truth == "zendesk":
-                    correct = zendesk
-                    incorrect = monday
-                elif source_of_truth == "monday":
-                    correct = monday
-                    incorrect = zendesk
-                    pass
-                if ((incorrect == None) or (correct != incorrect)) and source_of_truth == "monday":
-                    self.zendesk.update_custom_field(attribute, correct)
-                elif ((incorrect == None) or (correct != incorrect)) and (source_of_truth == "zendesk"):
-                    setattr(updated_item, attribute, correct)
-            if source_of_truth == "zendesk":
-                columns = MondayColumns(updated_item)
-                columns.update_item(self.monday)
+    # //def compare_app_objects_alt(self, source_of_truth):
+    # //    if not self.monday:
+    # //        self.debug("Cannot Compare Monday and Zendesk Objects - Monday does not exist")
+    # //    elif not self.zendesk:
+    # //        self.debug("Cannot Compare Monday and Zendesk Objects - Zendesk does not exist")
+    # //    else:
+    # //        updated_item = Repair.MondayRepair(self, created=self.name)
+    # //        for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+    # //            monday = getattr(self.monday, attribute, None)
+    # //            zendesk = getattr(self.zendesk, attribute, None)
+    # //            if source_of_truth == "zendesk":
+    # //                correct = zendesk
+    # //                incorrect = monday
+    # //            elif source_of_truth == "monday":
+    # //                correct = monday
+    # //                incorrect = zendesk
+    # //                pass
+    # //            if ((incorrect == None) or (correct != incorrect)) and source_of_truth == "monday":
+    # //                self.zendesk.update_custom_field(attribute, correct)
+    # //            elif ((incorrect == None) or (correct != incorrect)) and (source_of_truth == "zendesk"):
+    # //                setattr(updated_item, attribute, correct)
+    # //        if source_of_truth == "zendesk":
+    # //            columns = MondayColumns(updated_item)
+    # //            columns.update_item(self.monday)
 
 
     class VendRepair():
@@ -522,6 +523,7 @@ class Repair():
             if self.parent.zendesk:
                 self.parent.zendesk.ticket.status = "closed"
                 self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
+                self.customer_id_to_zendesk(self.id)
             for product in self.products:
                 if (product in keys.vend.post_checks) or (product in keys.vend.pre_checks):
                     continue
@@ -529,15 +531,20 @@ class Repair():
                     self.add_to_usage(product)
             self.parent.debug(end="sale_closed")
 
-        def parked_sale_adjustment(self, add_notes=True):
+        def customer_id_to_zendesk(self, customer_id):
+            if not self.parent.zendesk:
+                return False
+            elif not self.parent.zendesk.ticket.requester.user_fields["vend_customer_id"]:
+                self.parent.zendesk.ticket.requester.user_fields["vend_customer_id"] = customer_id
+                self.parent.zendesk_client.users.update(self.parent.zendesk.ticket.requester)
+                return True
+            else:
+                return False
 
-            # TODO: Iterate through products
-            # TODO: Remove Pre-Checks & 'Update Monday'
-            # TODO: Adjust Monday Pulse to Reflect Any Changes
+        def parked_sale_adjustment(self, add_notes=True):
 
             return_sale = self.sale_info.copy()
             return_sale.pop("line_items")
-            print(return_sale)
             return_sale["register_sale_products"] = []
             for item in self.sale_info["line_items"]:
                 if item["product_id"] not in keys.vend.pre_checks:
@@ -1039,7 +1046,8 @@ class Repair():
                 "text5": user.email,
                 "text93": self.parent.zendesk.postcode,
                 "dup__of_passcode": self.parent.zendesk.address2,
-                "passcode": self.parent.zendesk.address1
+                "passcode": self.parent.zendesk.address1,
+                "text15": self.parent.zendesk.company_name
                 })
             self.parent.debug(end="add_to_zendesk")
 
@@ -1223,13 +1231,14 @@ class Repair():
             self.address1 = None
             self.address2 = None
             self.postcode = None
+            self.company_name = None
 
 
             self.parent = repair_object
 
 
             if not created:
-                self.ticket_id = zendesk_ticket_number
+                self.ticket_id = str(zendesk_ticket_number)
                 try:
                     ticket = self.parent.zendesk_client.tickets(id=self.ticket_id)
                 except zenpyExceptions.RecordNotFoundException:
@@ -1246,6 +1255,8 @@ class Repair():
                     self.email = self.user.email
                     self.number = self.user.phone
 
+                    if self.ticket.organization:
+                        self.company_name = self.ticket.organization.name
 
                     self.convert_to_attributes()
 
@@ -1351,13 +1362,14 @@ class Repair():
                     "email",
                     "name",
                     "repair_type",
-                    "zendesk_url"
+                    "zendesk_url",
+                    "company_name"
                 ]
                 for attribute in attributes:
                     value = getattr(self, attribute, None)
                     if value:
                         setattr(self.parent.monday, attribute, value)
-                self.parent.monday.z_ticket_id = self.ticket_id
+                self.parent.monday.z_ticket_id = str(self.ticket_id)
                 if self.ticket.organization:
                     self.parent.monday.name += " ({})".format(self.ticket.organization.name)
                 for notification in self.notifications:
@@ -1515,7 +1527,8 @@ class MondayColumns():
                 "address2": "dup__of_passcode", # Company/Flat Column
                 "postcode": "text93", # Postcode Column
                 "passcode": "text8", # Passcode Column
-                "imei_sn": "text4" # IMEI Column
+                "imei_sn": "text4", # IMEI Column
+                "company_name": "text15" # Company Column
             },
 
             "structure": lambda id, value: [id, value]
@@ -1535,7 +1548,7 @@ class MondayColumns():
                 "device": "device0", # Device Column
                 "repairs": "repair", # Repairs Column
                 "screen_condition": "screen_condition",
-                "notifications": "dropdown8" # Screen Condition Column
+                "notifications": "dropdown8" # Notifications Column
             },
 
             "structure": lambda id, value: [id, {"ids": value}]
@@ -1572,16 +1585,11 @@ class MondayColumns():
             for column in values:
                 if category == "link":
                     diction = structure(values[column], getattr(monday_object, column), getattr(monday_object, "z_ticket_id"))
-                    print(column)
-                    print(diction)
-                    self.column_values[diction[0]] = diction[1]
+                    self.column_values[diction[0]] = str(diction[1])
                 else:
                     diction = structure(values[column], getattr(monday_object, column))
-                    print(column)
-                    print(diction)
                     self.column_values[diction[0]] = diction[1]
 
-        pprint(self.column_values)
 
 
     def update_item(self, monday_object):
