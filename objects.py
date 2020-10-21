@@ -650,6 +650,7 @@ class Repair():
             self.service = None
             self.client = None
             self.repair_type = None
+            self.company_name = None
             self.case = None
             self.refurb = None
             self.booking_time = None # Not currently used in program
