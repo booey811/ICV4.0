@@ -169,6 +169,7 @@ def monday_status_change():
 
                 # Check that the repair is not an End User Walk-In
                 if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
+                    repair.monday.vend_sync()
                     repair.debug("End User Walk-in Repair - Skipping Stock Adjustment")
                     return "Status Change Route Complete - Returning Early"
                 else:
