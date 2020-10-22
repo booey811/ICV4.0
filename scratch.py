@@ -9,6 +9,8 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit
 import keys.messages
 
-repair = Repair(monday=809720205)
+repair = Repair(monday=811389476)
 
-repair.monday.adjust_stock()
+repair.monday.vend_sync()
+
+repair.debug_print(debug="console")

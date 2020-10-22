@@ -163,13 +163,15 @@ def monday_status_change():
                 repair.debug_print(debug=os.environ["DEBUG"])
                 return "Status Change Route Complete - Returning Early"
 
+            if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
+                    repair.monday.vend_sync()
+
             # Check for corporate repairs
             elif repair.monday.end_of_day != "Complete":
                 repair.debug("End of Day != Complete")
 
                 # Check that the repair is not an End User Walk-In
                 if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
-                    repair.monday.vend_sync()
                     repair.debug("End User Walk-in Repair - Skipping Stock Adjustment")
                     return "Status Change Route Complete - Returning Early"
                 else:
