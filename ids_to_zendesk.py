@@ -1,9 +1,12 @@
 import requests
 import json
+import os
+
+import settings
 
 url = "https://icorrect.vendhq.com/api/2.0/customers"
 
-headers = {'authorization': 'Bearer 5Ladw3FITzySnwpPrgaiq_vMDjr0Rx6I5nqxOiT3'}
+headers = {'authorization': os.environ["VEND"]}
 
 response = requests.request("GET", url, headers=headers)
 
