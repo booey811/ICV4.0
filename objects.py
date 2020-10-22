@@ -1046,7 +1046,7 @@ class Repair():
             self.parent.zendesk.address_extractor()
             self.item.change_multiple_column_values({
                 "text6": str(ticket_audit.ticket.id),
-                "link1": {"url": str("https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id)), "text": str(ticket_audit.ticket.id)},
+                "link1": {"url": "https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id), "text": str(ticket_audit.ticket.id)},
                 "status5": {"label": "Active"},
                 "text00": user.phone,
                 "text5": user.email,
