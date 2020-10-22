@@ -9,6 +9,9 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit
 import keys.messages
 
-repair = Repair(vend="6ffc7cac-fb7b-8099-11eb-13a870ba7d71")
+repair = Repair(zendesk=5901)
 
-repair.vend.parked_sale_adjustment()
+repair.zendesk.convert_to_monday()
+repair.add_to_monday()
+
+repair.debug_print(debug="console")

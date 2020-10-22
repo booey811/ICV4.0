@@ -1591,7 +1591,7 @@ class MondayColumns():
             for column in values:
                 if category == "link":
                     diction = structure(values[column], getattr(monday_object, column), getattr(monday_object, "z_ticket_id"))
-                    self.column_values[diction[0]] = str(diction[1])
+                    self.column_values[diction[0]] = diction[1]
                 else:
                     diction = structure(values[column], getattr(monday_object, column))
                     self.column_values[diction[0]] = diction[1]
