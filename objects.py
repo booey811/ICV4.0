@@ -1656,6 +1656,8 @@ class RefurbUnit():
             self.main_board_item = item
             break
 
+        self.imei_sn = self.item.name.split()[-1]
+
 
     def statuses_to_repairs(self):
         repairs = []
@@ -1690,4 +1692,4 @@ class RefurbUnit():
 
     def adjust_main_board_repairs(self):
 
-        self.main_board_item.change_multiple_column_values({"repair": {"ids": self.repairs_required}})
+        self.main_board_item.change_multiple_column_values({"repair": {"ids": self.repairs_required}, "text4": str(self.imei_sn)})

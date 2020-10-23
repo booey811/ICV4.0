@@ -9,9 +9,6 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit
 import keys.messages
 
-repair = Repair(zendesk=5901)
+repair = RefurbUnit(778971905)
 
-repair.zendesk.convert_to_monday()
-repair.add_to_monday()
-
-repair.debug_print(debug="console")
+print(repair.imei_sn)
