@@ -1679,9 +1679,9 @@ class RefurbUnit():
         }
         for column in self.item.get_column_values():
             if column.id in columns_to_use and (column.index in [0, 2, 9, 11]):
-                if column.id == "haptic" and column.index == 2:
+                if column.id == "haptic" and column.index == 0:
                     repairs.append(82)
-                elif column.id == "haptic" and column.index == 0:
+                elif column.id == "haptic" and column.index == 2:
                     repairs.append(65)
                 else:
                     repairs.append(columns_to_use[column.id])
