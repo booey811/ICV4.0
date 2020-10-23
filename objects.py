@@ -731,7 +731,6 @@ class Repair():
                 ["Notifications", "m_notifications", "notifications"]
             ]
             for column, m_attribute, attribute in dropdown_attributes:
-
                 if column == "Notifications":
                     for ids in self.m_notifications:
                         for option in keys.monday.dropdown_column_dictionary["Notifications"]["values"]:
@@ -740,7 +739,6 @@ class Repair():
                                 self.z_notification_tags.append(option["z_tag"])
                 else:
                     setattr(self, attribute, getattr(self, m_attribute))
-
             self.parent.debug(end="translate_column_data")
 
         def retreive_column_data(self):
@@ -1680,8 +1678,13 @@ class RefurbUnit():
             "front_screen": 65
         }
         for column in self.item.get_column_values():
-            if column.id in columns_to_use and column.index == 2:
-                repairs.append(columns_to_use[column.id])
+            if column.id in columns_to_use and (column.index in [0, 2, 9, 11]:
+                if column.id == "haptic" and column.index == 2:
+                    repairs.append(82)
+                elif column.id == "haptic" and column.index == 0:
+                    repairs.append(65)
+                else:
+                    repairs.append(columns_to_use[column.id])
 
         self.repairs_required = repairs
 
