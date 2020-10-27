@@ -9,6 +9,6 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit
 import keys.messages
 
-repair = RefurbUnit(778971905)
+repair = Repair(monday=803866624)
 
-print(repair.imei_sn)
+repair.monday.adjust_stock()
