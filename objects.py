@@ -497,7 +497,7 @@ class Repair():
             self.parent.debug(start="post_sale")
             url = "https://icorrect.vendhq.com/api/register_sales"
             if sale_update:
-                payload = vend_sale.sale_attributes
+                payload = vend_sale
             else:
                 payload = vend_sale.sale_attributes
             payload = json.dumps(payload)
@@ -1258,7 +1258,7 @@ class Repair():
                 for code in self.vend_codes:
                     sale.sale_attributes["register_sale_products"].append(sale.create_register_sale_products(code))
                 sale.sale_attributes["register_sale_products"][0]["attributes"].append({"name": "line_note", "value": "IMEI/SN: {}".format(self.imei_sn)})
-                self.parent.vend.post_sale(sale, sale_update=True)
+                self.parent.vend.post_sale(sale.sale_attributes, sale_update=True)
 
     class ZendeskRepair():
 
