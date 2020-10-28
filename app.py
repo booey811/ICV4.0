@@ -273,6 +273,17 @@ def refurb_to_main():
 
     return "Add Refurb to Main Board Route Complete"
 
+@app.route("/monday/refurb/sales", methods=["POST"])
+def refurb_price_calcs():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    return "Refurb Complete & Calculations Route Complete"
+
 
 # ROUTES // VEND
 # Sale Update

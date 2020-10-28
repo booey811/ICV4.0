@@ -9,8 +9,10 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit
 import keys.messages
 
-repair = Repair(monday=811389476)
+repair = Repair(test=True)
 
-repair.monday.vend_sync()
+test = Repair(monday=798423274)
 
-repair.debug_print(debug="console")
+test.monday.convert_to_vend_codes()
+
+print(test.monday.repair_names)

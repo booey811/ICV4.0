@@ -36,6 +36,7 @@ class Repair():
     boards = {
         "logging": monday_client.get_board_by_id(id=736027251),
         "inventory": monday_client.get_board_by_id(id=703218230),
+        "inventory2": monday_client.get_board_by_id(id=703218230),
         "main": monday_client.get_board_by_id(id=349212843),
         "usage": monday_client.get_board_by_id(id=722437885),
         "zendesk_tags": monday_client.get_board_by_id(id=765453815),

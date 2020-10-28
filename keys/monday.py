@@ -423,6 +423,10 @@ status_column_dictionary = {
             {"title": "China Screen",
                 "index": 2,
                 "label": "China Screen",
+                "z_tag": ""},
+            {"title": "Glass, Touch & LCD",
+                "index": 109,
+                "label": "Glass, Touch & LCD",
                 "z_tag": ""}
         ]
     }
