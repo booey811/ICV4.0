@@ -941,8 +941,9 @@ class Repair():
                             self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id))
             self.parent.debug(end="adjust stock")
 
-        def convert_to_vend_codes(self):
+        def convert_to_vend_codes(self, for_refurb=False):
             self.parent.debug(start="convert_to_vend_codes")
+            inventory_items = []
             for repair in self.repairs:
                 search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
                 col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
@@ -959,12 +960,17 @@ class Repair():
                         self.add_update(update="Cannot Find: {}".format(search))
                         continue
                 for product in results:
-                    product_id = product.get_column_value(id="text").text
-                    self.vend_codes.append(product_id)
-                    name = product.name.replace('"', "")
-                    name = name.replace('\\"', "")
-                    self.repair_names[product_id] = [name]
+                    if for_refurb:
+                        inventory_items.append(product)
+                    else:
+                        product_id = product.get_column_value(id="text").text
+                        self.vend_codes.append(product_id)
+                        name = product.name.replace('"', "")
+                        name = name.replace('\\"', "")
+                        self.repair_names[product_id] = [name]
             self.parent.debug(end="convert_to_vend_codes")
+            if for_refurb:
+                return inventory_items
 
         def dropdown_value_webhook_comparison(self, webhook_data):
             self.parent.debug(start="dropdown_value_webhook_comparison")
@@ -1694,11 +1700,15 @@ class RefurbUnit():
             self.item = pulse
             break
 
-        self.main_board_id = self.item.get_column_value(id="connect_boards1").value["linkedPulseIds"][0]["linkedPulseId"]
-
-        for item in self.monday_client.get_items(ids=[self.main_board_id], limit=1):
-            self.main_board_item = item
-            break
+        connected = self.item.get_column_value(id="connect_boards1")
+        if connected.value:
+            self.main_board_id = connected.value["linkedPulseIds"][0]["linkedPulseId"]
+            for item in self.monday_client.get_items(ids=[self.main_board_id], limit=1):
+                self.main_board_item = item
+                break
+        else:
+            self.main_board_id = None
+            self.main_board_item = None
 
         self.imei_sn = self.item.name.split()[-1]
 
@@ -1737,3 +1747,54 @@ class RefurbUnit():
     def adjust_main_board_repairs(self):
 
         self.main_board_item.change_multiple_column_values({"repair": {"ids": self.repairs_required}, "text4": str(self.imei_sn)})
+
+    def get_cost_data(self):
+
+        price_dict = {
+            2: "supply_price",
+            1: "numbers7",
+            8: "numbers1",
+            19: "numbers_17",
+            109: "numbers2"
+        }
+
+        if not self.main_board_id:
+            print("No Main Board Connected Item - Nothing Done")
+        else:
+            main = Repair(monday=self.main_board_id)
+
+            inventory_items = main.monday.convert_to_vend_codes(for_refurb=True)
+            print(inventory_items)
+
+            completed = []
+
+            for item in inventory_items:
+                if item.get_column_value(id="device").number in [69, 83, 84]:
+                    col_id = price_dict[main.monday.m_refurb]
+                    name = "{}: {}".format(item.name, main.monday.refurb)
+                else:
+                    col_id = "supply_price"
+                    name = item.name
+
+                completed.append([
+                    name,
+                    item.get_column_value(id=col_id).number
+                ])
+
+            return completed
+
+    def add_costs_to_refurbs(self, listed_repairs):
+        update = []
+        total = 0
+        for item in listed_repairs:
+            update.append("{}: £{}".format(item[0], item[1]))
+            total += item[1]
+        self.item.change_multiple_column_values({
+            "numbers6": int(total)
+        })
+        self.item.add_update(
+            "PARTS COST BREAKDOWN:\n\n{}\n\nTotal: {}".format("\n".join(update), total)
+        )
+
+
+

@@ -273,6 +273,7 @@ def refurb_to_main():
 
     return "Add Refurb to Main Board Route Complete"
 
+# Refurb Completed
 @app.route("/monday/refurb/sales", methods=["POST"])
 def refurb_price_calcs():
     webhook = request.get_data()
@@ -281,6 +282,10 @@ def refurb_price_calcs():
         return data[1]
     else:
         data = data[1]
+
+    refurb = RefurbUnit(int(data["event"]["pulseId"]))
+
+    refurb.add_costs_to_refurbs(refurb.get_cost_data())
 
     return "Refurb Complete & Calculations Route Complete"
 
