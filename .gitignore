@@ -63,3 +63,6 @@ target/
 # Project Specific
 .env
 database.py
+
+inv_builder.py
+

@@ -163,6 +163,9 @@ def monday_status_change():
                 repair.debug_print(debug=os.environ["DEBUG"])
                 return "Status Change Route Complete - Returning Early"
 
+            if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
+                    repair.monday.vend_sync()
+
             # Check for corporate repairs
             elif repair.monday.end_of_day != "Complete":
                 repair.debug("End of Day != Complete")
@@ -269,6 +272,17 @@ def refurb_to_main():
     refurb.adjust_main_board_repairs()
 
     return "Add Refurb to Main Board Route Complete"
+
+@app.route("/monday/refurb/sales", methods=["POST"])
+def refurb_price_calcs():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    return "Refurb Complete & Calculations Route Complete"
 
 
 # ROUTES // VEND
