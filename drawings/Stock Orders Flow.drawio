@@ -1,63 +1,69 @@
-<mxfile host="app.diagrams.net" modified="2020-10-28T14:13:10.161Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36" etag="0kB2XEiu5zKh1zJur-EF" version="13.8.5" type="github">
+<mxfile host="app.diagrams.net" modified="2020-10-28T14:32:04.028Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36" etag="CLwEJ6_F7eLtsragBre1" version="13.8.5" type="github">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="946" dy="623" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2002" dy="1163" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-0" target="V_1-sHNXsYnWgaQ3mi9y-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-0" target="V_1-sHNXsYnWgaQ3mi9y-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-0" value="Stock Level Is Low" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-0" value="Stock Level Is Low" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="610" y="80" width="120" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-1" target="V_1-sHNXsYnWgaQ3mi9y-3">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-1" target="V_1-sHNXsYnWgaQ3mi9y-3" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-1" value="Part Found on INVENTORY Board" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-1" value="Part Found on INVENTORY Board" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="610" y="200" width="120" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-3">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-3" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="670" y="440" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-3" value="Status [Add To Order List] is selected" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-3" value="Status [Add To Order List] is selected" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="610" y="320" width="120" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-7">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-7" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="670" y="650" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-7" value="INVENTORY Board adds pulse to STOCK ORDERS Board, in top group" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-7" value="INVENTORY Board adds pulse to STOCK ORDERS Board, in top group" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="605" y="440" width="130" height="130" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-10" target="V_1-sHNXsYnWgaQ3mi9y-13">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-10" target="V_1-sHNXsYnWgaQ3mi9y-13" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-10" value="STOCK ORDERS Board is reviewed for quantities required and order is placed" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-10" value="STOCK ORDERS Board is reviewed for quantities required and order is placed" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="595" y="650" width="150" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-11" target="V_1-sHNXsYnWgaQ3mi9y-16">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-11" target="V_1-sHNXsYnWgaQ3mi9y-16" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-11" value="Stock is received and quantities added to STOCK ORDERS Board" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-11" value="Stock is received and quantities added to STOCK ORDERS Board" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="595" y="970" width="150" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-13" target="V_1-sHNXsYnWgaQ3mi9y-11">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-13" target="V_1-sHNXsYnWgaQ3mi9y-11" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-13" value="Once order is placed, the order is taken out of the &#39;To Order&#39; Group and added to a group with order number/supplier" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-13" value="Once order is placed, the order is taken out of the &#39;To Order&#39; Group and added to a group with order number/supplier" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="595" y="800" width="150" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-16" target="V_1-sHNXsYnWgaQ3mi9y-18">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-16" target="V_1-sHNXsYnWgaQ3mi9y-18" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-16" value="Status [Received] is selected" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-16" value="Status [Received] is selected" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="595" y="1120" width="150" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-18" value="Monday adds the specified quantity to INVENTORY board, works out the average cost and adjusts &#39;supply price&#39;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="X19V1P5iD9uZrufgtEZo-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="V_1-sHNXsYnWgaQ3mi9y-18" target="X19V1P5iD9uZrufgtEZo-0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="V_1-sHNXsYnWgaQ3mi9y-18" value="Monday adds the specified quantity to INVENTORY board, works out the average cost and adjusts &#39;supply price&#39;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="605" y="1260" width="130" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="X19V1P5iD9uZrufgtEZo-0" value="Monday changes status [Stock Order] to Good" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="605" y="1470" width="130" height="130" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
