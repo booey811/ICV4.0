@@ -749,7 +749,6 @@ class Repair():
                 ["Notifications", "m_notifications", "notifications"]
             ]
             for column, m_attribute, attribute in dropdown_attributes:
-
                 if column == "Notifications":
                     for ids in self.m_notifications:
                         for option in keys.monday.dropdown_column_dictionary["Notifications"]["values"]:
@@ -758,7 +757,6 @@ class Repair():
                                 self.z_notification_tags.append(option["z_tag"])
                 else:
                     setattr(self, attribute, getattr(self, m_attribute))
-
             self.parent.debug(end="translate_column_data")
 
         def retreive_column_data(self):
@@ -1065,7 +1063,7 @@ class Repair():
             self.parent.zendesk.address_extractor()
             self.item.change_multiple_column_values({
                 "text6": str(ticket_audit.ticket.id),
-                "link1": {"url": str("https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id)), "text": str(ticket_audit.ticket.id)},
+                "link1": {"url": "https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id), "text": str(ticket_audit.ticket.id)},
                 "status5": {"label": "Active"},
                 "text00": user.phone,
                 "text5": user.email,
@@ -1635,7 +1633,7 @@ class MondayColumns():
             for column in values:
                 if category == "link":
                     diction = structure(values[column], getattr(monday_object, column), getattr(monday_object, "z_ticket_id"))
-                    self.column_values[diction[0]] = str(diction[1])
+                    self.column_values[diction[0]] = diction[1]
                 else:
                     diction = structure(values[column], getattr(monday_object, column))
                     self.column_values[diction[0]] = diction[1]
@@ -1702,6 +1700,8 @@ class RefurbUnit():
             self.main_board_item = item
             break
 
+        self.imei_sn = self.item.name.split()[-1]
+
 
     def statuses_to_repairs(self):
         repairs = []
@@ -1724,11 +1724,16 @@ class RefurbUnit():
             "front_screen": 65
         }
         for column in self.item.get_column_values():
-            if column.id in columns_to_use and column.index == 2:
-                repairs.append(columns_to_use[column.id])
+            if column.id in columns_to_use and (column.index in [0, 2, 9, 11]):
+                if column.id == "haptic" and column.index == 0:
+                    repairs.append(82)
+                elif column.id == "haptic" and column.index == 2:
+                    repairs.append(65)
+                else:
+                    repairs.append(columns_to_use[column.id])
 
         self.repairs_required = repairs
 
     def adjust_main_board_repairs(self):
 
-        self.main_board_item.change_multiple_column_values({"repair": {"ids": self.repairs_required}})
+        self.main_board_item.change_multiple_column_values({"repair": {"ids": self.repairs_required}, "text4": str(self.imei_sn)})
