@@ -6,10 +6,9 @@ from pprint import pprint
 from moncli import create_column_value, ColumnType
 
 import settings
-from objects import Repair, MondayColumns, RefurbUnit
+from objects import Repair, MondayColumns, RefurbUnit, OrderItem
 import keys.messages
 
+test= OrderItem(824508892)
 
-repair = Repair(monday=824488881)
-
-repair.monday.add_to_zendesk()
+print(test.add_to_stock())

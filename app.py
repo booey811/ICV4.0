@@ -6,7 +6,7 @@ from time import sleep
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit
+from objects import Repair, RefurbUnit, OrderItem
 
 # APP SET UP
 app = Flask(__name__)
@@ -299,6 +299,10 @@ def stock_received():
         return data[1]
     else:
         data = data[1]
+
+    order_item = OrderItem(int(data["event"]["pulseId"]))
+
+    order_item.add_to_stock()
 
 # ROUTES // VEND
 # Sale Update
