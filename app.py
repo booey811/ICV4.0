@@ -290,6 +290,16 @@ def refurb_price_calcs():
     return "Refurb Complete & Calculations Route Complete"
 
 
+# Stock Orders Received
+@app.route("/monday/stock/received", methods=["POST"])
+def stock_received():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
 # ROUTES // VEND
 # Sale Update
 @app.route("/vend/sale_update", methods=["POST"])
