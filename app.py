@@ -304,6 +304,8 @@ def stock_received():
 
     order_item.add_to_stock()
 
+    return "Stock Received Route Complete"
+
 # ROUTES // VEND
 # Sale Update
 @app.route("/vend/sale_update", methods=["POST"])
