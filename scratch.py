@@ -9,6 +9,4 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem
 import keys.messages
 
-test=OrderItem(824771143)
-
-print(test.__dict__)
+Repair.MondayRepair.add_update("sougbs")

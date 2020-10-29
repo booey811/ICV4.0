@@ -867,7 +867,7 @@ class Repair():
             return True
             self.parent.debug(end="check_column_presence")
 
-        def add_update(self, update=False, user=False, notify=False, status=False):
+        def add_update(self, update=False, user=False, notify=False, status=False, non_main=False):
             """Adds Updates to oulses and aids with adjusting status or notifying users
 
             Args:
