@@ -1866,5 +1866,10 @@ class OrderItem():
         for item in self.inventory_items:
             item.change_multiple_column_values({
                 "supply_price": supply_price,
-                "numbers": total_stock
+                "numbers": total_stock,
+                "status6": {"index": 15}
             })
+        self.item.change_multiple_column_values({
+            "numbers6": self.inventory_attributes[0][2],
+            "numbers_1": total_stock
+        })
