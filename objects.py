@@ -44,7 +44,8 @@ class Repair():
         "zendesk_tags": monday_client.get_board_by_id(id=765453815),
         "macros": monday_client.get_board_by_id(id=762417852),
         "gophr": monday_client.get_board_by_id(id=538565672),
-        "refurbs": monday_client.get_board_by_id(id=757808757)
+        "refurbs": monday_client.get_board_by_id(id=757808757),
+        "new_sales": monday_client.get_board_by_id(id=826011912)
     }
 
     def __init__(self, webhook_payload=False, vend=False, monday=False, zendesk=False, test=False):
@@ -1297,6 +1298,32 @@ class Repair():
                         pulse.change_column_value(column_id="numbers", column_value=str(deductables[item][0].stock_level - deductables[item][1]))
                         print("Completed: {}".format(deductables[item][0].name))
 
+            stats = self.create_sale_stats(inventory_items)
+            update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}".format("\n".join(stats[0]), stats[1], stats[2], stats[3])
+            self.add_update(update)
+            log = self.parent.boards["new_sales"].add_item(item_name=self.name)
+            log.add_update("\n".join(stats))
+
+        def create_sale_stats(self, inventory_items):
+            total_sale = 0
+            total_cost = 0
+            stats = []
+            for item in inventory_items:
+                name = "Repair: {}".format(item.name)
+                price = "Sale Price: {}".format(item.supply_price)                
+                supply = "Supply Price: {}".format(item.supply_price)
+                stats.append([name, price, supply])
+                total_sale += int(item.sale_price)
+                total_cost += int(item.supply_price)
+            
+            if len(stats) > 1:
+                total_sale = total_sale - len(stats) * 10
+            
+            margin = "Margin: {}%".format(((total_sale - total_cost) / total_sale) * 100)
+
+            return [stats, "Total Sale Price: {}".format(total_sale), "Total Cost: {}".format(total_cost), margin]
+
+
         def create_inventory_items(self):
             self.parent.debug(start="convert_to_vend_codes")
             inventory_items = []
@@ -1316,7 +1343,10 @@ class Repair():
                         self.add_update(update="Cannot Find: {}".format(search))
                         continue
                 for product in results:
-                    inventory_items.append(InventoryItem(item_object=product))
+                    if repair in [69, 83, 84]:
+                        inventory_items.append(InventoryItem(item_object=product, refurb=self.refurb))
+                    else:
+                        inventory_items.append(InventoryItem(item_object=product))
             return inventory_items
 
         def construct_inventory_deductables(self, inventory_list):
@@ -1907,7 +1937,8 @@ class OrderItem():
             name = item.name
             cost = item.get_column_value(id="supply_price").number
             quantity = item.get_column_value(id="numbers").number
-        self.inventory_attributes.append([name, cost, quantity])
+            live = item.get_column_value(id="live").text
+        self.inventory_attributes.append([name, cost, quantity, live])
 
     def compare_stock_levels(self):
         stock = []
@@ -1931,13 +1962,17 @@ class OrderItem():
     def add_to_stock(self):
         self.create_inventory_attributes()
         total_stock = self.quant_received + self.inventory_attributes[0][2]
-        supply_price = self.calculate_supply_price()
+        col_vals = {
+            "numbers": total_stock,
+            "status6": {"index": 15}
+        }          
+        if self.inventory_attributes[0][3] != "Live":
+                col_vals["supply_price"] = self.unit_cost
+                col_vals["live"] = {"label": "Live"}
+        else:
+            col_vals["supply_price"] = self.calculate_supply_price()
         for item in self.inventory_items:
-            item.change_multiple_column_values({
-                "supply_price": supply_price,
-                "numbers": total_stock,
-                "status6": {"index": 15}
-            })
+            item.change_multiple_column_values(col_vals)
         self.item.change_multiple_column_values({
             "numbers6": self.inventory_attributes[0][2],
             "numbers_1": total_stock
@@ -1956,15 +1991,23 @@ class InventoryItem():
 
     columns = [
         ["sku", "text0", "text"],
-        ["sale_price", "retail_price", "number"],
-        ["supply_price", "supply_price", "number"],
         ["stock_level", "numbers", "number"],
         ["device", "numbers3", "number"],
         ["repair", "device", "number"],
-        ["colour", "numbers44", "number"]
+        ["colour", "numbers44", "number"],
+        ["live", "live", "text"],
+        ["sale_price", "retail_price", "number"]
     ]
 
-    def __init__(self, item_id=False, item_object=False):
+    price_key = {
+        "Glass Only": "numbers7",
+        "Glass & Touch": "numbers1",
+        "Glass, Touch & Backlight": "numbers_17",
+        "Glass, Touch & LCD": "numbers2",
+        "China Screen": "supply price"
+    }
+
+    def __init__(self, item_id=False, item_object=False, refurb=False):
 
         start_time = time.time()
 
@@ -1973,12 +2016,18 @@ class InventoryItem():
                 self.item = item
         elif item_object:
             self.item = item_object
-
         self.name = self.item.name
+        if refurb:
+            self.columns.append(["supply_price", self.price_key[refurb], "number"])
+        else:
+            self.columns.append(["supply_price", "supply_price", "number"])
         for column in self.item.get_column_values():
             for option in self.columns:
                 if column.id == option[1]:
                     setattr(self, option[0], getattr(column, option[2]))
+        
+        if not self.supply_price:
+            self.supply_price = self.item.get_column_value(id="supply_price").number
 
         self.linked_items = self.check_linked_products(self.sku)
 
@@ -1994,7 +2043,3 @@ class InventoryItem():
             return [self.item]
         elif len(links) > 1:
             return links
-
-
-
-
