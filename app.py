@@ -273,6 +273,7 @@ def refurb_to_main():
 
     return "Add Refurb to Main Board Route Complete"
 
+
 # Refurb Completed
 @app.route("/monday/refurb/sales", methods=["POST"])
 def refurb_price_calcs():
@@ -282,12 +283,10 @@ def refurb_price_calcs():
         return data[1]
     else:
         data = data[1]
-
     refurb = RefurbUnit(int(data["event"]["pulseId"]))
-
     refurb.add_costs_to_refurbs(refurb.get_cost_data())
-
     return "Refurb Complete & Calculations Route Complete"
+
 
 # Stock Order Placed
 @app.route("/monday/stock/order", methods=["POST"])
@@ -314,10 +313,11 @@ def stock_received():
         data = data[1]
     order_item = OrderItem(int(data["event"]["pulseId"]))
     if order_item.quant_received == None or order_item.quant_received == 0:
-        Repair.MondayRepair(repair_object=Repair(test=True), created=True).add_update(non_main=[order_item.id, int(data["event"]["userId"], 822509956], user="error", notify="There was an issue while processing your stock order - please check and try again", status=["status3", "Check Quantities"])
+        Repair.MondayRepair(repair_object=Repair(test=True), created=True).add_update(non_main=[order_item.id, int(data["event"]["userId"]), 822509956], user="error", notify="There was an issue while processing your stock order - please check and try again", status=["status3", "Check Quantities"])
     else:
         order_item.add_to_stock()
     return "Stock Received Route Complete"
+
 
 # ROUTES // VEND
 # Sale Update
