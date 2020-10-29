@@ -289,7 +289,7 @@ def refurb_price_calcs():
 
     return "Refurb Complete & Calculations Route Complete"
 
-# Stock Order Place
+# Stock Order Placed
 @app.route("/monday/stock/order", methods=["POST"])
 def stock_ordered():
     webhook = request.get_data()
@@ -299,6 +299,8 @@ def stock_ordered():
     else:
         data = data[1]
     order_item = OrderItem(int(data["event"]["pulseId"]))
+    order_item.order_placed()
+    return "Stock Order Placed Route Complete"
 
 
 # Stock Orders Received

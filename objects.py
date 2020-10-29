@@ -2,6 +2,7 @@ import json
 import os
 import requests
 from datetime import datetime, timedelta
+import time
 from pprint import pprint
 from urllib import request as urlrequest
 from urllib import parse
@@ -1810,6 +1811,8 @@ class OrderItem():
 
     def __init__(self, item_id):
 
+        start_time = time.time()
+
         self.inventory_items = []
         self.inventory_attributes = []
 
@@ -1821,19 +1824,21 @@ class OrderItem():
 
         self.collect_inventory_items()
 
+        print("--- %s seconds ---" % (time.time() - start_time))
+
     def set_attributes(self):
-        for column in self.order_columns:
-            column_value = self.item.get_column_value(id=column[1])
-            value = getattr(column_value, column[2])
-            if value:
-                setattr(self, column[0], value)
-            else:
-                setattr(self, column[0], False)
+        for column in self.item.get_column_values():
+            for option in self.order_columns:
+                if column.id == option[1]:
+                    setattr(self, option[0], getattr(column, option[2]))
+
 
     def collect_inventory_items(self):
         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=self.sku)
         for item in self.boards["inventory"].get_items_by_column_values(col_val):
             self.inventory_items.append(item)
+
+    def create_inventory_attributes(self):
         for item in self.inventory_items:
             name = item.name
             cost = item.get_column_value(id="supply_price").number
@@ -1860,9 +1865,9 @@ class OrderItem():
         return round(average_cost, 2)
 
     def add_to_stock(self):
+        self.create_inventory_attributes()
         total_stock = self.quant_received + self.inventory_attributes[0][2]
         supply_price = self.calculate_supply_price()
-        self.compare_stock_levels()
         for item in self.inventory_items:
             item.change_multiple_column_values({
                 "supply_price": supply_price,
@@ -1873,3 +1878,38 @@ class OrderItem():
             "numbers6": self.inventory_attributes[0][2],
             "numbers_1": total_stock
         })
+
+    def order_placed(self):
+        for item in self.inventory_items:
+            item.change_multiple_column_values({"status6": {"index": 0}})
+
+class InventoryItem():
+
+    columns = [
+        ["sku", "text0", "text"],
+        ["sale_price", "retail_price", "number"],
+        ["supply_price", "supply_price", "number"],
+        ["stock_level", "numbers", "number"],
+        ["device", "numbers3", "number"],
+        ["repair", "device", "number"],
+        ["colour", "numbers44", "number"]
+    ]
+
+    def __init__(self, item_id):
+
+        start_time = time.time()
+
+        for item in monday_client.get_items(ids=[item_id], limit=1):
+            self.item = item
+
+
+        for column in self.item.get_column_values():
+            for option in self.columns:
+                if column.id == option[1]:
+                    setattr(self, option[0], getattr(column, option[2]))
+
+
+
+
+
+        print("--- %s seconds ---" % (time.time() - start_time))
