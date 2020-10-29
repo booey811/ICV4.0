@@ -251,7 +251,7 @@ def monday_update_added():
             else:
                 repair.debug("Ticket Does Not Exist")
         else:
-            repair.debug("Cannot Add Comment - No Zendesk OBject Available")
+            repair.debug("Cannot Add Comment - No Zendesk Object Available")
     return "Monday Update Posted Route Complete"
 
 # Refurb Added to Main Board

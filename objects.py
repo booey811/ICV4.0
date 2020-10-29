@@ -1067,17 +1067,19 @@ class Repair():
             )
             self.parent.include_zendesk(ticket_audit.ticket.id)
             self.parent.zendesk.address_extractor()
-            self.item.change_multiple_column_values({
+            values = {
                 "text6": str(ticket_audit.ticket.id),
                 "link1": {"url": "https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id), "text": str(ticket_audit.ticket.id)},
                 "status5": {"label": "Active"},
-                "text00": user.phone,
                 "text5": user.email,
-                "text93": self.parent.zendesk.postcode,
-                "dup__of_passcode": self.parent.zendesk.address2,
-                "passcode": self.parent.zendesk.address1,
                 "text15": self.parent.zendesk.company_name
-                })
+            }
+            attributes = [["number", "text00"], ["address1", "passcode"], ["address2", "dup__of_passcode"]]
+            for attribute in attributes:
+                val = getattr(self, attribute[0])
+                if not val:
+                    values[attribute[1]] = val
+            self.item.change_multiple_column_values(values)
             self.parent.debug(end="add_to_zendesk")
 
 
