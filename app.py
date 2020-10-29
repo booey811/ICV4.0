@@ -314,7 +314,7 @@ def stock_received():
         data = data[1]
     order_item = OrderItem(int(data["event"]["pulseId"]))
     if order_item.quant_received == None or order_item.quant_received == 0:
-        Repair.MondayRepair.add_update(non_main=True, user="error", notify="You have not set a quantity of received items for {} - please check and try again".format(order_item.item.name))
+        Repair.MondayRepair(repair_object=Repair(test=True), created=True).add_update(non_main=[order_item.id, int(data["event"]["userId"], 822509956], user="error", notify="There was an issue while processing your stock order - please check and try again", status=["status3", "Check Quantities"])
     else:
         order_item.add_to_stock()
     return "Stock Received Route Complete"

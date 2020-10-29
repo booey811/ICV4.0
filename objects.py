@@ -104,7 +104,7 @@ class Repair():
     def include_monday(self, monday_id):
 
         self.debug("Adding[MONDAY] ID: {}".format(monday_id))
-        self.monday = Repair.MondayRepair(self, monday_id=monday_id)
+        self.monday = Repair.MondayRepair(repair_object=self, monday_id=monday_id)
 
     def include_zendesk(self, zendesk_ticket_id):
 
@@ -315,7 +315,7 @@ class Repair():
             if not self.monday or not self.zendesk:
                 self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
             else:
-                updated_item = Repair.MondayRepair(self, created=self.name)
+                updated_item = Repair.MondayRepair(repair_object=self, created=self.name)
                 for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
                     monday = getattr(self.monday, attribute, None)
                     zendesk = getattr(self.zendesk, attribute, None)
@@ -451,7 +451,7 @@ class Repair():
 
         def convert_to_monday_codes(self, comparison=False):
             inv_board = monday_client.get_board_by_id(id=703218230)
-            monday_object = Repair.MondayRepair(self.parent, created=self.name)
+            monday_object = Repair.MondayRepair(repair_object=self.parent, created=self.name)
             for item in self.products:
                 col_val = create_column_value(id="text", column_type=ColumnType.text, value=item)
                 for item in inv_board.get_items_by_column_values(col_val):
@@ -662,7 +662,7 @@ class Repair():
 
 
     class MondayRepair():
-        def __init__(self, repair_object, monday_id=False, created=False):
+        def __init__(self, repair_object=False, monday_id=False, created=False):
             self.parent = repair_object
 
             self.v_id = None
@@ -874,18 +874,26 @@ class Repair():
                 update (str): The body of the update to be posted to Monday Pulse
                 user (str, optional): Used to select which User the API should post as. Defaults to False.
                 notify (bool, optional): Used to send a notification from the selected API Client to the user who made the change on this webhook. Defaults to False.
-                status (str, optional): Used to adjust the status of a pulse (if required). Defaults to False.
+                status (list, optional): Used to adjust the status of a pulse (if required). [column_id, label] Defaults to False.
+                non_main (list, optional): Used when a notification neeeds to be sent for an itme on on the main board [item_id, userid_to_notify, board_id]
             """
 
-            self.parent.debug(start="add_update")
+            if non_main:
+                monday_id = int(non_main[0])
+                user_id = int(non_main[1])
+                target_id = int(non_main[2])
+            else:
+                monday_id = int(self.id)
+                user_id = int(self.user_id)
+                target_id = 349212843
             if user == 'error':
                 client =  MondayClient(user_name='admin@icorrect.co.uk', api_key_v1=os.environ["MONV1ERR"], api_key_v2=os.environ["MONV2ERR"])
-                for item in client.get_items(ids=[int(self.id)], limit=1):
+                for item in client.get_items(ids=[monday_id], limit=1):
                     monday_object = item
                     break
             elif user == 'email':
                 client =  MondayClient(user_name='icorrectltd@gmail.com', api_key_v1=os.environ["MONV1EML"], api_key_v2=os.environ["MONV2EML"])
-                for item in client.get_items(ids=[int(self.id)], limit=1):
+                for item in client.get_items(ids=[monday_id], limit=1):
                     monday_object = item
                     break
             else:
@@ -894,14 +902,13 @@ class Repair():
             if update:
                 monday_object.add_update(update)
             if status:
-                monday_object.change_column_value(column_id="status4", column_value={"label": status})
+                monday_object.change_column_value(column_id=status[0], column_value={"label": status[1]})
             if notify:
-                self.send_notification(sender=client, message=notify, user_id=self.user_id)
-            self.parent.debug(end="add_update")
+                self.send_notification(sender=client, message=notify, user_id=user_id, target_id=target_id)
 
-        def send_notification(self, sender, message, user_id):
+        def send_notification(self, sender, message, user_id, target_id):
             self.parent.debug(start="send_notifcation")
-            sender.create_notification(text=message, user_id=user_id, target_id=349212843, target_type=NotificationTargetType.Project)
+            sender.create_notification(text=message, user_id=user_id, target_id=target_id, target_type=NotificationTargetType.Project)
             self.parent.debug(message)
             self.parent.debug(end="send_notifcation")
 
@@ -912,7 +919,7 @@ class Repair():
             self.convert_to_vend_codes()
             if len(self.vend_codes) != len(self.repairs):
                 self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
-                self.add_update(update="Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error", status="!! See Updates !!")
+                self.add_update(update="Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error", status=["status4", "!! See Updates !!"])
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
@@ -1154,7 +1161,7 @@ class Repair():
             else:
                 # error_code = text_response["error"]["code"].replace('\"', "|")
                 notes = text_response["error"]["message"].replace('\"', "|")
-                self.add_update(update="""Booking Failed\n\nNotes: {}""".format(notes), user="error", status="!! See Updates !!")
+                self.add_update(update="""Booking Failed\n\nNotes: {}""".format(notes), user="error", status=["status4", "!! See Updates !!"])
                 result = False
             self.parent.debug(end="gophr_booking")
             return result
@@ -1235,6 +1242,7 @@ class Repair():
             if self.repair_type == "Diagnostic" and self.status != "Repaired":
                 key.insert(2, self.repair_type)
             string = " ".join(key)
+            print(string)
             try:
                 message = keys.messages.messages[string].format(self.name.split()[0])
             except KeyError:
