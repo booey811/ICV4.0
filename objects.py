@@ -1280,6 +1280,57 @@ class Repair():
                 sale.sale_attributes["register_sale_products"][0]["attributes"].append({"name": "line_note", "value": "IMEI/SN: {}".format(self.imei_sn)})
                 self.parent.vend.post_sale(sale.sale_attributes, sale_update=True)
 
+        def adjust_stock_alt(self):
+            if len(self.m_repairs) == 0:
+                self.parent.debug_print("No Repairs on Monday")
+            inventory_items = self.create_inventory_items()
+            if len(inventory_items)!= len(self.m_repairs):
+                self.add_update(
+                    update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
+                    notify="Please check {}'s Repair Details",
+                    user="error"
+                )
+            else:
+                deductables = self.construct_inventory_deductables(inventory_items)
+                for item in deductables:
+                    for pulse in deductables[item][0].linked_items:
+                        pulse.change_column_value(column_id="numbers", column_value=str(deductables[item][0].stock_level - deductables[item][1]))
+                        print("Completed: {}".format(deductables[item][0].name))
+
+        def create_inventory_items(self):
+            self.parent.debug(start="convert_to_vend_codes")
+            inventory_items = []
+            for repair in self.repairs:
+                search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
+                col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
+                results = self.parent.boards["inventory"].get_items_by_column_values(column_value=col_val)
+                if not len(results) or len(results) > 1:
+                    self.parent.debug("No results found for tuple (including colour): {}".format(search))
+                    search = tuple([(self.device[0],), (repair,), ()])
+                    col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
+                    results = self.parent.boards["inventory"].get_items_by_column_values(column_value=col_val)
+                    if not len(results):
+                        self.parent.debug("No results found for tuple (excluding colour): {}".format(search))
+                    elif len(results) > 1:
+                        self.parent.debug("Too many results found for tuple: {}".format(search))
+                        self.add_update(update="Cannot Find: {}".format(search))
+                        continue
+                for product in results:
+                    inventory_items.append(InventoryItem(item_object=product))
+            return inventory_items
+
+        def construct_inventory_deductables(self, inventory_list):
+            deductables = {}
+            for item in inventory_list:
+                if item.sku in deductables:
+                    deductables[item.sku][1] += 1
+                else:
+                    deductables[item.sku] = [item, 1]
+            return deductables
+
+
+
+
     class ZendeskRepair():
 
         def __init__(self, repair_object, zendesk_ticket_number, created=False):
@@ -1898,6 +1949,11 @@ class OrderItem():
 
 class InventoryItem():
 
+    boards = {
+        "inventory": monday_client.get_board_by_id(id=703218230),
+        "orders": monday_client.get_board_by_id(id=822509956)
+    }
+
     columns = [
         ["sku", "text0", "text"],
         ["sale_price", "retail_price", "number"],
@@ -1908,21 +1964,37 @@ class InventoryItem():
         ["colour", "numbers44", "number"]
     ]
 
-    def __init__(self, item_id):
+    def __init__(self, item_id=False, item_object=False):
 
         start_time = time.time()
 
-        for item in monday_client.get_items(ids=[item_id], limit=1):
-            self.item = item
+        if item_id:
+            for item in monday_client.get_items(ids=[item_id], limit=1):
+                self.item = item
+        elif item_object:
+            self.item = item_object
 
-
+        self.name = self.item.name
         for column in self.item.get_column_values():
             for option in self.columns:
                 if column.id == option[1]:
                     setattr(self, option[0], getattr(column, option[2]))
 
-
-
-
+        self.linked_items = self.check_linked_products(self.sku)
 
         print("--- %s seconds ---" % (time.time() - start_time))
+
+    def check_linked_products(self, sku):
+
+        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
+
+        links = self.boards["inventory"].get_items_by_column_values(col_val)
+
+        if len(links) == 1:
+            return [self.item]
+        elif len(links) > 1:
+            return links
+
+
+
+
