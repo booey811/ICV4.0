@@ -1830,7 +1830,10 @@ class OrderItem():
         for column in self.item.get_column_values():
             for option in self.order_columns:
                 if column.id == option[1]:
-                    setattr(self, option[0], getattr(column, option[2]))
+                    value = getattr(column, option[2])
+                    if not value and option[2] == "number":
+                        value = 0
+                    setattr(self, option[0], value)
 
 
     def collect_inventory_items(self):
