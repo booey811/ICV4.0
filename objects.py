@@ -716,6 +716,8 @@ class Repair():
                 self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
                 if self.parent.payload:
                     self.user_id = self.parent.payload["event"]["userId"]
+                else:
+                    self.user_id = False
                 self.retreive_column_data()
                 self.translate_column_data()
             if created:
