@@ -320,6 +320,16 @@ def stock_received():
         order_item.add_to_stock()
     return "Stock Received Route Complete"
 
+# Stock Count Complete
+@app.route("/monday/stock/count", methods=["POST"])
+def stock_count():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
 
 # ROUTES // VEND
 # Sale Update
