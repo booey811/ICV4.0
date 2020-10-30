@@ -201,15 +201,14 @@ def monday_notifications_column():
         data = data[1]
 
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+    new_notification = repair.monday.dropdown_value_webhook_comparison(data)
+    if new_notification:
+        if not repair.zendesk:
+            repair.monday.add_to_zendesk
+        repair.zendesk.notifications_check_and_send(new_notification)
+        repair.monday.textlocal_notification()
     else:
-        new_notification = repair.monday.dropdown_value_webhook_comparison(data)
-        if new_notification:
-            if not repair.zendesk:
-                repair.monday.add_to_zendesk()
-            repair.zendesk.notifications_check_and_send(new_notification)
-            repair.monday.textlocal_notification()
-        else:
-            print("new notification returned false")
+        print("new notification returned false")
 
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday Notificaions Column Change Route Complete"
