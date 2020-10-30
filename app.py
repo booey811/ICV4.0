@@ -325,10 +325,8 @@ def stock_count():
         return data[1]
     else:
         data = data[1]
-
     stock_count = CountItem(int(data["event"]["pulseId"]))
     stock_count.adjust_inventory_with_count()
-
     return "Stock Count Route Complete"
 
 

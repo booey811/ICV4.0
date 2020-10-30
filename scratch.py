@@ -9,6 +9,6 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem, CountItem
 import keys.messages
 
-test = Repair(monday=827228210)
+test = Repair(monday=827104543)
 
-test.monday.add_to_zendesk()
+test.monday.adjust_stock_alt()
