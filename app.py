@@ -6,7 +6,7 @@ from time import sleep
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem
+from objects import Repair, RefurbUnit, OrderItem, CountItem
 
 # APP SET UP
 app = Flask(__name__)
@@ -201,13 +201,11 @@ def monday_notifications_column():
         data = data[1]
 
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-    # Check Zendesk Exists
-    if not repair.zendesk:
-        repair.debug("Unable to send macro - no zendesk ticket exists")
-        repair.monday.add_update(update="Unable to send Macro - No Zendesk Ticket Exists", user="error", notify="error")
     else:
         new_notification = repair.monday.dropdown_value_webhook_comparison(data)
         if new_notification:
+            if not repair.zendesk:
+                repair.monday.add_to_zendesk()
             repair.zendesk.notifications_check_and_send(new_notification)
             repair.monday.textlocal_notification()
         else:
@@ -314,7 +312,7 @@ def stock_received():
     else:
         data = data[1]
     order_item = OrderItem(int(data["event"]["pulseId"]))
-    if order_item.quant_received == None or order_item.quant_received == 0:
+    if order_item.quant_received == None or order_item.quant_received == 0 or order_item.unit_cost == None or order_item.unit_cost == 0:
         Repair.MondayRepair(repair_object=Repair(test=True), created=True).add_update(non_main=[order_item.id, int(data["event"]["userId"]), 822509956], user="error", notify="There was an issue while processing your stock order - please check and try again", status=["status3", "Check Quantities"])
     else:
         order_item.add_to_stock()
@@ -329,6 +327,11 @@ def stock_count():
         return data[1]
     else:
         data = data[1]
+
+    stock_count = CountItem(int(data["event"]["pulseId"]))
+    stock_count.adjust_inventory_with_count()
+
+    return "Stock Count Route Complete"
 
 
 # ROUTES // VEND

@@ -1295,7 +1295,8 @@ class Repair():
                 deductables = self.construct_inventory_deductables(inventory_items)
                 for item in deductables:
                     for pulse in deductables[item][0].linked_items:
-                        pulse.change_column_value(column_id="numbers", column_value=str(deductables[item][0].stock_level - deductables[item][1]))
+                        val = str(deductables[item][0].stock_level - deductables[item][1])
+                        pulse.change_column_value(column_id="numbers", column_value=val)
                         print("Adjusting Stock: {}".format(pulse.name))
                     print("Completed: {}".format(deductables[item][0].name))
 
@@ -1328,12 +1329,9 @@ class Repair():
             if len(stats) > 1:
                 discount = len(stats) * 10
                 total_sale = total_sale - discount
-
             if total_sale == 0:
                 total_sale = 1
-
             margin = ((total_sale - total_cost) / total_sale) * 100
-
             return [stats, discount, total_sale, total_cost, margin]
 
 
@@ -1370,8 +1368,6 @@ class Repair():
                 else:
                     deductables[item.sku] = [item, 1]
             return deductables
-
-
 
 
     class ZendeskRepair():
@@ -2017,7 +2013,7 @@ class InventoryItem():
         "Glass & Touch": "numbers1",
         "Glass, Touch & Backlight": "numbers_17",
         "Glass, Touch & LCD": "numbers2",
-        "China Screen": "supply price"
+        "China Screen": "supply_price"
     }
 
     def __init__(self, item_id=False, item_object=False, refurb=False):
@@ -2027,7 +2023,7 @@ class InventoryItem():
                 self.item = item
         elif item_object:
             self.item = item_object
-        self.name = self.item.name
+        self.name = self.item.name.replace('"', "inch")
         if refurb:
             self.columns.append(["supply_price", self.price_key[refurb], "number"])
         else:
@@ -2038,6 +2034,8 @@ class InventoryItem():
                     setattr(self, option[0], getattr(column, option[2]))
         if not self.supply_price:
             self.supply_price = self.item.get_column_value(id="supply_price").number
+        if not self.stock_level:
+            self.stock_level = 0
         self.linked_items = self.check_linked_products(self.sku)
         print("--- %s seconds ---" % (time.time() - start_time))
 
@@ -2048,3 +2046,46 @@ class InventoryItem():
             return [self.item]
         elif len(links) > 1:
             return links
+
+class CountItem():
+
+    boards = {
+        "count": monday_client.get_board_by_id(826826623),
+        "inventory": monday_client.get_board_by_id(703218230)
+    }
+
+    columns = [
+        ["counted", "numbers_1", "number"],
+        ["status", "status9", "text"],
+        ["sku", "text", "text"]
+    ]
+
+    def __init__(self, monday_id):
+        self.inventory_items = []
+        for item in monday_client.get_items(ids=[monday_id], limit=1):
+            self.item = item
+
+        for column in self.item.get_column_values():
+            for option in self.columns:
+                if column.id == option[1]:
+                    setattr(self, option[0], getattr(column, option[2]))
+
+        self.collect_inventory_items(self.sku)
+
+
+    def collect_inventory_items(self, sku):
+        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
+        results = self.boards["inventory"].get_items_by_column_values(col_val)
+        for item in results:
+            self.inventory_items.append(item)
+
+    def adjust_inventory_with_count(self):
+        if self.counted < 5:
+            self.inventory_items[0].change_multiple_column_values({"status6": {"label": "Add To Order List"}})
+        for item in self.inventory_items:
+            col_vals = {
+                "numbers": self.counted,
+                "status_141": {"label": "Uncounted"},
+            }
+            item.change_multiple_column_values(col_vals)
+        self.item.change_multiple_column_values({"status9": {"label": "Adjustment Complete"}})
