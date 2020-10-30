@@ -1340,6 +1340,9 @@ class Repair():
             self.parent.debug(start="convert_to_vend_codes")
             inventory_items = []
             for repair in self.repairs:
+                if repair == 35:
+                    inventory_items.append(InventoryItem(827372849))
+                    continue
                 search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
                 col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
                 results = self.parent.boards["inventory"].get_items_by_column_values(column_value=col_val)
