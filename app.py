@@ -88,10 +88,9 @@ def monday_status_change():
 
     else:
         # Add to notification column
-        if repair.zendesk:
-            repair.monday.status_to_notification(data["event"]["value"]["label"]["text"])
-            if not repair.multiple_pulse_check_repair():
-                repair.compare_app_objects("monday", "zendesk")
+        repair.monday.status_to_notification(data["event"]["value"]["label"]["text"])
+        if not repair.multiple_pulse_check_repair():
+            repair.compare_app_objects("monday", "zendesk")
 
         # Filter By Status
         if repair.monday.status == "Received":
