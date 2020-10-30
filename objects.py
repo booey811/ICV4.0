@@ -1288,7 +1288,7 @@ class Repair():
             if len(inventory_items)!= len(self.m_repairs):
                 self.add_update(
                     update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
-                    notify="Please check {}'s Repair Details",
+                    notify="Please check {}'s Repair Details".format(self.name),
                     user="error"
                 )
             else:
@@ -1324,10 +1324,13 @@ class Repair():
                 stats.append([name, price, supply])
                 total_sale += int(item.sale_price)
                 total_cost += int(item.supply_price)
-
+            discount = 0
             if len(stats) > 1:
                 discount = len(stats) * 10
                 total_sale = total_sale - discount
+
+            if total_sale == 0:
+                total_sale = 1
 
             margin = ((total_sale - total_cost) / total_sale) * 100
 
