@@ -6,7 +6,7 @@ from time import sleep
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit
+from objects import Repair, RefurbUnit, OrderItem, CountItem
 
 # APP SET UP
 app = Flask(__name__)
@@ -88,10 +88,9 @@ def monday_status_change():
 
     else:
         # Add to notification column
-        if repair.zendesk:
-            repair.monday.status_to_notification(data["event"]["value"]["label"]["text"])
-            if not repair.multiple_pulse_check_repair():
-                repair.compare_app_objects("monday", "zendesk")
+        repair.monday.status_to_notification(data["event"]["value"]["label"]["text"])
+        if not repair.multiple_pulse_check_repair():
+            repair.compare_app_objects("monday", "zendesk")
 
         # Filter By Status
         if repair.monday.status == "Received":
@@ -163,6 +162,8 @@ def monday_status_change():
                 repair.debug_print(debug=os.environ["DEBUG"])
                 return "Status Change Route Complete - Returning Early"
 
+            repair.monday.adjust_stock_alt()
+
             if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
                     repair.monday.vend_sync()
 
@@ -199,17 +200,14 @@ def monday_notifications_column():
         data = data[1]
 
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-    # Check Zendesk Exists
-    if not repair.zendesk:
-        repair.debug("Unable to send macro - no zendesk ticket exists")
-        repair.monday.add_update(update="Unable to send Macro - No Zendesk Ticket Exists", user="error", notify="error")
+    new_notification = repair.monday.dropdown_value_webhook_comparison(data)
+    if new_notification:
+        if not repair.zendesk:
+            repair.monday.add_to_zendesk
+        repair.zendesk.notifications_check_and_send(new_notification)
+        repair.monday.textlocal_notification()
     else:
-        new_notification = repair.monday.dropdown_value_webhook_comparison(data)
-        if new_notification:
-            repair.zendesk.notifications_check_and_send(new_notification)
-            repair.monday.textlocal_notification()
-        else:
-            print("new notification returned false")
+        print("new notification returned false")
 
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday Notificaions Column Change Route Complete"
@@ -273,6 +271,7 @@ def refurb_to_main():
 
     return "Add Refurb to Main Board Route Complete"
 
+
 # Refurb Completed
 @app.route("/monday/refurb/sales", methods=["POST"])
 def refurb_price_calcs():
@@ -282,12 +281,23 @@ def refurb_price_calcs():
         return data[1]
     else:
         data = data[1]
-
     refurb = RefurbUnit(int(data["event"]["pulseId"]))
-
     refurb.add_costs_to_refurbs(refurb.get_cost_data())
-
     return "Refurb Complete & Calculations Route Complete"
+
+
+# Stock Order Placed
+@app.route("/monday/stock/order", methods=["POST"])
+def stock_ordered():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    order_item = OrderItem(int(data["event"]["pulseId"]))
+    order_item.order_placed()
+    return "Stock Order Placed Route Complete"
 
 
 # Stock Orders Received
@@ -299,6 +309,28 @@ def stock_received():
         return data[1]
     else:
         data = data[1]
+    order_item = OrderItem(int(data["event"]["pulseId"]))
+    if order_item.quant_received == None or order_item.quant_received == 0 or order_item.unit_cost == None or order_item.unit_cost == 0:
+        Repair.MondayRepair(repair_object=Repair(test=True), created=True).add_update(non_main=[order_item.id, int(data["event"]["userId"]), 822509956], user="error", notify="There was an issue while processing your stock order - please check and try again", status=["status3", "Check Quantities"])
+    else:
+        order_item.add_to_stock()
+    return "Stock Received Route Complete"
+
+# Stock Count Complete
+@app.route("/monday/stock/count", methods=["POST"])
+def stock_count():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    stock_count = CountItem(int(data["event"]["pulseId"]))
+    stock_count.adjust_inventory_with_count()
+
+    return "Stock Count Route Complete"
+
 
 # ROUTES // VEND
 # Sale Update

@@ -1,7 +1,7 @@
 messages = {
-    # "Corporate Courier Returned": """Hi {},\n\nThank you for arranging a repair with iCorrect today.\n\nWe can confirm the device has been successfully re-delivered to it's collection point.\n\nPlease do get in touch if you experience any difficulty locating the package.\n\nKind Regards,\n\nThe iCorrect Team\n+442070998517""",
+    "Corporate Courier Returned": """Hi {},\n\nThank you for arranging a repair with iCorrect today.\n\nWe can confirm the device has been successfully re-delivered to it's collection point.\n\nPlease do get in touch if you experience any difficulty locating the package.\n\nKind Regards,\n\nThe iCorrect Team\n+442070998517""",
 
-    # "Corporate Walk-In Repaired": """Hi {},\n\nThank you for bringing a device into iCorrect for repair.\n\nWe can confirm the repairs have been successfully completed and your device is available for collection at your convenience.\n\nWe shall look forward to seeing you./nKind Regards,\n\nThe iCorrect Team\n+442070998517""",
+    "Corporate Walk-In Repaired": """Hi {},\n\nThank you for bringing a device into iCorrect for repair.\n\nWe can confirm the repairs have been successfully completed and your device is available for collection at your convenience.\n\nWe shall look forward to seeing you./nKind Regards,\n\nThe iCorrect Team\n+442070998517""",
 
     "End User Courier Returned": """Hi {},\n\nThank you for arranging to have your device repaired with iCorrect.\n\nWe can confirm your device has been successfully re-delivered to it's collection point.\n\nPlease do get in touch if you experience any difficulty locating the package.\n\nKind Regards,\n\nThe iCorrect Team\n+442070998517""",
 
@@ -49,7 +49,7 @@ message_dictionary = {
         }
     },
 
-    
+
     "Courier Booked": {
 
         "Mail-In": {

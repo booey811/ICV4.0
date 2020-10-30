@@ -2,6 +2,7 @@ import json
 import os
 import requests
 from datetime import datetime, timedelta
+import time
 from pprint import pprint
 from urllib import request as urlrequest
 from urllib import parse
@@ -17,20 +18,21 @@ import keys.vend
 import keys.monday
 import keys.messages
 
+monday_client = MondayClient(
+    user_name='systems@icorrect.co.uk',
+    api_key_v1=os.environ["MONV1SYS"],
+    api_key_v2=os.environ["MONV2SYS"]
+    )
+
+zendesk_client = Zenpy(
+    email='admin@icorrect.co.uk',
+    token=os.environ["ZENDESKADMIN"],
+    subdomain="icorrect"
+    )
+
+
 
 class Repair():
-
-    monday_client = MondayClient(
-        user_name='systems@icorrect.co.uk',
-        api_key_v1=os.environ["MONV1SYS"],
-        api_key_v2=os.environ["MONV2SYS"]
-        )
-
-    zendesk_client = Zenpy(
-        email='admin@icorrect.co.uk',
-        token=os.environ["ZENDESKADMIN"],
-        subdomain="icorrect"
-        )
 
     # Monday Boards
     boards = {
@@ -42,7 +44,8 @@ class Repair():
         "zendesk_tags": monday_client.get_board_by_id(id=765453815),
         "macros": monday_client.get_board_by_id(id=762417852),
         "gophr": monday_client.get_board_by_id(id=538565672),
-        "refurbs": monday_client.get_board_by_id(id=757808757)
+        "refurbs": monday_client.get_board_by_id(id=757808757),
+        "new_sales": monday_client.get_board_by_id(id=826011912)
     }
 
     def __init__(self, webhook_payload=False, vend=False, monday=False, zendesk=False, test=False):
@@ -102,7 +105,7 @@ class Repair():
     def include_monday(self, monday_id):
 
         self.debug("Adding[MONDAY] ID: {}".format(monday_id))
-        self.monday = Repair.MondayRepair(self, monday_id=monday_id)
+        self.monday = Repair.MondayRepair(repair_object=self, monday_id=monday_id)
 
     def include_zendesk(self, zendesk_ticket_id):
 
@@ -125,7 +128,7 @@ class Repair():
 
         elif self.source == 'vend':
             col_val = create_column_value(id='text88', column_type=ColumnType.text, value=str(self.vend.id))
-            for item in self.monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
+            for item in monday_client.get_board(id="349212843").get_items_by_column_values(col_val):
                 self.include_monday(item.id)
                 break
 
@@ -164,7 +167,7 @@ class Repair():
             item = self.monday.item = self.boards["main"].add_item(item_name=name, column_values=self.monday.columns.column_values)
             if self.zendesk:
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
-                self.zendesk_client.tickets.update(self.zendesk.ticket)
+                zendesk_client.tickets.update(self.zendesk.ticket)
         self.debug(end="add_to_monday")
 
     def debug(self, *args, start=False, end=False):
@@ -231,7 +234,7 @@ class Repair():
 
         for term in terms:
             if term:
-                search = self.zendesk_client.search(term, type="user")
+                search = zendesk_client.search(term, type="user")
                 if len(search) == 1:
                     self.debug("Found User Through {}".format(term))
                     for item in search:
@@ -313,7 +316,7 @@ class Repair():
             if not self.monday or not self.zendesk:
                 self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
             else:
-                updated_item = Repair.MondayRepair(self, created=self.name)
+                updated_item = Repair.MondayRepair(repair_object=self, created=self.name)
                 for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
                     monday = getattr(self.monday, attribute, None)
                     zendesk = getattr(self.zendesk, attribute, None)
@@ -448,8 +451,8 @@ class Repair():
                     self.products.append(product["product_id"])
 
         def convert_to_monday_codes(self, comparison=False):
-            inv_board = self.parent.monday_client.get_board_by_id(id=703218230)
-            monday_object = Repair.MondayRepair(self.parent, created=self.name)
+            inv_board = monday_client.get_board_by_id(id=703218230)
+            monday_object = Repair.MondayRepair(repair_object=self.parent, created=self.name)
             for item in self.products:
                 col_val = create_column_value(id="text", column_type=ColumnType.text, value=item)
                 for item in inv_board.get_items_by_column_values(col_val):
@@ -521,7 +524,7 @@ class Repair():
                 self.parent.monday.add_update(update="Vend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(self.id))
             if self.parent.zendesk:
                 self.parent.zendesk.ticket.status = "closed"
-                self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
+                zendesk_client.tickets.update(self.parent.zendesk.ticket)
                 self.customer_id_to_zendesk(self.id)
             for product in self.products:
                 if (product in keys.vend.post_checks) or (product in keys.vend.pre_checks):
@@ -535,7 +538,7 @@ class Repair():
                 return False
             elif not self.parent.zendesk.ticket.requester.user_fields["vend_customer_id"]:
                 self.parent.zendesk.ticket.requester.user_fields["vend_customer_id"] = customer_id
-                self.parent.zendesk_client.users.update(self.parent.zendesk.ticket.requester)
+                zendesk_client.users.update(self.parent.zendesk.ticket.requester)
                 return True
             else:
                 return False
@@ -660,7 +663,7 @@ class Repair():
 
 
     class MondayRepair():
-        def __init__(self, repair_object, monday_id=False, created=False):
+        def __init__(self, repair_object=False, monday_id=False, created=False):
             self.parent = repair_object
 
             self.v_id = None
@@ -707,13 +710,15 @@ class Repair():
             self.z_notification_tags = []
 
             if monday_id:
-                for item in self.parent.monday_client.get_items(limit=1, ids=[int(monday_id)]):
+                for item in monday_client.get_items(limit=1, ids=[int(monday_id)]):
                     self.item = item
                     self.id = item.id
                     break
                 self.name = str(self.item.name.split()[0]) + " " + str(self.item.name.split()[1])
                 if self.parent.payload:
                     self.user_id = self.parent.payload["event"]["userId"]
+                else:
+                    self.user_id = False
                 self.retreive_column_data()
                 self.translate_column_data()
             if created:
@@ -865,41 +870,48 @@ class Repair():
             return True
             self.parent.debug(end="check_column_presence")
 
-        def add_update(self, update=False, user=False, notify=False, status=False):
+        def add_update(self, update=False, user=False, notify=False, status=False, non_main=False):
             """Adds Updates to oulses and aids with adjusting status or notifying users
 
             Args:
                 update (str): The body of the update to be posted to Monday Pulse
                 user (str, optional): Used to select which User the API should post as. Defaults to False.
                 notify (bool, optional): Used to send a notification from the selected API Client to the user who made the change on this webhook. Defaults to False.
-                status (str, optional): Used to adjust the status of a pulse (if required). Defaults to False.
+                status (list, optional): Used to adjust the status of a pulse (if required). [column_id, label] Defaults to False.
+                non_main (list, optional): Used when a notification neeeds to be sent for an itme on on the main board [item_id, userid_to_notify, board_id]
             """
 
-            self.parent.debug(start="add_update")
+            if non_main:
+                monday_id = int(non_main[0])
+                user_id = int(non_main[1])
+                target_id = int(non_main[2])
+            else:
+                monday_id = int(self.id)
+                user_id = int(self.user_id)
+                target_id = 349212843
             if user == 'error':
                 client =  MondayClient(user_name='admin@icorrect.co.uk', api_key_v1=os.environ["MONV1ERR"], api_key_v2=os.environ["MONV2ERR"])
-                for item in client.get_items(ids=[int(self.id)], limit=1):
+                for item in client.get_items(ids=[monday_id], limit=1):
                     monday_object = item
                     break
             elif user == 'email':
                 client =  MondayClient(user_name='icorrectltd@gmail.com', api_key_v1=os.environ["MONV1EML"], api_key_v2=os.environ["MONV2EML"])
-                for item in client.get_items(ids=[int(self.id)], limit=1):
+                for item in client.get_items(ids=[monday_id], limit=1):
                     monday_object = item
                     break
             else:
                 monday_object = self.item
-                client = self.parent.monday_client
+                client = monday_client
             if update:
                 monday_object.add_update(update)
             if status:
-                monday_object.change_column_value(column_id="status4", column_value={"label": status})
+                monday_object.change_column_value(column_id=status[0], column_value={"label": status[1]})
             if notify:
-                self.send_notification(sender=client, message=notify, user_id=self.user_id)
-            self.parent.debug(end="add_update")
+                self.send_notification(sender=client, message=notify, user_id=user_id, target_id=target_id)
 
-        def send_notification(self, sender, message, user_id):
+        def send_notification(self, sender, message, user_id, target_id):
             self.parent.debug(start="send_notifcation")
-            sender.create_notification(text=message, user_id=user_id, target_id=349212843, target_type=NotificationTargetType.Project)
+            sender.create_notification(text=message, user_id=user_id, target_id=target_id, target_type=NotificationTargetType.Project)
             self.parent.debug(message)
             self.parent.debug(end="send_notifcation")
 
@@ -910,7 +922,7 @@ class Repair():
             self.convert_to_vend_codes()
             if len(self.vend_codes) != len(self.repairs):
                 self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
-                self.add_update(update="Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error", status="!! See Updates !!")
+                self.add_update(update="Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error", status=["status4", "!! See Updates !!"])
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
@@ -1040,7 +1052,7 @@ class Repair():
                     self.add_update(update="Unable to Create a Zendesk User -- Please provide an email address", user="error")
                 else:
                     info = User(name=self.name, email=self.email, phone=self.number)
-                    user = self.parent.zendesk_client.users.create(info)
+                    user = zendesk_client.users.create(info)
             custom_fields =[]
             for item in fields:
                 value = getattr(self, item, None)
@@ -1055,7 +1067,7 @@ class Repair():
                         tags.append(value["z_tag"])
                     else:
                         continue
-            ticket_audit = self.parent.zendesk_client.tickets.create(
+            ticket_audit = zendesk_client.tickets.create(
                 Ticket(
                     subject='Your Repair with iCorrect',
                     description="iCorrect Ltd",
@@ -1074,11 +1086,12 @@ class Repair():
                 "text5": user.email,
                 "text15": self.parent.zendesk.company_name
             }
-            attributes = [["number", "text00"], ["address1", "passcode"], ["address2", "dup__of_passcode"]]
+            attributes = [["number", "text00"], ["address1", "passcode"], ["address2", "dup__of_passcode"], ["postcode", "text93"]]
             for attribute in attributes:
-                val = getattr(self, attribute[0])
-                if not val:
-                    values[attribute[1]] = val
+                mon_val = getattr(self, attribute[0])
+                zen_val = getattr(self.parent.zendesk, attribute[0], None)
+                if not mon_val and zen_val:
+                    values[attribute[1]] = zen_val
             self.item.change_multiple_column_values(values)
             self.parent.debug(end="add_to_zendesk")
 
@@ -1143,7 +1156,7 @@ class Repair():
                         text_response["data"]["pickup_eta"][11:19], text_response["data"]["private_job_url"])
                 )
                 self.parent.zendesk.ticket.custom_fields.append(CustomField(id=360006704157, value=text_response["data"]["public_tracker_url"]))
-                self.parent.zendesk_client.tickets.update(self.parent.zendesk.ticket)
+                zendesk_client.tickets.update(self.parent.zendesk.ticket)
                 if from_client:
                     self.capture_gophr_data(info["pickup_postcode"], info["delivery_postcode"], text_response["data"])
                 else:
@@ -1152,7 +1165,7 @@ class Repair():
             else:
                 # error_code = text_response["error"]["code"].replace('\"', "|")
                 notes = text_response["error"]["message"].replace('\"', "|")
-                self.add_update(update="""Booking Failed\n\nNotes: {}""".format(notes), user="error", status="!! See Updates !!")
+                self.add_update(update="""Booking Failed\n\nNotes: {}""".format(notes), user="error", status=["status4", "!! See Updates !!"])
                 result = False
             self.parent.debug(end="gophr_booking")
             return result
@@ -1233,6 +1246,7 @@ class Repair():
             if self.repair_type == "Diagnostic" and self.status != "Repaired":
                 key.insert(2, self.repair_type)
             string = " ".join(key)
+            print(string)
             try:
                 message = keys.messages.messages[string].format(self.name.split()[0])
             except KeyError:
@@ -1268,6 +1282,98 @@ class Repair():
                 sale.sale_attributes["register_sale_products"][0]["attributes"].append({"name": "line_note", "value": "IMEI/SN: {}".format(self.imei_sn)})
                 self.parent.vend.post_sale(sale.sale_attributes, sale_update=True)
 
+        def adjust_stock_alt(self):
+            if len(self.m_repairs) == 0:
+                self.parent.debug_print("No Repairs on Monday")
+            inventory_items = self.create_inventory_items()
+            if len(inventory_items)!= len(self.m_repairs):
+                self.add_update(
+                    update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
+                    notify="Please check {}'s Repair Details".format(self.name),
+                    user="error"
+                )
+            else:
+                deductables = self.construct_inventory_deductables(inventory_items)
+                for item in deductables:
+                    for pulse in deductables[item][0].linked_items:
+                        val = str(deductables[item][0].stock_level - deductables[item][1])
+                        pulse.change_column_value(column_id="numbers", column_value=val)
+                        print("Adjusting Stock: {}".format(pulse.name))
+                    print("Completed: {}".format(deductables[item][0].name))
+
+            stats = self.create_sale_stats(inventory_items)
+            sale_items = []
+            for item in stats[0]:
+                sale_items.append("\n".join(item))
+            update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items), "Multi Discount: £{}".format(stats[1]), "Total Sale Price: £{}".format(stats[2]), "Total Cost: £{}".format(stats[3]), "Margin: {}%".format(stats[4]))
+            self.add_update(update)
+            col_vals = {
+                "numbers": stats[2],
+                "numbers3": stats[3],
+                "numbers5": stats[4]
+            }
+            log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
+            log.add_update(update)
+
+        def create_sale_stats(self, inventory_items):
+            total_sale = 0
+            total_cost = 0
+            stats = []
+            for item in inventory_items:
+                name = "Repair: {}".format(item.name)
+                price = "Sale Price: £{}".format(item.sale_price)
+                supply = "Supply Price: £{}".format(item.supply_price)
+                stats.append([name, price, supply])
+                total_sale += int(item.sale_price)
+                total_cost += int(item.supply_price)
+            discount = 0
+            if len(stats) > 1:
+                discount = len(stats) * 10
+                total_sale = total_sale - discount
+            if total_sale == 0:
+                total_sale = 1
+            margin = ((total_sale - total_cost) / total_sale) * 100
+            return [stats, discount, total_sale, total_cost, margin]
+
+
+        def create_inventory_items(self):
+            self.parent.debug(start="convert_to_vend_codes")
+            inventory_items = []
+            for repair in self.repairs:
+                if repair == 35:
+                    inventory_items.append(InventoryItem(827372849))
+                    continue
+                search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
+                col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
+                results = self.parent.boards["inventory"].get_items_by_column_values(column_value=col_val)
+                if not len(results) or len(results) > 1:
+                    self.parent.debug("No results found for tuple (including colour): {}".format(search))
+                    search = tuple([(self.device[0],), (repair,), ()])
+                    col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
+                    results = self.parent.boards["inventory"].get_items_by_column_values(column_value=col_val)
+                    if not len(results):
+                        self.parent.debug("No results found for tuple (excluding colour): {}".format(search))
+                    elif len(results) > 1:
+                        self.parent.debug("Too many results found for tuple: {}".format(search))
+                        self.add_update(update="Cannot Find: {}".format(search))
+                        continue
+                for product in results:
+                    if repair in [69, 83, 84]:
+                        inventory_items.append(InventoryItem(item_object=product, refurb=self.refurb))
+                    else:
+                        inventory_items.append(InventoryItem(item_object=product))
+            return inventory_items
+
+        def construct_inventory_deductables(self, inventory_list):
+            deductables = {}
+            for item in inventory_list:
+                if item.sku in deductables:
+                    deductables[item.sku][1] += 1
+                else:
+                    deductables[item.sku] = [item, 1]
+            return deductables
+
+
     class ZendeskRepair():
 
         def __init__(self, repair_object, zendesk_ticket_number, created=False):
@@ -1296,7 +1402,7 @@ class Repair():
             if not created:
                 self.ticket_id = str(zendesk_ticket_number)
                 try:
-                    ticket = self.parent.zendesk_client.tickets(id=self.ticket_id)
+                    ticket = zendesk_client.tickets(id=self.ticket_id)
                 except zenpyExceptions.RecordNotFoundException:
                     self.parent.debug("Ticket {} Does Not Exist".format(zendesk_ticket_number))
                     ticket = False
@@ -1434,8 +1540,8 @@ class Repair():
 
         def execute_macro(self, macro_id):
             self.parent.debug(start="execute_macro")
-            macro_result = self.parent.zendesk_client.tickets.show_macro_effect(self.ticket, macro_id)
-            self.parent.zendesk_client.tickets.update(macro_result.ticket)
+            macro_result = zendesk_client.tickets.show_macro_effect(self.ticket, macro_id)
+            zendesk_client.tickets.update(macro_result.ticket)
             self.parent.debug(end="execute_macro")
 
         def notifications_check_and_send(self, notification_id):
@@ -1465,7 +1571,7 @@ class Repair():
             if macro_id:
                 self.execute_macro(macro_id)
                 self.ticket.tags.extend([tag])
-                self.parent.zendesk_client.tickets.update(self.ticket)
+                zendesk_client.tickets.update(self.ticket)
                 self.parent.debug("Macro Sent: {}".format(name))
                 self.update_monday_notification_column(notification_id)
             else:
@@ -1486,7 +1592,7 @@ class Repair():
         def add_comment(self, message_body):
             self.parent.debug(start="add_comment")
             self.ticket.comment = Comment(body=message_body, public=False)
-            self.parent.zendesk_client.tickets.update(self.ticket)
+            zendesk_client.tickets.update(self.ticket)
             self.parent.debug(start="add_comment")
 
 
@@ -1516,12 +1622,12 @@ class Repair():
             }
             if field in text_fields:
                 self.ticket.custom_fields.append(CustomField(id=text_fields[field], value=value))
-                self.parent.zendesk_client.tickets.update(self.ticket)
+                zendesk_client.tickets.update(self.ticket)
             elif field in tag_fields:
                 for option in tag_fields[field]:
                     if option["title"] == value:
                         self.ticket.tags.extend([option["z_tag"]])
-                        self.parent.zendesk_client.tickets.update(self.ticket)
+                        zendesk_client.tickets.update(self.ticket)
             else:
                 print("field not found in method")
 
@@ -1676,12 +1782,6 @@ class MondayColumns():
 
 class RefurbUnit():
 
-    monday_client = MondayClient(
-        user_name='systems@icorrect.co.uk',
-        api_key_v1=os.environ["MONV1SYS"],
-        api_key_v2=os.environ["MONV2SYS"]
-        )
-
     # Monday Boards
     boards = {
         "logging": monday_client.get_board_by_id(id=736027251),
@@ -1698,14 +1798,14 @@ class RefurbUnit():
 
         self.id = monday_id
 
-        for pulse in self.monday_client.get_items(ids=[monday_id], limit=1):
+        for pulse in monday_client.get_items(ids=[monday_id], limit=1):
             self.item = pulse
             break
 
         connected = self.item.get_column_value(id="connect_boards1")
         if connected.value:
             self.main_board_id = connected.value["linkedPulseIds"][0]["linkedPulseId"]
-            for item in self.monday_client.get_items(ids=[self.main_board_id], limit=1):
+            for item in monday_client.get_items(ids=[self.main_board_id], limit=1):
                 self.main_board_item = item
                 break
         else:
@@ -1799,4 +1899,197 @@ class RefurbUnit():
         )
 
 
+class OrderItem():
 
+    boards = {
+        "inventory": monday_client.get_board_by_id(id=703218230),
+        "orders": monday_client.get_board_by_id(id=822509956)
+    }
+
+    order_columns = [
+        ["sku", "text0", "text"],
+        ["unit_cost", "numbers04", "number"],
+        ["quant_ordered", "numbers8", "number"],
+        ["quant_received", "numbers0", "number"]
+    ]
+
+    def __init__(self, item_id):
+
+        start_time = time.time()
+
+        self.inventory_items = []
+        self.inventory_attributes = []
+
+        self.id = item_id
+        for item in monday_client.get_items(ids=[item_id], limit=1):
+            self.item = item
+
+        self.set_attributes()
+
+        self.collect_inventory_items()
+
+        print("--- %s seconds ---" % (time.time() - start_time))
+
+    def set_attributes(self):
+        for column in self.item.get_column_values():
+            for option in self.order_columns:
+                if column.id == option[1]:
+                    value = getattr(column, option[2])
+                    if not value and option[2] == "number":
+                        value = 0
+                    setattr(self, option[0], value)
+
+
+    def collect_inventory_items(self):
+        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=self.sku)
+        for item in self.boards["inventory"].get_items_by_column_values(col_val):
+            self.inventory_items.append(item)
+
+    def create_inventory_attributes(self):
+        for item in self.inventory_items:
+            name = item.name
+            cost = item.get_column_value(id="supply_price").number
+            quantity = item.get_column_value(id="numbers").number
+            live = item.get_column_value(id="live").text
+        self.inventory_attributes.append([name, cost, quantity, live])
+
+    def compare_stock_levels(self):
+        stock = []
+        for item in self.inventory_items:
+            stock.append([item.name, item.get_column_value(id="numbers").number])
+        count = 1
+        while count < len(stock):
+            if stock[count-1] != stock[count]:
+                self.item.add_update("Stock Levels For These Items were misaligned and have now been corrected\n{}".format(stock))
+                return stock
+            else:
+                continue
+        return False
+
+    def calculate_supply_price(self):
+        onhand_cost = self.inventory_attributes[0][1] * self.inventory_attributes[0][2]
+        ordered_cost = self.quant_received * self.unit_cost
+        average_cost = float((onhand_cost + ordered_cost)) / float((self.quant_received + self.inventory_attributes[0][2]))
+        return round(average_cost, 2)
+
+    def add_to_stock(self):
+        self.create_inventory_attributes()
+        total_stock = self.quant_received + self.inventory_attributes[0][2]
+        col_vals = {
+            "numbers": total_stock,
+            "status6": {"index": 15}
+        }
+        if self.inventory_attributes[0][3] != "Live":
+                col_vals["supply_price"] = self.unit_cost
+                col_vals["live"] = {"label": "Live"}
+        else:
+            col_vals["supply_price"] = self.calculate_supply_price()
+        for item in self.inventory_items:
+            item.change_multiple_column_values(col_vals)
+        self.item.change_multiple_column_values({
+            "numbers6": self.inventory_attributes[0][2],
+            "numbers_1": total_stock
+        })
+
+    def order_placed(self):
+        for item in self.inventory_items:
+            item.change_multiple_column_values({"status6": {"index": 0}})
+
+class InventoryItem():
+
+    boards = {
+        "inventory": monday_client.get_board_by_id(id=703218230),
+        "orders": monday_client.get_board_by_id(id=822509956)
+    }
+
+    columns = [
+        ["sku", "text0", "text"],
+        ["stock_level", "numbers", "number"],
+        ["device", "numbers3", "number"],
+        ["repair", "device", "number"],
+        ["colour", "numbers44", "number"],
+        ["live", "live", "text"],
+        ["sale_price", "retail_price", "number"]
+    ]
+
+    price_key = {
+        "Glass Only": "numbers7",
+        "Glass & Touch": "numbers1",
+        "Glass, Touch & Backlight": "numbers_17",
+        "Glass, Touch & LCD": "numbers2",
+        "China Screen": "supply_price"
+    }
+
+    def __init__(self, item_id=False, item_object=False, refurb=False):
+        start_time = time.time()
+        if item_id:
+            for item in monday_client.get_items(ids=[item_id], limit=1):
+                self.item = item
+        elif item_object:
+            self.item = item_object
+        self.name = self.item.name.replace('"', "inch")
+        if refurb:
+            self.columns.append(["supply_price", self.price_key[refurb], "number"])
+        else:
+            self.columns.append(["supply_price", "supply_price", "number"])
+        for column in self.item.get_column_values():
+            for option in self.columns:
+                if column.id == option[1]:
+                    setattr(self, option[0], getattr(column, option[2]))
+        if not self.supply_price:
+            self.supply_price = self.item.get_column_value(id="supply_price").number
+        if not self.stock_level:
+            self.stock_level = 0
+        self.linked_items = self.check_linked_products(self.sku)
+        print("--- %s seconds ---" % (time.time() - start_time))
+
+    def check_linked_products(self, sku):
+        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
+        links = self.boards["inventory"].get_items_by_column_values(col_val)
+        if len(links) == 1:
+            return [self.item]
+        elif len(links) > 1:
+            return links
+
+class CountItem():
+
+    boards = {
+        "count": monday_client.get_board_by_id(826826623),
+        "inventory": monday_client.get_board_by_id(703218230)
+    }
+
+    columns = [
+        ["counted", "numbers_1", "number"],
+        ["status", "status9", "text"],
+        ["sku", "text", "text"]
+    ]
+
+    def __init__(self, monday_id):
+        self.inventory_items = []
+        for item in monday_client.get_items(ids=[monday_id], limit=1):
+            self.item = item
+
+        for column in self.item.get_column_values():
+            for option in self.columns:
+                if column.id == option[1]:
+                    setattr(self, option[0], getattr(column, option[2]))
+
+        self.collect_inventory_items(self.sku)
+
+
+    def collect_inventory_items(self, sku):
+        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
+        results = self.boards["inventory"].get_items_by_column_values(col_val)
+        for item in results:
+            self.inventory_items.append(item)
+
+    def adjust_inventory_with_count(self):
+        if self.counted < 5:
+            self.inventory_items[0].change_multiple_column_values({"status6": {"label": "Add To Order List"}})
+        for item in self.inventory_items:
+            col_vals = {
+                "numbers": self.counted,
+                "status_141": {"label": "Uncounted"},
+            }
+            item.change_multiple_column_values(col_vals)
+        self.item.change_multiple_column_values({"status9": {"label": "Adjustment Complete"}})
