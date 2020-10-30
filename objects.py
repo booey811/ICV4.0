@@ -1296,13 +1296,22 @@ class Repair():
                 for item in deductables:
                     for pulse in deductables[item][0].linked_items:
                         pulse.change_column_value(column_id="numbers", column_value=str(deductables[item][0].stock_level - deductables[item][1]))
-                        print("Completed: {}".format(deductables[item][0].name))
+                        print("Adjusting Stock: {}".format(pulse.name))
+                    print("Completed: {}".format(deductables[item][0].name))
 
             stats = self.create_sale_stats(inventory_items)
-            update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}".format("\n".join(stats[0]), stats[1], stats[2], stats[3])
+            sale_items = []
+            for item in stats[0]:
+                sale_items.append("\n".join(item))
+            update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items), "Multi Discount: £{}".format(stats[1]), "Total Sale Price: £{}".format(stats[2]), "Total Cost: £{}".format(stats[3]), "Margin: {}%".format(stats[4]))
             self.add_update(update)
-            log = self.parent.boards["new_sales"].add_item(item_name=self.name)
-            log.add_update("\n".join(stats))
+            col_vals = {
+                "numbers": stats[2],
+                "numbers3": stats[3],
+                "numbers5": stats[4]
+            }
+            log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
+            log.add_update(update)
 
         def create_sale_stats(self, inventory_items):
             total_sale = 0
@@ -1310,18 +1319,19 @@ class Repair():
             stats = []
             for item in inventory_items:
                 name = "Repair: {}".format(item.name)
-                price = "Sale Price: {}".format(item.supply_price)                
-                supply = "Supply Price: {}".format(item.supply_price)
+                price = "Sale Price: £{}".format(item.sale_price)
+                supply = "Supply Price: £{}".format(item.supply_price)
                 stats.append([name, price, supply])
                 total_sale += int(item.sale_price)
                 total_cost += int(item.supply_price)
-            
-            if len(stats) > 1:
-                total_sale = total_sale - len(stats) * 10
-            
-            margin = "Margin: {}%".format(((total_sale - total_cost) / total_sale) * 100)
 
-            return [stats, "Total Sale Price: {}".format(total_sale), "Total Cost: {}".format(total_cost), margin]
+            if len(stats) > 1:
+                discount = len(stats) * 10
+                total_sale = total_sale - discount
+
+            margin = ((total_sale - total_cost) / total_sale) * 100
+
+            return [stats, discount, total_sale, total_cost, margin]
 
 
         def create_inventory_items(self):
@@ -1965,7 +1975,7 @@ class OrderItem():
         col_vals = {
             "numbers": total_stock,
             "status6": {"index": 15}
-        }          
+        }
         if self.inventory_attributes[0][3] != "Live":
                 col_vals["supply_price"] = self.unit_cost
                 col_vals["live"] = {"label": "Live"}
@@ -2008,9 +2018,7 @@ class InventoryItem():
     }
 
     def __init__(self, item_id=False, item_object=False, refurb=False):
-
         start_time = time.time()
-
         if item_id:
             for item in monday_client.get_items(ids=[item_id], limit=1):
                 self.item = item
@@ -2025,20 +2033,14 @@ class InventoryItem():
             for option in self.columns:
                 if column.id == option[1]:
                     setattr(self, option[0], getattr(column, option[2]))
-        
         if not self.supply_price:
             self.supply_price = self.item.get_column_value(id="supply_price").number
-
         self.linked_items = self.check_linked_products(self.sku)
-
         print("--- %s seconds ---" % (time.time() - start_time))
 
     def check_linked_products(self, sku):
-
         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
-
         links = self.boards["inventory"].get_items_by_column_values(col_val)
-
         if len(links) == 1:
             return [self.item]
         elif len(links) > 1:

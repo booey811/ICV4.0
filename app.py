@@ -163,6 +163,8 @@ def monday_status_change():
                 repair.debug_print(debug=os.environ["DEBUG"])
                 return "Status Change Route Complete - Returning Early"
 
+            repair.monday.adjust_stock_alt()
+
             if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
                     repair.monday.vend_sync()
 
