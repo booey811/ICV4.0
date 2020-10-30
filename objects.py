@@ -1086,11 +1086,12 @@ class Repair():
                 "text5": user.email,
                 "text15": self.parent.zendesk.company_name
             }
-            attributes = [["number", "text00"], ["address1", "passcode"], ["address2", "dup__of_passcode"]]
+            attributes = [["number", "text00"], ["address1", "passcode"], ["address2", "dup__of_passcode"], ["postcode", "text93"]]
             for attribute in attributes:
-                val = getattr(self, attribute[0])
-                if not val:
-                    values[attribute[1]] = val
+                mon_val = getattr(self, attribute[0])
+                zen_val = getattr(self.parent.zendesk, attribute[0], None)
+                if not mon_val and zen_val:
+                    values[attribute[1]] = zen_val
             self.item.change_multiple_column_values(values)
             self.parent.debug(end="add_to_zendesk")
 
