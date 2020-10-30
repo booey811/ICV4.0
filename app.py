@@ -285,7 +285,6 @@ def refurb_price_calcs():
     refurb.add_costs_to_refurbs(refurb.get_cost_data())
     return "Refurb Complete & Calculations Route Complete"
 
-
 # Stock Order Placed
 @app.route("/monday/stock/order", methods=["POST"])
 def stock_ordered():
