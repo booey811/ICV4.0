@@ -9,6 +9,6 @@ import settings
 from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem, CountItem
 import keys.messages
 
-test = Repair(monday=827104543)
+test = Repair(monday=796559335)
 
-test.monday.adjust_stock_alt()
+print(test.monday.new_end_of_day)

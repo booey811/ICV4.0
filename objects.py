@@ -702,6 +702,7 @@ class Repair():
             self.end_of_day = None
             self.deactivated = None
             self.notifications = []
+            self.new_end_of_day = False
 
             self.vend_codes = []
             self.repair_names = {}
@@ -735,10 +736,11 @@ class Repair():
                 ["Client", "m_client", "client"],
                 ["Type", "m_type", "repair_type"],
                 ["Refurb Type", "m_refurb", "refurb"],
-                ["End Of Day", "m_eod", "end_of_day"],
+                ["Vend End Of Day", "m_eod", "end_of_day"],
                 ["ZenLink", "m_zenlink", "zenlink"],
                 ["Has Case", "m_has_case", "case"],
-                ["Colour", "m_colour", "colour"]
+                ["Colour", "m_colour", "colour"],
+                ["New End Of Day", "new_eod", "new_end_of_day"]
             ]
             for column, m_attribute, attribute in status_attributes:
                 # Check in status column dictionary for the corresponding column

@@ -162,8 +162,6 @@ def monday_status_change():
                 repair.debug_print(debug=os.environ["DEBUG"])
                 return "Status Change Route Complete - Returning Early"
 
-            repair.monday.adjust_stock_alt()
-
             if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
                     repair.monday.vend_sync()
 
@@ -212,7 +210,24 @@ def monday_notifications_column():
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Monday Notificaions Column Change Route Complete"
 
-# End of Day Column
+
+# New End of Day Column
+@app.route("/monday/eod/new", methods=["POST"])
+def monday_eod_column_new():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+
+    repair.adjust_stock_alt()
+
+    return "New End Of Day Route Complete"
+
+# Vend End of Day Column
 @app.route("/monday/eod/do_now", methods=["POST"])
 def monday_eod_column_do_now():
     webhook = request.get_data()
