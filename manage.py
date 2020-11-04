@@ -1,0 +1,71 @@
+import os
+
+from moncli import MondayClient, NotificationTargetType
+
+import settings
+
+
+class Manager():
+
+    monday_clients = {
+
+        "system": [
+            MondayClient(
+                user_name='systems@icorrect.co.uk',
+                api_key_v1=os.environ["MONV1SYS"],
+                api_key_v2=os.environ["MONV2SYS"]
+                ),
+            12304876],
+
+        "error": [
+            MondayClient(
+                user_name='admin@icorrect.co.uk',
+                api_key_v1=os.environ["MONV1ERR"],
+                api_key_v2=os.environ["MONV2ERR"]
+                ),
+            15365289
+        ],
+
+        "emails": [
+            MondayClient(
+                user_name='icorrectltd@gmail.com',
+                api_key_v1=os.environ["MONV1EML"],
+                api_key_v2=os.environ["MONV2EML"]
+                ),
+            11581083
+        ]
+    }
+
+    def __init__(self):
+        pass
+
+    def add_update(self, monday_id, user, update=False, status=False, notify=False, non_main=False):
+
+        # Select Client (Which User Will be posting updates/notificaitons)
+        client = self.monday_clients[user][0]
+        user_id = self.monday_clients[user][1]
+        # Get Item
+        item = None
+        for pulse in client.get_items(ids=[monday_id], limit=1):
+            item = pulse
+            break
+        # Check Item Can Be Found
+        if not item:
+            return False
+        # Post Update, if provided
+        if update:
+            item.add_update(body=update)
+        # Change Status, if provided
+        if status:
+            # Ensure 'status' is a 2 length list
+            if len(status) == 2:
+                item.change_column_value(column_id=status[0], column_value={"label": status[1]})
+            else:
+                print("status list has not been provided correctly")
+        # Send Notification, if requested
+        if notify:
+            # Check 'notify' is a 2 length list
+            if len(notify) == 3:
+                client.create_notification(text=notify[0], user_id=notify[1], target_id=notify[2], target_type=NotificationTargetType.Post)
+            else:
+                print("notify list has not been provided correctly")
