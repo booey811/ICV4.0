@@ -223,7 +223,7 @@ def monday_eod_column_new():
 
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
 
-    repair.adjust_stock_alt()
+    repair.monday.adjust_stock_alt()
 
     return "New End Of Day Route Complete"
 

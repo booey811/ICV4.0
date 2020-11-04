@@ -1337,7 +1337,6 @@ class Repair():
             margin = ((total_sale - total_cost) / total_sale) * 100
             return [stats, discount, total_sale, total_cost, margin]
 
-
         def create_inventory_items(self):
             self.parent.debug(start="convert_to_vend_codes")
             inventory_items = []
