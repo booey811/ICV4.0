@@ -1322,6 +1322,7 @@ class Repair():
         def adjust_stock_alt(self):
             if len(self.m_repairs) == 0:
                 self.parent.debug_print("No Repairs on Monday")
+<<<<<<< HEAD
                 manager.add_update(
                     monday_id=self.id,
                     user="error",
@@ -1364,6 +1365,42 @@ class Repair():
                 }
                 log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
                 log.add_update(update)
+=======
+            inventory_items = self.create_inventory_items()
+            if len(inventory_items)!= len(self.m_repairs):
+                manager.add_update(
+                    monday_id=self.id,
+                    update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
+                    notify=["Please check {}'s Repair Details".format(self.name), self.user_id],
+                    user="error"
+                )
+            else:
+                deductables = self.construct_inventory_deductables(inventory_items)
+                for item in deductables:
+                    for pulse in deductables[item][0].linked_items:
+                        val = str(deductables[item][0].stock_level - deductables[item][1])
+                        pulse.change_column_value(column_id="numbers", column_value=val)
+                        print("Adjusting Stock: {}".format(pulse.name))
+                    print("Completed: {}".format(deductables[item][0].name))
+
+            stats = self.create_sale_stats(inventory_items)
+            sale_items = []
+            for item in stats[0]:
+                sale_items.append("\n".join(item))
+            update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items), "Multi Discount: £{}".format(stats[1]), "Total Sale Price: £{}".format(stats[2]), "Total Cost: £{}".format(stats[3]), "Margin: {}%".format(stats[4]))
+            manager.add_update(
+                monday_id=self.id,
+                user="system",
+                update=update
+            )
+            col_vals = {
+                "numbers": stats[2],
+                "numbers3": stats[3],
+                "numbers5": stats[4]
+            }
+            log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
+            log.add_update(update)
+>>>>>>> 1078b713e87ef9aee121e6dd243eedf8b1448863
 
         def create_sale_stats(self, inventory_items):
             total_sale = 0

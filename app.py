@@ -7,6 +7,7 @@ from time import sleep
 from flask import Flask, request
 
 from objects import Repair, RefurbUnit, OrderItem, CountItem
+from manage import manager
 
 # APP SET UP
 app = Flask(__name__)
@@ -158,7 +159,7 @@ def monday_status_change():
         elif repair.monday.status == "Repaired":
 
             # Check the required information has been filled out
-            if not repair.monday.check_column_presence():
+            if not repair.monday.check_column_presence(data["event"]["userId"]):
                 repair.debug_print(debug=os.environ["DEBUG"])
                 return "Status Change Route Complete - Returning Early"
 
@@ -325,7 +326,12 @@ def stock_received():
         data = data[1]
     order_item = OrderItem(int(data["event"]["pulseId"]))
     if order_item.quant_received == None or order_item.quant_received == 0 or order_item.unit_cost == None or order_item.unit_cost == 0:
-        Repair.MondayRepair(repair_object=Repair(test=True), created=True).add_update(non_main=[order_item.id, int(data["event"]["userId"]), 822509956], user="error", notify="There was an issue while processing your stock order - please check and try again", status=["status3", "Check Quantities"])
+        manager.add_update(
+            monday_id=int(data["event"]["pulseId"]),
+            user="error",
+            notify=["There was an issue while processing your stock order - please check and try again", data["event"]["userId"]],
+            status=["status3", "Check Quantities"]
+        )
     else:
         order_item.add_to_stock()
     return "Stock Received Route Complete"
@@ -396,11 +402,18 @@ def zendesk_comment_sent():
     else:
         if repair.multiple_pulse_check_repair():
             for obj in repair.associated_pulse_results:
-                pulse = Repair(monday=obj.id)
-                pulse.monday.add_update(update=data["latest_comment"], user="email")
+                manager.add_update(
+                    monday_id=obj.id,
+                    user="email",
+                    update=data["latest_comment"]
+                )
         else:
             repair.compare_app_objects("zendesk", "monday")
-            repair.monday.add_update(update=data["latest_comment"], user="email")
+            manager.add_update(
+                monday_id=repair.monday.id,
+                user="email",
+                update=data["latest_comment"]
+            )
 
     repair.debug_print(debug=os.environ["DEBUG"])
     return "Zendesk Commments Route Completed Successfully"
