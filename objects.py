@@ -1347,23 +1347,23 @@ class Repair():
                             print("Adjusting Stock: {}".format(pulse.name))
                         print("Completed: {}".format(deductables[item][0].name))
 
-                stats = self.create_sale_stats(inventory_items)
-                sale_items = []
-                for item in stats[0]:
-                    sale_items.append("\n".join(item))
-                update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items), "Multi Discount: £{}".format(stats[1]), "Total Sale Price: £{}".format(stats[2]), "Total Cost: £{}".format(stats[3]), "Margin: {}%".format(stats[4]))
-                manager.add_update(
-                    monday_id=self.id,
-                    user="system",
-                    update=update
-                )
-                col_vals = {
-                    "numbers": stats[2],
-                    "numbers3": stats[3],
-                    "numbers5": stats[4]
-                }
-                log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
-                log.add_update(update)
+                    stats = self.create_sale_stats(inventory_items)
+                    sale_items = []
+                    for item in stats[0]:
+                        sale_items.append("\n".join(item))
+                    update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items), "Multi Discount: £{}".format(stats[1]), "Total Sale Price: £{}".format(stats[2]), "Total Cost: £{}".format(stats[3]), "Margin: {}%".format(stats[4]))
+                    manager.add_update(
+                        monday_id=self.id,
+                        user="system",
+                        update=update
+                    )
+                    col_vals = {
+                        "numbers": stats[2],
+                        "numbers3": stats[3],
+                        "numbers5": stats[4]
+                    }
+                    log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
+                    log.add_update(update)
 
         def create_sale_stats(self, inventory_items):
             total_sale = 0
