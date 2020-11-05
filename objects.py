@@ -17,6 +17,7 @@ import settings
 import keys.vend
 import keys.monday
 import keys.messages
+from manage import manager
 
 monday_client = MondayClient(
     user_name='systems@icorrect.co.uk',
@@ -518,10 +519,12 @@ class Repair():
         def sale_closed(self):
             self.parent.debug(start="sale_closed")
             if self.parent.monday:
-                self.parent.monday.item.change_multiple_column_values({
-                    "status4": {"label": "Returned"}
-                })
-                self.parent.monday.add_update(update="Vend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(self.id))
+                manager.add_update(
+                    monday_id=self.parent.monday.id,
+                    user="system",
+                    update="Vend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(self.id),
+                    status=["status4", "Returned"]
+                )
             if self.parent.zendesk:
                 self.parent.zendesk.ticket.status = "closed"
                 zendesk_client.tickets.update(self.parent.zendesk.ticket)
@@ -558,7 +561,11 @@ class Repair():
             }
             for info in [[self.pre_checks, "PRE-CHECKS"], [self.notes, "NOTES"]]:
                 if info[0]:
-                    self.parent.monday.add_update(update="{}:\n\n{}".format(info[1], "\n".join(info[0])))
+                    manager.add_update(
+                        monday_id=self.parent.monday.id,
+                        user="system",
+                        update="{}:\n\n{}".format(info[1], "\n".join(info[0]))
+                    )
 
         def add_to_usage(self, product_id):
             url = "https://icorrect.vendhq.com/api/products/{}".format(product_id)
@@ -702,6 +709,7 @@ class Repair():
             self.end_of_day = None
             self.deactivated = None
             self.notifications = []
+            self.new_end_of_day = False
 
             self.vend_codes = []
             self.repair_names = {}
@@ -735,10 +743,11 @@ class Repair():
                 ["Client", "m_client", "client"],
                 ["Type", "m_type", "repair_type"],
                 ["Refurb Type", "m_refurb", "refurb"],
-                ["End Of Day", "m_eod", "end_of_day"],
+                ["Vend End Of Day", "m_eod", "end_of_day"],
                 ["ZenLink", "m_zenlink", "zenlink"],
                 ["Has Case", "m_has_case", "case"],
-                ["Colour", "m_colour", "colour"]
+                ["Colour", "m_colour", "colour"],
+                ["New End Of Day", "new_eod", "new_end_of_day"]
             ]
             for column, m_attribute, attribute in status_attributes:
                 # Check in status column dictionary for the corresponding column
@@ -814,7 +823,7 @@ class Repair():
                 if (dropdown_text[0] == "A") and ("Watch" not in dropdown_text):
                     self.category = self.parent.category = "MacBook"
 
-        def check_column_presence(self):
+        def check_column_presence(self, user_id):
             """Goes through monday columns to make sure essential data has been filled out for this repair
             Returns False if any information is missing or True if all is well
             """
@@ -822,49 +831,54 @@ class Repair():
             placeholder_repairs = [96, 97, 98]
             # Check if a placeholder repair has been left on pulse
             if any(repair in self.repairs for repair in placeholder_repairs):
-                self.add_update(
+                manager.add_update(
+                    monday_id=self.id,
                     update="You have selected a placeholder repair - please select the repair you have completed and try again",
                     user="error",
-                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
-                    status="!! See Updates !!"
+                    notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                    status=["status4", "!! See Updates !!"]
                 )
                 return False
             # Check if some type of screen repair has been completed
             if any(repair in self.m_repairs for repair in [69, 74, 84, 89, 90, 83]):
                 # Check that screen condition has been selected/not left blank
                 if not self.m_screen_condition and self.client != "Refurb":
-                    self.add_update(
+                    manager.add_update(
+                        monday_id=self.id,
                         update="You have not selected a screen condition for this repair - please select an option from the dropdown menu and try again",
                         user="error",
-                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
-                        status="!! See Updates !!"
+                        notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                        status=["status4", "!! See Updates !!"]
                     )
                     return False
                 # Check that colour has been selected/not left blank
                 elif self.m_colour is None or self.m_colour == 5:
-                    self.add_update(
+                    manager.add_update(
+                        monday_id=self.id,
                         update="You have not selected a colour for the screen of this device - please select a colour option and try again",
                         user="error",
-                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
-                        status="!! See Updates !!"
+                        notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                        status=["status4", "!! See Updates !!"]
                     )
                     return False
                 # Check that a refurb type has been selected/not left blank
                 elif not self.m_refurb or self.m_refurb == 5:
-                    self.add_update(
+                    manager.add_update(
+                        monday_id=self.id,
                         update="You have not selected what refurb variety of screen was used with this repair - please select a refurbishmnet option and try again",
                         user="error",
-                        notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
-                        status="!! See Updates !!"
+                        notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                        status=["status4", "!! See Updates !!"]
                     )
                     return False
             # Check that IMEI has been recorded
             if not self.imei_sn and self.client != "Refurb":
-                self.add_update(
+                manager.add_update(
+                    monday_id=self.id,
                     update="This device does not have an IMEI or SN given - please input this and try again",
                     user="error",
-                    notify="You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name),
-                    status="!! See Updates !!"
+                    notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                    status=["status4", "!! See Updates !!"]
                 )
                 return False
             return True
@@ -922,7 +936,11 @@ class Repair():
             self.convert_to_vend_codes()
             if len(self.vend_codes) != len(self.repairs):
                 self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
-                self.add_update(update="Cannot Adjust Stock - Vend Codes Lost During Conversion", user="error", status=["status4", "!! See Updates !!"])
+                manager.add_update(
+                    monday_id=self.id,
+                    update="Cannot Adjust Stock - Vend Codes Lost During Conversion",
+                    user="error",
+                    status=["status4", "!! See Updates !!"])
             else:
                 self.parent.vend = Repair.VendRepair(self.parent)
                 self.parent.vend.create_eod_sale()
@@ -948,9 +966,15 @@ class Repair():
                         for repair in self.repair_names:
                             update.append(self.repair_names[repair][0])
                         try:
-                            self.add_update(update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id)))
+                            manager.add_update(
+                                monday_id=self.id,
+                                update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id))
+                            )
                         except MondayApiError:
-                            self.add_update(update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id))
+                            manager.add_update(
+                                monday_id=self.id,
+                                update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id)
+                            )
             self.parent.debug(end="adjust stock")
 
         def convert_to_vend_codes(self, for_refurb=False):
@@ -1049,7 +1073,11 @@ class Repair():
             if not user:
                 self.parent.debug("Cannot Find User -- Must Create One")
                 if not self.email:
-                    self.add_update(update="Unable to Create a Zendesk User -- Please provide an email address", user="error")
+                    manager.add_update(
+                        monday_id=self.id,
+                        update="Unable to Create a Zendesk User -- Please provide an email address",
+                        user="error"
+                    )
                 else:
                     info = User(name=self.name, email=self.email, phone=self.number)
                     user = zendesk_client.users.create(info)
@@ -1150,7 +1178,9 @@ class Repair():
             text_response = json.loads(response.text)
             if text_response["success"]:
                 self.parent.debug("Booking Successful -- Job ID: {}".format(text_response["data"]["job_id"]))
-                self.add_update(
+                manager.add_update(
+                    monday_id=self.id,
+                    user="system",
                     update="Booking Successful\nJob ID: {}\nPrice: £{}\nPickup ETA: {}\nClick to Confirm Booking: {}".format(
                         text_response["data"]["job_id"], text_response["data"]["price_gross"],
                         text_response["data"]["pickup_eta"][11:19], text_response["data"]["private_job_url"])
@@ -1165,7 +1195,11 @@ class Repair():
             else:
                 # error_code = text_response["error"]["code"].replace('\"', "|")
                 notes = text_response["error"]["message"].replace('\"', "|")
-                self.add_update(update="""Booking Failed\n\nNotes: {}""".format(notes), user="error", status=["status4", "!! See Updates !!"])
+                manager.add_update(
+                    update="""Booking Failed\n\nNotes: {}""".format(notes),
+                    user="error",
+                    status=["status4", "!! See Updates !!"]
+                )
                 result = False
             self.parent.debug(end="gophr_booking")
             return result
@@ -1274,7 +1308,11 @@ class Repair():
 
             self.convert_to_vend_codes()
             if len(self.vend_codes) != len(self.m_repairs):
-                self.add_update(user="error", notify="Please add {}'s Repairs to Vend Manually, I can't find one or more of the repairs that have been completed on this device".format(self.name))
+                manager.add_update(
+                    monday_id=self.id,
+                    user="error",
+                    notify=["Please add {}'s Repairs to Vend Manually, I can't find one or more of the repairs that have been completed on this device".format(self.name), self.user_id]
+                )
                 self.parent.debug("Vend Codes Lost During Conversion: D:{} Rs:{} C:{}".format(self.m_device, self.m_repairs, self.m_colour))
             else:
                 for code in self.vend_codes:
@@ -1287,9 +1325,10 @@ class Repair():
                 self.parent.debug_print("No Repairs on Monday")
             inventory_items = self.create_inventory_items()
             if len(inventory_items)!= len(self.m_repairs):
-                self.add_update(
+                manager.add_update(
+                    monday_id=self.id,
                     update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
-                    notify="Please check {}'s Repair Details".format(self.name),
+                    notify=["Please check {}'s Repair Details".format(self.name), self.user_id],
                     user="error"
                 )
             else:
@@ -1306,7 +1345,11 @@ class Repair():
             for item in stats[0]:
                 sale_items.append("\n".join(item))
             update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items), "Multi Discount: £{}".format(stats[1]), "Total Sale Price: £{}".format(stats[2]), "Total Cost: £{}".format(stats[3]), "Margin: {}%".format(stats[4]))
-            self.add_update(update)
+            manager.add_update(
+                monday_id=self.id,
+                user="system",
+                update=update
+            )
             col_vals = {
                 "numbers": stats[2],
                 "numbers3": stats[3],
@@ -1335,7 +1378,6 @@ class Repair():
             margin = ((total_sale - total_cost) / total_sale) * 100
             return [stats, discount, total_sale, total_cost, margin]
 
-
         def create_inventory_items(self):
             self.parent.debug(start="convert_to_vend_codes")
             inventory_items = []
@@ -1355,7 +1397,11 @@ class Repair():
                         self.parent.debug("No results found for tuple (excluding colour): {}".format(search))
                     elif len(results) > 1:
                         self.parent.debug("Too many results found for tuple: {}".format(search))
-                        self.add_update(update="Cannot Find: {}".format(search))
+                        manager.add_update(
+                            monday_id=self.id,
+                            user="error",
+                            update="Cannot Find: {}".format(search)
+                        )
                         continue
                 for product in results:
                     if repair in [69, 83, 84]:
@@ -1555,10 +1601,18 @@ class Repair():
                 self.parent.debug("No Ticket Generated on Zendesk Object -- Cannot Process Zendesk Features")
             elif tag and tag in self.ticket.tags:
                 self.parent.debug("No Macro Sent - macro has already been applied to this ticket")
-                self.parent.monday.add_update(update="No Macro Sent - This ticket has already received this macro", user="email")
+                manager.add_update(
+                    monday_id=self.parent.monday.id,
+                    user="email",
+                    update="No Macro Sent - This ticket has already received this macro"
+                )
             elif not tag:
                 self.parent.debug("No Macro Sent - Cannot find notification ID in dropdown_column_dictionary")
-                self.parent.monday.add_update(update="Cannot Send Macro - Please Let Gabe Know (Notification ID not found in dropdown_column_dictionary)", user="error")
+                manager.add_update(
+                    monday_id=self.parent.monday.id,
+                    user="error",
+                    update="Cannot Send Macro - Please Let Gabe Know (Notification ID not found in dropdown_column_dictionary)"
+                )
             else:
                 col_val = create_column_value(id="numbers8", column_type=ColumnType.numbers, value=int(notification_id))
                 results = self.parent.boards["macros"].get_items_by_column_values(col_val)
@@ -1575,7 +1629,11 @@ class Repair():
                 self.parent.debug("Macro Sent: {}".format(name))
                 self.update_monday_notification_column(notification_id)
             else:
-                self.parent.monday.add_update(update="Cannot Send Macro - Please Let Gabe Know (No Macro On Macro Board)", user="error")
+                manager.add_update(
+                    monday_id=self.parent.monday.id,
+                    update="Cannot Send Macro - Please Let Gabe Know (No Macro On Macro Board)",
+                    user="error"
+                    )
                 self.parent.debug("Could Not Get Macro ID from Macro Board\nNotication ID: {}\nService: {}\nClient: {}\nType: {}".format(notification_id, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type))
             self.parent.debug(end="notifcations_check_and_send")
 

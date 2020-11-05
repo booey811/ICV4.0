@@ -32,7 +32,8 @@ col_ids_to_attributes = {
     'item_id': {'title': 'Item ID', 'value_type': None, 'attribute': None},
     'text6': {'title': 'ZenDeskID', 'value_type': ['text'], 'attribute': 'z_ticket_id'},
     'text88': {'title': 'Vend Sale ID', 'value_type': ['text'], 'attribute': 'v_id'},
-    'blocker': {'title': 'End Of Day', 'value_type': ["index", "label"], 'attribute': "m_eod"},
+    'blocker': {'title': 'Vend EOD', 'value_type': ["index", "label"], 'attribute': "m_eod"},
+    'status_17': {'title': 'New EOD', 'value_type': ["index", "label"], 'attribute': "new_eod"},
     "passcode": {"title": "Street Name/Number", 'value_type': ["text"], "attribute": "address1"},
     "dup__of_passcode": {"title": "Company/Flat", 'value_type': ["text"], "attribute": "address2"},
     "check71": {"title": "Deactivate", "value_type": ["checked"], "attribute": "deactivate"},
@@ -366,7 +367,7 @@ status_column_dictionary = {
         ]
     },
 
-    "End Of Day": {
+    "Vend End Of Day": {
         "attribute": "end_of_day",
         "col_id": "blocker",
         "values": [
@@ -381,6 +382,37 @@ status_column_dictionary = {
             {"title": "Failed",
                 "index": 2,
                 "label": "Failed",
+                "z_tag": ""}
+        ]
+    },
+
+    "New End Of Day": {
+        "attribute": "new_end_of_day",
+        "col_id": "status_17",
+        "values": [
+            {"title": "Not Done",
+                "index": 5,
+                "label": "Not Done",
+                "z_tag": ""},
+            {"title": "Not Done",
+                "index": None,
+                "label": "Not Done",
+                "z_tag": ""},
+            {"title": "Complete",
+                "index": 109,
+                "label": "Complete",
+                "z_tag": ""},
+            {"title": "Error - Not Found",
+                "index": 19,
+                "label": "Error - Not Found",
+                "z_tag": ""},
+            {"title": "Error - Other",
+                "index": 12,
+                "label": "Error - Other",
+                "z_tag": ""},
+            {"title": "Do Now!",
+                "index": 15,
+                "label": "Do Now!",
                 "z_tag": ""}
         ]
     },
