@@ -11,4 +11,8 @@ from manage import manager
 import keys.messages
 
 
-manager.add_update(824488881, "system", notify=["TEST NOTIFY", 4251271])
+test = Repair(monday=837781515)
+
+test.monday.adjust_stock_alt()
+
+print()

@@ -968,11 +968,13 @@ class Repair():
                         try:
                             manager.add_update(
                                 monday_id=self.id,
+                                user="system",
                                 update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id))
                             )
                         except MondayApiError:
                             manager.add_update(
                                 monday_id=self.id,
+                                user="system",
                                 update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id)
                             )
             self.parent.debug(end="adjust stock")
@@ -1355,7 +1357,8 @@ class Repair():
                     manager.add_update(
                         monday_id=self.id,
                         user="system",
-                        update=update
+                        update=update,
+                        status=["status_17", "Complete"]
                     )
                     col_vals = {
                         "numbers": stats[2],
