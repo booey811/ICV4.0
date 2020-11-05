@@ -26,7 +26,7 @@ class Manager():
             15365289
         ],
 
-        "emails": [
+        "email": [
             MondayClient(
                 user_name='icorrectltd@gmail.com',
                 api_key_v1=os.environ["MONV1EML"],
@@ -65,7 +65,10 @@ class Manager():
         # Send Notification, if requested
         if notify:
             # Check 'notify' is a 2 length list
-            if len(notify) == 3:
-                client.create_notification(text=notify[0], user_id=notify[1], target_id=notify[2], target_type=NotificationTargetType.Post)
+            if len(notify) == 2:
+                client.create_notification(text=notify[0], user_id=notify[1], target_id=monday_id, target_type=NotificationTargetType.Project)
             else:
                 print("notify list has not been provided correctly")
+
+
+manager = Manager()

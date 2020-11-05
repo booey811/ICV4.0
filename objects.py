@@ -17,6 +17,7 @@ import settings
 import keys.vend
 import keys.monday
 import keys.messages
+from manage import manager
 
 monday_client = MondayClient(
     user_name='systems@icorrect.co.uk',
