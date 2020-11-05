@@ -1249,7 +1249,6 @@ class Repair():
             if self.repair_type == "Diagnostic" and self.status != "Repaired":
                 key.insert(2, self.repair_type)
             string = " ".join(key)
-            print(string)
             try:
                 message = keys.messages.messages[string].format(self.name.split()[0])
             except KeyError:
@@ -1288,12 +1287,24 @@ class Repair():
         def adjust_stock_alt(self):
             if len(self.m_repairs) == 0:
                 self.parent.debug_print("No Repairs on Monday")
+                manager.add_update(
+                    monday_id=self.id,
+                    user="error",
+                    update="No Repairs Given - Cannot Check Out Stock",
+                    status=["status_17", "Error - Other"]
+                )
             inventory_items = self.create_inventory_items()
             if len(inventory_items)!= len(self.m_repairs):
                 self.add_update(
                     update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
+<<<<<<< Updated upstream
                     notify="Please check {}'s Repair Details".format(self.name),
                     user="error"
+=======
+                    notify=["Please check {}'s Repair Details".format(self.name), self.user_id],
+                    user="error",
+                    status=["status_17", "Error - Not Found"]
+>>>>>>> Stashed changes
                 )
             else:
                 deductables = self.construct_inventory_deductables(inventory_items)
