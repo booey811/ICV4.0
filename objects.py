@@ -2149,7 +2149,7 @@ class CountItem():
             self.inventory_items.append(item)
 
     def adjust_inventory_with_count(self):
-        if not self.counted:
+        if self.counted is None:
             manager.add_update(self.id, "error", update="The 'Counted' Column has not been filled out", status=["status9", "Error In Count"])
             return False
         elif self.counted < 5:
