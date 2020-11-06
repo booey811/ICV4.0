@@ -2153,7 +2153,7 @@ class CountItem():
 
     def adjust_inventory_with_count(self):
         if self.counted < 5:
-            self.inventory_items[0].change_multiple_column_values({"status6": {"label": "Add To Order List"}})
+            self.inventory_items[0].change_multiple_column_values({"status6": {"label": "Add To Order"}})
         for item in self.inventory_items:
             col_vals = {
                 "numbers": self.counted,
