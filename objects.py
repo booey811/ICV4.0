@@ -2133,6 +2133,7 @@ class CountItem():
     ]
 
     def __init__(self, monday_id):
+        self.id = monday_id
         self.inventory_items = []
         for item in monday_client.get_items(ids=[monday_id], limit=1):
             self.item = item
@@ -2152,7 +2153,10 @@ class CountItem():
             self.inventory_items.append(item)
 
     def adjust_inventory_with_count(self):
-        if self.counted < 5:
+        if not self.counted:
+            manager.add_update(self.id, "error", update="The 'Counted' Column has not been filled out", status=["status9", "Error In Count"])
+            return False
+        elif self.counted < 5:
             self.inventory_items[0].change_multiple_column_values({"status6": {"label": "Add to Order"}})
         for item in self.inventory_items:
             col_vals = {

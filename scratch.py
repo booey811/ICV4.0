@@ -11,7 +11,6 @@ from manage import manager
 import keys.messages
 
 
-test = CountItem(840151447)
+test = CountItem(840197213)
 
-for item in test.inventory_items:
-    print(item.change_multiple_column_values({"status6": {"label": "Add to Order"}}))
+print(test.counted)
