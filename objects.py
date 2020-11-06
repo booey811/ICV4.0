@@ -2120,31 +2120,27 @@ class InventoryItem():
             return links
 
 class CountItem():
-
     boards = {
         "count": monday_client.get_board_by_id(826826623),
         "inventory": monday_client.get_board_by_id(703218230)
     }
-
     columns = [
         ["counted", "numbers_1", "number"],
         ["status", "status9", "text"],
-        ["sku", "text", "text"]
+        ["sku", "text", "text"],
+        ["overwrite", "check", "checked"],
+        ["supply_price", "numbers7", "number"]
     ]
-
     def __init__(self, monday_id):
         self.id = monday_id
         self.inventory_items = []
         for item in monday_client.get_items(ids=[monday_id], limit=1):
             self.item = item
-
         for column in self.item.get_column_values():
             for option in self.columns:
                 if column.id == option[1]:
                     setattr(self, option[0], getattr(column, option[2]))
-
         self.collect_inventory_items(self.sku)
-
 
     def collect_inventory_items(self, sku):
         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
@@ -2163,5 +2159,7 @@ class CountItem():
                 "numbers": self.counted,
                 "status_141": {"label": "Uncounted"},
             }
+            if self.overwrite:
+                col_vals["supply_price"] = self.supply_price
             item.change_multiple_column_values(col_vals)
         self.item.change_multiple_column_values({"status9": {"label": "Adjustment Complete"}})

@@ -11,6 +11,6 @@ from manage import manager
 import keys.messages
 
 
-test = CountItem(840197213)
+test = CountItem(840268688)
 
-print(test.counted)
+print(test.__dict__)
