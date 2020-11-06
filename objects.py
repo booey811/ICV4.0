@@ -1852,7 +1852,6 @@ class RefurbUnit():
 
     # Monday Boards
     boards = {
-        "logging": monday_client.get_board_by_id(id=736027251),
         "inventory": monday_client.get_board_by_id(id=703218230),
         "main": monday_client.get_board_by_id(id=349212843),
         "usage": monday_client.get_board_by_id(id=722437885),
