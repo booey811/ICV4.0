@@ -11,8 +11,7 @@ from manage import manager
 import keys.messages
 
 
-test = Repair(monday=837781515)
+test = CountItem(840151447)
 
-test.monday.adjust_stock_alt()
-
-print()
+for item in test.inventory_items:
+    print(item.change_multiple_column_values({"status6": {"label": "Add to Order"}}))
