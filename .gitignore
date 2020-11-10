@@ -59,6 +59,7 @@ target/
 
 # VS Code
 /venv
+.vscode/
 
 # Project Specific
 .env
@@ -67,3 +68,4 @@ database.py
 inv_builder.py
 
 .python-version
+.vscode/settings.json
