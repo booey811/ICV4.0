@@ -307,7 +307,7 @@ def refurb_unit_sold():
     else:
         data = data[1]
     refurb = RefurbUnit(int(data["event"]["pulseId"]))
-
+    refurb.refurb_unit_sold()
     return "Refurb Complete & Calculations Route Complete"
 
 # Stock Order Placed

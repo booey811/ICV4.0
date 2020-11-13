@@ -11,6 +11,6 @@ from manage import manager
 import keys.messages
 
 
-test = CountItem(840268688)
+test = RefurbUnit(807273946)
 
-print(test.__dict__)
+test.refurb_unit_sold()

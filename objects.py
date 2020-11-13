@@ -1966,7 +1966,18 @@ class RefurbUnit():
         )
 
     def refurb_unit_sold(self):
-        pass
+        if not self.main_board_item:
+            manager.add_update(
+                self.id,
+                "error",
+                notify=["There is no item on the Main Board for this Refurb. Please correct this so that stock and sales numbers can be proceesed"],
+                status=["status", "Cannot Sell"]
+                )
+        else:
+            self.main_board_item.change_multiple_column_values({
+                "status4": {"label": "Returned"}
+            })
+
 
 
 class OrderItem():
