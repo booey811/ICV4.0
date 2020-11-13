@@ -1032,6 +1032,9 @@ class Repair():
 
         def status_to_notification(self, status_label):
             self.parent.debug(start="status_to_notification")
+            if self.repair_type == "Refurb":
+                self.parent.debug("Refurb Repair - No Notification Required")
+                return False
             notification_ids = {
                 "Booking Confirmed": 1,
                 "Courier Booked": 6,
