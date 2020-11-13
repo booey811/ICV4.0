@@ -1032,7 +1032,7 @@ class Repair():
 
         def status_to_notification(self, status_label):
             self.parent.debug(start="status_to_notification")
-            if self.repair_type == "Refurb":
+            if self.client == "Refurb":
                 self.parent.debug("Refurb Repair - No Notification Required")
                 return False
             notification_ids = {

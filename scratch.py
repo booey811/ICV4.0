@@ -11,6 +11,6 @@ from manage import manager
 import keys.messages
 
 
-test = RefurbUnit(807273946)
+test = Repair(monday=812348650)
 
-test.refurb_unit_sold()
+test.monday.status_to_notification('Returned')
