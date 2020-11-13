@@ -1965,6 +1965,9 @@ class RefurbUnit():
             "PARTS COST BREAKDOWN:\n\n{}\n\nTotal: {}".format("\n".join(update), total)
         )
 
+    def refurb_unit_sold(self):
+        pass
+
 
 class OrderItem():
 
