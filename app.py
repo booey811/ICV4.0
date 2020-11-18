@@ -34,10 +34,25 @@ def monday_handshake(webhook):
 
 
 # ROUTES // ++++++++++++ TEST ROUTE ++++++++++++ \\
-@app.route("/811/test/monday", methods=["POST"])
+@app.route("/811/test", methods=["POST"])
 def test_route():
     info = request.get_data()
     print(info)
+    return "TEST COMPLETE"
+
+# ROUTES // ++++++++++++ TEST ROUTE == MONDAY ++++++++++++ \\
+@app.route("/811/test/monday", methods=["POST"])
+def test_route_monday():
+    print("Zenlink Column Adjustment")
+    webhook = request.get_data()
+    # Authenticate & Create Object
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    print(data)
+    return "MONDAY TEST COMPLETE"
 
 # ROUTES // MONDAY
 # Zenlink Column
