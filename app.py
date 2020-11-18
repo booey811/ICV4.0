@@ -30,8 +30,11 @@ def monday_handshake(webhook):
     else:
         return [True, data]
 
+    print(data)
+
+
 # ROUTES // ++++++++++++ TEST ROUTE ++++++++++++ \\
-@app.route("/811/test", methods=["POST"])
+@app.route("/811/test/monday", methods=["POST"])
 def test_route():
     info = request.get_data()
     print(info)
