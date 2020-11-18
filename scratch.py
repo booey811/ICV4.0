@@ -11,6 +11,6 @@ from manage import manager
 import keys.messages
 
 
-test = CountItem(840268688)
+test = Repair(monday=812348650)
 
-print(test.__dict__)
+test.monday.status_to_notification('Returned')

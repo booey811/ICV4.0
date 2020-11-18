@@ -1032,6 +1032,9 @@ class Repair():
 
         def status_to_notification(self, status_label):
             self.parent.debug(start="status_to_notification")
+            if self.client == "Refurb":
+                self.parent.debug("Refurb Repair - No Notification Required")
+                return False
             notification_ids = {
                 "Booking Confirmed": 1,
                 "Courier Booked": 6,
@@ -1964,6 +1967,20 @@ class RefurbUnit():
         self.item.add_update(
             "PARTS COST BREAKDOWN:\n\n{}\n\nTotal: {}".format("\n".join(update), total)
         )
+
+    def refurb_unit_sold(self):
+        if not self.main_board_item:
+            manager.add_update(
+                self.id,
+                "error",
+                notify=["There is no item on the Main Board for this Refurb. Please correct this so that stock and sales numbers can be proceesed"],
+                status=["status", "Cannot Sell"]
+                )
+        else:
+            self.main_board_item.change_multiple_column_values({
+                "status4": {"label": "Returned"}
+            })
+
 
 
 class OrderItem():

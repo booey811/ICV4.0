@@ -283,14 +283,10 @@ def refurb_to_main():
         return data[1]
     else:
         data = data[1]
-
     sleep(4)
-
     refurb = RefurbUnit(int(data["event"]["pulseId"]))
-
     refurb.statuses_to_repairs()
     refurb.adjust_main_board_repairs()
-
     return "Add Refurb to Main Board Route Complete"
 
 
@@ -305,6 +301,19 @@ def refurb_price_calcs():
         data = data[1]
     refurb = RefurbUnit(int(data["event"]["pulseId"]))
     refurb.add_costs_to_refurbs(refurb.get_cost_data())
+    return "Refurb Complete & Calculations Route Complete"
+
+# Refurb Sold
+@app.route("/monday/refurb/sold", methods=["POST"])
+def refurb_unit_sold():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    refurb = RefurbUnit(int(data["event"]["pulseId"]))
+    refurb.refurb_unit_sold()
     return "Refurb Complete & Calculations Route Complete"
 
 # Stock Order Placed
