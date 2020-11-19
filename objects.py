@@ -336,33 +336,6 @@ class Repair():
                 columns = MondayColumns(updated_item)
                 columns.update_item(self.monday)
 
-
-    # //def compare_app_objects_alt(self, source_of_truth):
-    # //    if not self.monday:
-    # //        self.debug("Cannot Compare Monday and Zendesk Objects - Monday does not exist")
-    # //    elif not self.zendesk:
-    # //        self.debug("Cannot Compare Monday and Zendesk Objects - Zendesk does not exist")
-    # //    else:
-    # //        updated_item = Repair.MondayRepair(self, created=self.name)
-    # //        for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
-    # //            monday = getattr(self.monday, attribute, None)
-    # //            zendesk = getattr(self.zendesk, attribute, None)
-    # //            if source_of_truth == "zendesk":
-    # //                correct = zendesk
-    # //                incorrect = monday
-    # //            elif source_of_truth == "monday":
-    # //                correct = monday
-    # //                incorrect = zendesk
-    # //                pass
-    # //            if ((incorrect == None) or (correct != incorrect)) and source_of_truth == "monday":
-    # //                self.zendesk.update_custom_field(attribute, correct)
-    # //            elif ((incorrect == None) or (correct != incorrect)) and (source_of_truth == "zendesk"):
-    # //                setattr(updated_item, attribute, correct)
-    # //        if source_of_truth == "zendesk":
-    # //            columns = MondayColumns(updated_item)
-    # //            columns.update_item(self.monday)
-
-
     class VendRepair():
         def __init__(self, repair_object, vend_sale_id=False):
             self.parent = repair_object
@@ -1345,12 +1318,20 @@ class Repair():
                     )
                 else:
                     deductables = self.construct_inventory_deductables(inventory_items)
+
                     for item in deductables:
-                        for pulse in deductables[item][0].linked_items:
-                            val = str(deductables[item][0].stock_level - deductables[item][1])
-                            pulse.change_column_value(column_id="numbers", column_value=val)
-                            print("Adjusting Stock: {}".format(pulse.name))
-                        print("Completed: {}".format(deductables[item][0].name))
+                        deductables[item][0].get_parent()
+                        val = deductables[item][0].parent_product.stock_level - deductables[item][1]
+                        deductables[item][0].parent_product.item.change_column_value(column_id="inventory_oc_walk_in", column_value=str(val))
+                        print("Adjusting Stock: {}".format(deductables[item][0].parent_product.name))
+
+
+                    # for item in deductables:
+                    #     for pulse in deductables[item][0].linked_items:
+                    #         val = str(deductables[item][0].stock_level - deductables[item][1])
+                    #         pulse.change_column_value(column_id="numbers", column_value=val)
+                    #         print("Adjusting Stock: {}".format(pulse.name))
+                    #     print("Completed: {}".format(deductables[item][0].name))
 
                     stats = self.create_sale_stats(inventory_items)
                     sale_items = []
@@ -2083,17 +2064,20 @@ class InventoryItem():
 
     boards = {
         "inventory": monday_client.get_board_by_id(id=703218230),
-        "orders": monday_client.get_board_by_id(id=822509956)
+        "orders": monday_client.get_board_by_id(id=822509956),
+        "parents": monday_client.get_board_by_id(id=851755095)
     }
 
     columns = [
         ["sku", "text0", "text"],
-        ["stock_level", "numbers", "number"],
         ["device", "numbers3", "number"],
         ["repair", "device", "number"],
         ["colour", "numbers44", "number"],
         ["live", "live", "text"],
-        ["sale_price", "retail_price", "number"]
+        ["vend_id", "text", "text"],
+        ["sale_price", "retail_price", "number"],
+        ["parent_id", "text1", "text"],
+        ["model", "type", "text"]
     ]
 
     price_key = {
@@ -2111,6 +2095,7 @@ class InventoryItem():
                 self.item = item
         elif item_object:
             self.item = item_object
+        self.id = self.item.id
         self.name = self.item.name.replace('"', "inch")
         if refurb:
             self.columns.append(["supply_price", self.price_key[refurb], "number"])
@@ -2122,9 +2107,8 @@ class InventoryItem():
                     setattr(self, option[0], getattr(column, option[2]))
         if not self.supply_price:
             self.supply_price = self.item.get_column_value(id="supply_price").number
-        if not self.stock_level:
-            self.stock_level = 0
         self.linked_items = self.check_linked_products(self.sku)
+        self.parent_product = False
         print("--- %s seconds ---" % (time.time() - start_time))
 
     def check_linked_products(self, sku):
@@ -2134,6 +2118,97 @@ class InventoryItem():
             return [self.item]
         elif len(links) > 1:
             return links
+
+    def get_parent(self):
+        if not self.parent_id:
+            return False
+        else:
+            results = self.boards["parents"].get_items(ids=[self.parent_id], limit=1)
+            if len(results) > 1:
+                return False
+            elif len(results) < 1:
+                return False
+            else:
+                for pulse in results:
+                    self.parent_product = ParentProduct(self.parent_id)
+                    return True
+
+    def add_to_product_catalogue(self, user_id):
+
+        # Check for Required Info
+        for attribute in ["sku", "model"]:
+            if not getattr(self, attribute):
+                manager.add_update(self.id, "error", notify=["Unable to Add Product as no {} has been provided".format(attribute.capitalize()), user_id])
+                return False
+
+        # Check for Linked Products ??
+        # Check Parents & Add If Necessary
+        if self.get_parent():
+            self.item.change_column_value(column_id="text1", column_value=self.parent_product.id)
+        else:
+            to_add = ParentProduct()
+            to_add.add_to_parents_board(self)
+            self.item.change_column_value(column_id="text1", column_value=to_add.id)
+
+        # Otherwise, Complete Linking Process
+
+
+class ParentProduct():
+
+    boards = {
+        "parents": monday_client.get_board_by_id(id=851755095)
+    }
+
+    columns = [
+        ["vend_id", "id", "text"],
+        ["sku", "text10", "text"],
+        ["model", "type", "text"],
+        ["stock_level", "numbers", "number"]
+    ]
+
+    price_key = {
+        "Glass Only": "numbers7",
+        "Glass & Touch": "numbers1",
+        "Glass, Touch & Backlight": "numbers_17",
+        "Glass, Touch & LCD": "numbers2",
+        "China Screen": "supply_price"
+    }
+
+    def __init__(self, item_id=False, refurb=False):
+
+        if item_id:
+            for pulse in self.boards["parents"].get_items(ids=[item_id], limit=1):
+                self.item = pulse
+                break
+            self.id = self.item.id
+            self.name = self.item.name
+
+            for column in self.item.get_column_values():
+                for option in self.columns:
+                    if column.id == option[1]:
+                        setattr(self, option[0], getattr(column, option[2]))
+            if self.stock_level is None:
+                self.stock_level = 0
+        else:
+            pass
+
+    def add_to_parents_board(self, inventory_item):
+        col_vals = {}
+        for attribute in self.columns:
+            value = getattr(inventory_item, attribute[0])
+            if attribute[0] == "stock_level":
+                continue
+            elif attribute[2] == "status":
+                print("Status Column - Not Yet Configured")
+            else:
+                col_vals[attribute[1]] = value
+        self.item = self.boards["parents"].add_item(item_name=inventory_item.name, column_values=col_vals)
+        if len(inventory_item.linked_items) > 1:
+            self.item.add_update("\n".join(inventory_item.linked_products))
+        self.id = self.item.id
+
+
+
 
 class CountItem():
     boards = {

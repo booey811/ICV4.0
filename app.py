@@ -6,7 +6,7 @@ from time import sleep
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem
 from manage import manager
 
 # APP SET UP
@@ -382,6 +382,18 @@ def stock_count():
     stock_count.adjust_inventory_with_count()
     return "Stock Count Route Complete"
 
+# Product Added
+@app.route("/monday/stock/add_product", methods=["POST"])
+def add_product():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    product = InventoryItem(int(data["event"]["pulseId"]))
+    product.add_to_product_catalogue(data["event"]["userId"])
+    return "Add Product Route Complete"
 
 # ROUTES // VEND
 # Sale Update
