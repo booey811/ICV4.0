@@ -2286,7 +2286,7 @@ class ParentProduct():
         ["vend_id", "id", "text"],
         ["sku", "better_sku", "text"],
         ["model", "type", "text"],
-        ["stock_level", "numbers", "number"]
+        ["stock_level", "inventory_oc_walk_in", "number"]
     ]
 
     price_key = {
