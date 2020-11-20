@@ -2270,6 +2270,7 @@ class InventoryItem():
             names.append(item.name)
         if len(names) > 1:
             parent.add_update(body="\n".join(names))
+            parent.change_column_value(column_id="text3", column_value="Required")
 
 
 
