@@ -1347,8 +1347,13 @@ class Repair():
                     col_vals = {
                         "numbers": stats[2],
                         "numbers3": stats[3],
-                        "numbers5": stats[4]
+                        "numbers5": stats[4],
+                        "status5": {"label": str(self.client)}
                     }
+
+                    if self.client == "Warranty":
+                        col_vals["numbers"] = 0
+
                     log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
                     log.add_update(update)
 
@@ -1357,6 +1362,8 @@ class Repair():
             total_cost = 0
             stats = []
             for item in inventory_items:
+                if not item.supply_price:
+                    item.supply_price = 0
                 name = "Repair: {}".format(item.name)
                 price = "Sale Price: £{}".format(item.sale_price)
                 supply = "Supply Price: £{}".format(item.supply_price)
@@ -1365,7 +1372,7 @@ class Repair():
                 total_cost += int(item.supply_price)
             discount = 0
             if len(stats) > 1:
-                discount = len(stats) * 10
+                discount = (len(stats) - 1) * 10
                 total_sale = total_sale - discount
             if total_sale == 0:
                 total_sale = 1
@@ -2175,7 +2182,6 @@ class ParentProduct():
     }
 
     def __init__(self, item_id=False, refurb=False):
-
         if item_id:
             for pulse in self.boards["parents"].get_items(ids=[item_id], limit=1):
                 self.item = pulse
@@ -2194,11 +2200,10 @@ class ParentProduct():
 
     def add_to_parents_board(self, inventory_item):
         col_vals = {}
-        for attribute in self.columns:
+        attributes = [column for column in self.columns if column[0] != "stock_level"]
+        for attribute in attributes:
             value = getattr(inventory_item, attribute[0])
-            if attribute[0] == "stock_level":
-                continue
-            elif attribute[2] == "status":
+            if attribute[2] == "status":
                 print("Status Column - Not Yet Configured")
             else:
                 col_vals[attribute[1]] = value
