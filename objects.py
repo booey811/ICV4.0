@@ -38,7 +38,7 @@ class Repair():
     # Monday Boards
     boards = {
         "logging": monday_client.get_board_by_id(id=736027251),
-        "inventory": monday_client.get_board_by_id(id=703218230),
+        "inventory": monday_client.get_board_by_id(id=868065293),
         "inventory2": monday_client.get_board_by_id(id=703218230),
         "main": monday_client.get_board_by_id(id=349212843),
         "usage": monday_client.get_board_by_id(id=722437885),
@@ -1843,7 +1843,7 @@ class RefurbUnit():
 
     # Monday Boards
     boards = {
-        "inventory": monday_client.get_board_by_id(id=703218230),
+        "inventory": monday_client.get_board_by_id(id=868065293),
         "main": monday_client.get_board_by_id(id=349212843),
         "usage": monday_client.get_board_by_id(id=722437885),
         "zendesk_tags": monday_client.get_board_by_id(id=765453815),
@@ -1974,7 +1974,7 @@ class RefurbUnit():
 class OrderItem():
 
     boards = {
-        "inventory": monday_client.get_board_by_id(id=703218230),
+        "inventory": monday_client.get_board_by_id(id=868065293),
         "orders": monday_client.get_board_by_id(id=822509956)
     }
 
@@ -2070,9 +2070,9 @@ class OrderItem():
 # class InventoryItemOLD():
 
 #     boards = {
-#         "inventory": monday_client.get_board_by_id(id=703218230),
+#         "inventory": monday_client.get_board_by_id(id=868065293),
 #         "orders": monday_client.get_board_by_id(id=822509956),
-#         "parents": monday_client.get_board_by_id(id=851755095)
+#         "parents": monday_client.get_board_by_id(id=867934405)
 #     }
 
 #     columns = [
@@ -2163,9 +2163,9 @@ class OrderItem():
 class InventoryItem():
 
     boards = {
-        "inventory": monday_client.get_board_by_id(id=703218230),
+        "inventory": monday_client.get_board_by_id(id=868065293),
         "orders": monday_client.get_board_by_id(id=822509956),
-        "parents": monday_client.get_board_by_id(id=851755095)
+        "parents": monday_client.get_board_by_id(id=867934405)
     }
 
     simple_columns = [
@@ -2279,7 +2279,7 @@ class InventoryItem():
 class ParentProduct():
 
     boards = {
-        "parents": monday_client.get_board_by_id(id=851755095)
+        "parents": monday_client.get_board_by_id(id=867934405)
     }
 
     columns = [
@@ -2303,7 +2303,7 @@ class ParentProduct():
                 self.item = pulse
                 break
             self.id = self.item.id
-            self.name = self.item.name
+            self.name = self.item.name.replace('"', " inch")
 
             for column in self.item.get_column_values():
                 for option in self.columns:
