@@ -1,6 +1,3 @@
-import requests
-import json
-import os
 from pprint import pprint
 
 from moncli import create_column_value, ColumnType
@@ -10,9 +7,6 @@ from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem,
 from manage import manager
 import keys.messages
 
-test = Repair(monday=867467819)
+test = Repair(monday=867936891)
 
 test.monday.adjust_stock_alt()
-
-print()
-
