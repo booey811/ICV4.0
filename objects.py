@@ -2297,7 +2297,8 @@ class ParentProduct():
         "China Screen": "supply_price"
     }
 
-    def __init__(self, item_id=False, refurb=False):
+    def __init__(self, item_id=False, inventory_item=False refurb=False):
+
         if item_id:
             for pulse in self.boards["parents"].get_items(ids=[item_id], limit=1):
                 self.item = pulse
@@ -2311,6 +2312,12 @@ class ParentProduct():
                         setattr(self, option[0], getattr(column, option[2]))
             if self.stock_level is None:
                 self.stock_level = 0
+
+        elif inventory_item:
+            for attribute in self.columns:
+                inventory_att = getattr(inventory_item, attribute[0])
+                setattr(self, attribute[0], inventory_att)
+
         else:
             pass
 
