@@ -2179,7 +2179,8 @@ class InventoryItem():
         ["parent_id", "text1", "text"],
         ["model", "type", "text"],
         ["category", "status43", "text"],
-        ["type", "status_11", "text"]
+        ["type", "status_11", "text"],
+        ["stock_level", "numbers", "number"]
     ]
 
     status_columns = [
@@ -2254,8 +2255,8 @@ class InventoryItem():
         results = self.boards["parents"].get_items_by_column_values(column_value=search_val, limit=1)
 
         if len(results) == 0:
-            parent_obj = ParentProduct()
-            parent_obj.add_to_parents_board(self)
+            parent_obj = ParentProduct(inventory_item=self)
+            parent_obj.add_to_parents_board()
             parent = parent_obj.item
         elif len(results) == 1:
             for pulse in results:
@@ -2297,7 +2298,7 @@ class ParentProduct():
         "China Screen": "supply_price"
     }
 
-    def __init__(self, item_id=False, inventory_item=False refurb=False):
+    def __init__(self, item_id=False, inventory_item=False, refurb=False):
 
         if item_id:
             for pulse in self.boards["parents"].get_items(ids=[item_id], limit=1):
@@ -2314,6 +2315,7 @@ class ParentProduct():
                 self.stock_level = 0
 
         elif inventory_item:
+            self.name = inventory_item.name
             for attribute in self.columns:
                 inventory_att = getattr(inventory_item, attribute[0])
                 setattr(self, attribute[0], inventory_att)
@@ -2321,19 +2323,24 @@ class ParentProduct():
         else:
             pass
 
-    def add_to_parents_board(self, inventory_item):
-        col_vals = {}
-        attributes = [column for column in self.columns if column[0] != "stock_level"]
-        for attribute in attributes:
-            value = getattr(inventory_item, attribute[0])
-            if attribute[2] == "status":
-                print("Status Column - Not Yet Configured")
-            else:
-                col_vals[attribute[1]] = value
-        col_vals["status"] = {"label": inventory_item.category}
-        col_vals["status6"] = {"label": inventory_item.type}
-        self.item = self.boards["parents"].add_item(item_name=inventory_item.name, column_values=col_vals)
+    def add_to_parents_board(self):
+        col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns}
+        self.item = self.boards["parents"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
+
+    # def add_to_parents_board(self, inventory_item):
+    #     col_vals = {}
+    #     attributes = [column for column in self.columns if column[0] != "stock_level"]
+    #     for attribute in attributes:
+    #         value = getattr(inventory_item, attribute[0])
+    #         if attribute[2] == "status":
+    #             print("Status Column - Not Yet Configured")
+    #         else:
+    #             col_vals[attribute[1]] = value
+    #     col_vals["status"] = {"label": inventory_item.category}
+    #     col_vals["status6"] = {"label": inventory_item.type}
+    #     self.item = self.boards["parents"].add_item(item_name=inventory_item.name, column_values=col_vals)
+    #     self.id = self.item.id
 
 
 

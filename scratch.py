@@ -10,6 +10,4 @@ from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem,
 from manage import manager
 import keys.messages
 
-test = InventoryItem(867599581)
 
-test.add_to_product_catalogue()
