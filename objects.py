@@ -2266,8 +2266,6 @@ class InventoryItem():
         parent.move_to_group(group_id="dictionary")
 
 
-
-
 class ParentProduct():
 
     boards = {
@@ -2313,8 +2311,11 @@ class ParentProduct():
         elif create_from_inventory:
             self.name = create_from_inventory.name
             for attribute in self.columns:
-                inventory_att = getattr(create_from_inventory, attribute[0])
-                setattr(self, attribute[0], inventory_att)
+                try:
+                    inventory_att = getattr(create_from_inventory, attribute[0])
+                    setattr(self, attribute[0], inventory_att)
+                except AttributeError:
+                    print("Cannot Set {} As It Does Not Exist".format(attribute[0]))
         else:
             pass
 
