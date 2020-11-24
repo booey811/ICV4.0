@@ -10,6 +10,7 @@
 # from manage import manager
 # import keys.messages
 
+gabe_id = 4251271
 
 # test = Repair(monday=874099610)
 

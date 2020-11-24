@@ -3,10 +3,11 @@ import json
 import os
 from urllib.parse import parse_qs
 from time import sleep
+from pprint import pprint
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb
 from manage import manager
 
 # APP SET UP
@@ -378,8 +379,8 @@ def stock_count():
         return data[1]
     else:
         data = data[1]
-    stock_count = CountItem(int(data["event"]["pulseId"]))
-    stock_count.adjust_inventory_with_count()
+    parent = ParentProduct(item_id=int(data["event"]["pulseId"]), user_id=int(data["event"]["userId"]))
+    parent.stock_counted()
     return "Stock Count Route Complete"
 
 # Product Added
@@ -394,6 +395,37 @@ def add_product():
     product = InventoryItem(int(data["event"]["pulseId"]))
     product.add_to_product_catalogue(data["event"]["userId"])
     return "Add Product Route Complete"
+
+# Screen Refurbishment Complete
+@app.route("/monday/screen-refurb/complete", methods=["POST"])
+def screen_refurbishment_complete():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    user_id = data["event"]["userId"]
+    order = ParentProduct(user_id=int(data["event"]["userId"]), item_id=int(data["event"]["pulseId"]))
+    order.refurb_order_creation()
+    return "Screen Refurbishment Complete Route Completed"
+
+
+# Screen Refurbishment Tested - Add To Stock
+@app.route("/monday/screen-refurb/tested", methods=["POST"])
+def screen_refurbishment_tested():
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    screen_set = ScreenRefurb(item_id=int(data["event"]["pulseId"]), user_id=int(data["event"]["userId"]))
+    screen_set.add_to_stock()
+
+    return "Screen Refurbishment Tested - Add To Stock Route Complete"
+
+
 
 # ROUTES // VEND
 # Sale Update
