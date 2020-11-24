@@ -2327,7 +2327,7 @@ class ParentProduct():
         print("INventory created")
 
     def add_to_parents_board(self):
-        col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns}
+        col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
         self.item = self.boards["parents"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
 
