@@ -2288,7 +2288,11 @@ class ParentProduct():
         "Glass, Touch & LCD": "numbers2",
         "China Screen": "supply_price"
     }
-    def __init__(self, item_id=False, create_from_inventory=False, refurb=False):
+    def __init__(self, user_id=False, item_id=False, create_from_inventory=False, refurb=False):
+
+        if user_id:
+            self.user_id = user_id
+
         if item_id:
             for pulse in self.boards["parents"].get_items(ids=[item_id], limit=1):
                 self.item = pulse
@@ -2316,36 +2320,21 @@ class ParentProduct():
         self.item = self.boards["parents"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
 
-    def refurb_order_creation(self, user_id):
-
+    def refurb_order_creation(self):
         if not self.add_quantity:
             manager.add_update(
                 self.id,
                 "error",
-                notify=["You have not specified how many {}'s have been completed. Please correct this and try again", user_id]
+                notify=["You have not specified how many {}'s have been completed. Please correct this and try again", self.user_id]
             )
 
         else:
-            # Create Items on Refurbished Screens Board
             order =  ScreenRefurb(create_from_parent=self)
             order.add_to_screen_refurbs()
-            # Notify Team
-
-    # def add_to_parents_board(self, inventory_item):
-    #     col_vals = {}
-    #     attributes = [column for column in self.columns if column[0] != "stock_level"]
-    #     for attribute in attributes:
-    #         value = getattr(inventory_item, attribute[0])
-    #         if attribute[2] == "status":
-    #             print("Status Column - Not Yet Configured")
-    #         else:
-    #             col_vals[attribute[1]] = value
-    #     col_vals["status"] = {"label": inventory_item.category}
-    #     col_vals["status6"] = {"label": inventory_item.type}
-    #     self.item = self.boards["parents"].add_item(item_name=inventory_item.name, column_values=col_vals)
-    #     self.id = self.item.id
-
-
+            self.item.change_multiple_column_values({
+                "status5": {"label": "Refurb - Testing"},
+                "numbers": str(0)
+            })
 
 
 class CountItem():
@@ -2408,7 +2397,10 @@ class ScreenRefurb():
         "screen_refurbs": monday_client.get_board_by_id(id=874011166)
     }
 
-    def __init__(self, item_id=False, create_from_parent=False):
+    def __init__(self, user_id=False item_id=False, create_from_parent=False):
+
+        if user_id:
+            self.user_id = user_id
 
         if item_id:
             self.id = item_id
@@ -2434,12 +2426,12 @@ class ScreenRefurb():
         self.id = self.item.id
 
 
-    def add_to_stock(self, user_id):
+    def add_to_stock(self):
         if self.status == "Added To Stock":
             manager.add_update(
                 self.id,
                 "error",
-                notify=["{} x {} Have already Been Added To Our Total Stock. They have not been added again".format(self.tested_quantity, self.name), user_id])
+                notify=["{} x {} Have already Been Added To Our Total Stock. They have not been added again".format(self.tested_quantity, self.name), self.user_id])
             return False
         elif self.refurb_quantity is None or self.tested_quantity is None:
             manager.add_update(self.id,
@@ -2451,7 +2443,7 @@ class ScreenRefurb():
                 self.id,
                 "error",
                 status=["status6", "Missing SKU"],
-                notify=["Unable to Add {} x {} as no SKU has been provided. Please check this and try again".format(self.tested_quantity, self.name), user_id]
+                notify=["Unable to Add {} x {} as no SKU has been provided. Please check this and try again".format(self.tested_quantity, self.name), self.user_id]
             )
         else:
             search_val = create_column_value(id="better_sku", column_type=ColumnType.text, value=self.sku)
@@ -2468,7 +2460,8 @@ class ScreenRefurb():
                 return False
             new_quantity = int(int(parent.stock_level) + int(self.tested_quantity))
             parent.item.change_multiple_column_values({
-                "inventory_oc_walk_in": new_quantity
+                "inventory_oc_walk_in": new_quantity,
+                "status5": {"label": "No Movement"}
             })
             self.item.change_multiple_column_values({
                 "status6": {"label": "Added To Stock"},
