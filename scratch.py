@@ -6,17 +6,23 @@ from pprint import pprint
 from moncli import create_column_value, ColumnType
 
 import settings
-from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem, CountItem, ParentProduct
+from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem, CountItem, ParentProduct, ScreenRefurb
 from manage import manager
 import keys.messages
 
-
-test = Repair(monday=873866120)
-
-for item in test.monday.create_inventory_items():
-    pprint(item.__dict__)
+gabe_id = 4251271
 
 
+# ================================================================================================
+# ================================================================================================
+# ================================================================================================
+
+
+test = ParentProduct(868238254)
+
+pprint(test.__dict__)
+
+
+test.refurb_order_creation(gabe_id)
 
 print()
-
