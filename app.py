@@ -408,7 +408,6 @@ def screen_refurbishment_complete():
     user_id = data["event"]["userId"]
     order = ParentProduct(user_id=int(data["event"]["userId"]), item_id=int(data["event"]["pulseId"]))
     order.refurb_order_creation()
-    pprint(order.__dict__)
     return "Screen Refurbishment Complete Route Completed"
 
 
