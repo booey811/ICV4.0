@@ -2300,6 +2300,8 @@ class ParentProduct():
 
     def __init__(self, item_id=False, inventory_item=False, refurb=False):
 
+        self.stock_level = None
+
         if item_id:
             for pulse in self.boards["parents"].get_items(ids=[item_id], limit=1):
                 self.item = pulse
@@ -2322,6 +2324,13 @@ class ParentProduct():
 
         else:
             pass
+
+        try:
+            self.stock_level = int(self.stock_level)
+        except TypeError:
+            self.stock_level = int(0)
+
+        print("INventory created")
 
     def add_to_parents_board(self):
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns}
