@@ -2263,7 +2263,6 @@ class InventoryItem():
             parent.add_update(body="\n".join(names))
             parent.change_column_value(column_id="text3", column_value="Required")
 
-        parent.move_to_group(group_id="dictionary")
 
 
 class ParentProduct():
