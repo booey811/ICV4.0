@@ -2263,20 +2263,23 @@ class InventoryItem():
             parent.add_update(body="\n".join(names))
             parent.change_column_value(column_id="text3", column_value="Required")
 
-        parent.move_to_group(id="dictionary")
+        parent.move_to_group(group_id="dictionary")
 
 
 
 
 class ParentProduct():
+
     boards = {
-        "parents": monday_client.get_board_by_id(id=867934405)
+        "parents": monday_client.get_board_by_id(id=867934405),
+        "screen_refurbs": monday_client.get_board_by_id(id=874011166)
     }
     columns = [
         ["vend_id", "id", "text"],
         ["sku", "better_sku", "text"],
         ["model", "type", "text"],
-        ["stock_level", "inventory_oc_walk_in", "number"]
+        ["stock_level", "inventory_oc_walk_in", "number"],
+        ["add_quantity", "numbers", "number"]
     ]
     price_key = {
         "Glass Only": "numbers7",
@@ -2312,6 +2315,21 @@ class ParentProduct():
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns}
         self.item = self.boards["parents"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
+
+    def refurb_order_creation(self, user_id):
+
+        if not self.add_quantity:
+            manager.add_update(
+                self.id,
+                "error",
+                notify=["You have not specified how many {}'s have been completed. Please correct this and try again", user_id]
+            )
+
+        else:
+            # Create Items on Refurbished Screens Board
+            order =  ScreenRefurb(create_from_parent=self)
+            order.add_to_screen_refurbs()
+            # Notify Team
 
     # def add_to_parents_board(self, inventory_item):
     #     col_vals = {}
@@ -2374,3 +2392,86 @@ class CountItem():
                 col_vals["supply_price"] = self.supply_price
             item.change_multiple_column_values(col_vals)
         self.item.change_multiple_column_values({"status9": {"label": "Adjustment Complete"}})
+
+
+class ScreenRefurb():
+
+    simple_columns = [
+        ["refurb_quantity", "numbers", "number"],
+        ["sku", "text", "text"],
+        ["tested_quantity", "numbers0", "number"],
+        ["status", "status6", "text"]
+    ]
+
+    boards = {
+        "parents": monday_client.get_board_by_id(id=867934405),
+        "screen_refurbs": monday_client.get_board_by_id(id=874011166)
+    }
+
+    def __init__(self, item_id=False, create_from_parent=False):
+
+        if item_id:
+            self.id = item_id
+            for pulse in self.boards["screen_refurbs"].get_items(ids=[item_id], limit=1):
+                self.item = pulse
+                self.name = self.item.name.replace('"', " Inch")
+                break
+            for column in self.item.get_column_values():
+                for attribute in self.simple_columns:
+                    if column.id == attribute[1]:
+                        setattr(self, attribute[0], getattr(column, attribute[2]))
+        elif create_from_parent:
+            self.name = create_from_parent.name
+            self.refurb_quantity = create_from_parent.add_quantity
+            self.sku = create_from_parent.sku
+
+    def add_to_screen_refurbs(self):
+        col_vals = {
+            "numbers": self.refurb_quantity,
+            "text": self.sku
+        }
+        self.item = self.boards["screen_refurbs"].add_item(item_name=self.name, column_values=col_vals)
+        self.id = self.item.id
+
+
+    def add_to_stock(self, user_id):
+        if self.status == "Added To Stock":
+            manager.add_update(
+                self.id,
+                "error",
+                notify=["{} x {} Have already Been Added To Our Total Stock. They have not been added again".format(self.tested_quantity, self.name), user_id])
+            return False
+        elif self.refurb_quantity is None or self.tested_quantity is None:
+            manager.add_update(self.id,
+            "error",
+            status=["status6", "Missing Quantities"],
+            notify=["You have missed out Quantities from {}. Please correct this and try again".format(self.name)])
+        elif not self.sku:
+            manager.add_update(
+                self.id,
+                "error",
+                status=["status6", "Missing SKU"],
+                notify=["Unable to Add {} x {} as no SKU has been provided. Please check this and try again".format(self.tested_quantity, self.name), user_id]
+            )
+        else:
+            search_val = create_column_value(id="better_sku", column_type=ColumnType.text, value=self.sku)
+            results = self.boards["parents"].get_items_by_column_values(search_val)
+            if len(results) == 1:
+                for pulse in results:
+                    parent = ParentProduct(pulse.id)
+                    break
+            elif len(results) == 0:
+                print("No Parent Item Found - Cannot Adjust Stock :: {}".format(self.sku))
+                return False
+            else:
+                print("More Than One Parent Found - Cannot Adjust Stock :: {}".format(self.sku))
+                return False
+            new_quantity = int(int(parent.stock_level) + int(self.tested_quantity))
+            parent.item.change_multiple_column_values({
+                "inventory_oc_walk_in": new_quantity
+            })
+            self.item.change_multiple_column_values({
+                "status6": {"label": "Added To Stock"},
+                "numbers6": int(parent.stock_level),
+                "numbers3": new_quantity
+            })
