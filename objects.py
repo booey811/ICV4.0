@@ -2299,7 +2299,7 @@ class ParentProduct():
                 break
             self.id = self.item.id
             self.name = self.item.name.replace('"', " inch")
-
+            self.stock_level = False
             for column in self.item.get_column_values():
                 for option in self.columns:
                     if column.id == option[1]:
@@ -2329,7 +2329,7 @@ class ParentProduct():
             )
 
         else:
-            order =  ScreenRefurb(create_from_parent=self)
+            order =  ScreenRefurb(create_from_parent=self, user_id=self.user_id)
             order.add_to_screen_refurbs()
             self.item.change_multiple_column_values({
                 "status5": {"label": "Refurb - Testing"},
@@ -2397,7 +2397,7 @@ class ScreenRefurb():
         "screen_refurbs": monday_client.get_board_by_id(id=874011166)
     }
 
-    def __init__(self, user_id=False item_id=False, create_from_parent=False):
+    def __init__(self, user_id=False, item_id=False, create_from_parent=False):
 
         if user_id:
             self.user_id = user_id
@@ -2437,7 +2437,7 @@ class ScreenRefurb():
             manager.add_update(self.id,
             "error",
             status=["status6", "Missing Quantities"],
-            notify=["You have missed out Quantities from {}. Please correct this and try again".format(self.name)])
+            notify=["You have missed out Quantities from {}. Please correct this and try again".format(self.name), self.user_id])
         elif not self.sku:
             manager.add_update(
                 self.id,
@@ -2450,7 +2450,7 @@ class ScreenRefurb():
             results = self.boards["parents"].get_items_by_column_values(search_val)
             if len(results) == 1:
                 for pulse in results:
-                    parent = ParentProduct(pulse.id)
+                    parent = ParentProduct(item_id=pulse.id)
                     break
             elif len(results) == 0:
                 print("No Parent Item Found - Cannot Adjust Stock :: {}".format(self.sku))
