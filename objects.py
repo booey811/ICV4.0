@@ -2272,7 +2272,8 @@ class ParentProduct():
 
     boards = {
         "parents": monday_client.get_board_by_id(id=867934405),
-        "screen_refurbs": monday_client.get_board_by_id(id=874011166)
+        "screen_refurbs": monday_client.get_board_by_id(id=874011166),
+        "counts": monday_client.get_board_by_id(id=874560619)
     }
     columns = [
         ["vend_id", "id", "text"],
@@ -2327,7 +2328,6 @@ class ParentProduct():
                 "error",
                 notify=["You have not specified how many {}'s have been completed. Please correct this and try again", self.user_id]
             )
-
         else:
             order =  ScreenRefurb(create_from_parent=self, user_id=self.user_id)
             order.add_to_screen_refurbs()
@@ -2336,51 +2336,73 @@ class ParentProduct():
                 "numbers": str(0)
             })
 
+    def stock_counted(self):
+        if self.add_quantity is None:
+            manager.add_update(
+                self.id,
+                "error",
+                notify=["Unable to include Stock Count for {}. You have not entered a quantity for the count".format(self.name), self.user_id],
+            )
+            return False
+
+        elif self.add_quantity == 0:
+            manager.add_update(
+                self.id,
+                "error",
+                notify=["Unable to include Stock Count for {}. You have set the count quantity as 0, so please check and try again".format(self.name), self.user_id]
+            )
+        else:
+            count = CountItem(create_from_inventory=self)
+            count.add_to_count_board()
+            new_stock = int(int(self.stock_level) + int(self.add_quantity))
+            self.item.change_multiple_column_values({
+                "numbers": 0,
+                "status5": {"label": "Counted Today"},
+                "inventory_oc_walk_in": new_stock
+            })
+
 
 class CountItem():
     boards = {
-        "count": monday_client.get_board_by_id(826826623),
-        "inventory": monday_client.get_board_by_id(703218230)
+        "parents": monday_client.get_board_by_id(id=867934405),
+        "screen_refurbs": monday_client.get_board_by_id(id=874011166),
+        "counts": monday_client.get_board_by_id(id=874560619)
     }
     columns = [
-        ["counted", "numbers_1", "number"],
-        ["status", "status9", "text"],
-        ["sku", "text", "text"],
-        ["overwrite", "check", "checked"],
-        ["supply_price", "numbers7", "number"]
+        ["expected", "numbers", "number"],
+        ["counted", "numbers0", "number"],
+        ["sku", "text", "text"]
     ]
-    def __init__(self, monday_id):
-        self.id = monday_id
-        self.inventory_items = []
-        for item in monday_client.get_items(ids=[monday_id], limit=1):
-            self.item = item
-        for column in self.item.get_column_values():
-            for option in self.columns:
-                if column.id == option[1]:
-                    setattr(self, option[0], getattr(column, option[2]))
-        self.collect_inventory_items(self.sku)
+    def __init__(self, user_id=False, item_id=False, create_from_inventory=False):
 
-    def collect_inventory_items(self, sku):
-        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
-        results = self.boards["inventory"].get_items_by_column_values(col_val)
-        for item in results:
-            self.inventory_items.append(item)
+        if user_id:
+            self.user_id = user_id
 
-    def adjust_inventory_with_count(self):
-        if self.counted is None:
-            manager.add_update(self.id, "error", update="The 'Counted' Column has not been filled out", status=["status9", "Error In Count"])
-            return False
-        elif self.counted < 5:
-            self.inventory_items[0].change_multiple_column_values({"status6": {"label": "Add to Order"}})
-        for item in self.inventory_items:
-            col_vals = {
-                "numbers": self.counted,
-                "status_141": {"label": "Uncounted"},
-            }
-            if self.overwrite:
-                col_vals["supply_price"] = self.supply_price
-            item.change_multiple_column_values(col_vals)
-        self.item.change_multiple_column_values({"status9": {"label": "Adjustment Complete"}})
+        if item_id:
+            self.id = item_id
+            for item in monday_client.get_items(ids=[item_id], limit=1):
+                self.item = item
+                self.name = self.item.name
+                break
+            for column in self.item.get_column_values():
+                for option in self.columns:
+                    if column.id == option[1]:
+                        setattr(self, option[0], getattr(column, option[2]))
+
+        elif create_from_inventory:
+            self.name = create_from_inventory.name
+            self.expected = create_from_inventory.stock_level
+            self.counted = create_from_inventory.add_quantity
+            self.sku = create_from_inventory.sku
+
+    def add_to_count_board(self):
+        col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns}
+        self.item = self.boards["counts"].add_item(item_name=self.name, column_values=col_vals)
+        self.id = self.item.id
+
+
+
+
 
 
 class ScreenRefurb():
