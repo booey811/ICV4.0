@@ -406,11 +406,9 @@ def screen_refurbishment_complete():
     else:
         data = data[1]
     user_id = data["event"]["userId"]
-
-    order = ParentProduct(int(data["event"]["pulseId"]))
-
+    order = ParentProduct(user_id=int(data["event"]["userId"]), item_id=int(data["event"]["pulseId"]))
+    order.refurb_order_creation()
     pprint(order.__dict__)
-
     return "Screen Refurbishment Complete Route Completed"
 
 
@@ -423,10 +421,8 @@ def screen_refurbishment_tested():
         return data[1]
     else:
         data = data[1]
-    user_id = data["event"]["userId"]
-    screen_set = ScreenRefurb(int(data["event"]["pulseId"]))
-
-    screen_set.add_to_stock(user_id)
+    screen_set = ScreenRefurb(item_id=int(data["event"]["pulseId"]), user_id=int(data["event"]["userId"]))
+    screen_set.add_to_stock()
 
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
