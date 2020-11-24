@@ -2245,7 +2245,7 @@ class InventoryItem():
         results = self.boards["parents"].get_items_by_column_values(column_value=search_val, limit=1)
 
         if len(results) == 0:
-            parent_obj = ParentProduct(inventory_item=self)
+            parent_obj = ParentProduct(create_from_inventory=self)
             parent_obj.add_to_parents_board()
             parent = parent_obj.item
         elif len(results) == 1:
