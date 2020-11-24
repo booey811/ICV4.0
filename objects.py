@@ -1374,7 +1374,7 @@ class Repair():
             inventory_items = []
             for repair in self.repairs:
                 if repair == 35:
-                    inventory_items.append(InventoryItem(827372849))
+                    inventory_items.append(InventoryItem(item_id=827372849))
                     continue
                 search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
                 col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
@@ -2227,7 +2227,7 @@ class InventoryItem():
                 return False
             else:
                 for pulse in results:
-                    self.parent_product = ParentProduct(self.parent_id)
+                    self.parent_product = ParentProduct(item_id=self.parent_id)
                     return True
 
     def add_to_product_catalogue(self, user_id):
