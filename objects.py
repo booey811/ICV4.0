@@ -2195,6 +2195,7 @@ class InventoryItem():
         self.name = self.item.name.replace('"', "inch")
         if refurb:
             self.simple_columns.append(["supply_price", self.price_key[refurb], "number"])
+            self.name = self.name + " | REFURB: {}".format(refurb)
         else:
             self.simple_columns.append(["supply_price", "supply_price", "number"])
         for column in self.item.get_column_values():
