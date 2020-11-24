@@ -1318,21 +1318,11 @@ class Repair():
                     )
                 else:
                     deductables = self.construct_inventory_deductables(inventory_items)
-
                     for item in deductables:
                         deductables[item][0].get_parent()
                         val = deductables[item][0].parent_product.stock_level - deductables[item][1]
                         deductables[item][0].parent_product.item.change_column_value(column_id="inventory_oc_walk_in", column_value=str(val))
                         print("Adjusting Stock: {}".format(deductables[item][0].parent_product.name))
-
-
-                    # for item in deductables:
-                    #     for pulse in deductables[item][0].linked_items:
-                    #         val = str(deductables[item][0].stock_level - deductables[item][1])
-                    #         pulse.change_column_value(column_id="numbers", column_value=val)
-                    #         print("Adjusting Stock: {}".format(pulse.name))
-                    #     print("Completed: {}".format(deductables[item][0].name))
-
                     stats = self.create_sale_stats(inventory_items)
                     sale_items = []
                     for item in stats[0]:
@@ -2190,8 +2180,7 @@ class InventoryItem():
     price_key = {
         "Glass Only": "numbers7",
         "Glass & Touch": "numbers1",
-        "Glass, Touch & Backlight": "numbers_17",
-        "Glass, Touch & LCD": "numbers2",
+        "Glass, Touch & LCD": "numbers_17",
         "China Screen": "supply_price"
     }
 
@@ -2278,18 +2267,15 @@ class InventoryItem():
 
 
 class ParentProduct():
-
     boards = {
         "parents": monday_client.get_board_by_id(id=867934405)
     }
-
     columns = [
         ["vend_id", "id", "text"],
         ["sku", "better_sku", "text"],
         ["model", "type", "text"],
         ["stock_level", "inventory_oc_walk_in", "number"]
     ]
-
     price_key = {
         "Glass Only": "numbers7",
         "Glass & Touch": "numbers1",
@@ -2297,9 +2283,7 @@ class ParentProduct():
         "Glass, Touch & LCD": "numbers2",
         "China Screen": "supply_price"
     }
-
-    def __init__(self, item_id=False, inventory_item=False, refurb=False):
-
+    def __init__(self, item_id=False, create_from_inventory=False, refurb=False):
         if item_id:
             for pulse in self.boards["parents"].get_items(ids=[item_id], limit=1):
                 self.item = pulse
@@ -2311,15 +2295,14 @@ class ParentProduct():
                 for option in self.columns:
                     if column.id == option[1]:
                         setattr(self, option[0], getattr(column, option[2]))
-            if self.stock_level is None:
+            if not self.stock_level:
                 self.stock_level = 0
 
-        elif inventory_item:
-            self.name = inventory_item.name
+        elif create_from_inventory:
+            self.name = create_from_inventory.name
             for attribute in self.columns:
-                inventory_att = getattr(inventory_item, attribute[0])
+                inventory_att = getattr(create_from_inventory, attribute[0])
                 setattr(self, attribute[0], inventory_att)
-
         else:
             pass
 

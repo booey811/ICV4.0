@@ -11,3 +11,12 @@ from manage import manager
 import keys.messages
 
 
+test = Repair(monday=873866120)
+
+for item in test.monday.create_inventory_items():
+    pprint(item.__dict__)
+
+
+
+print()
+
