@@ -2246,7 +2246,7 @@ class InventoryItem():
 
         if len(results) == 0:
             parent_obj = ParentProduct(create_from_inventory=self)
-            parent_obj.add_to_parents_board()
+            parent_obj.add_to_parents_board(self)
             parent = parent_obj.item
         elif len(results) == 1:
             for pulse in results:
@@ -2325,8 +2325,10 @@ class ParentProduct():
 
         print("INventory created")
 
-    def add_to_parents_board(self):
+    def add_to_parents_board(self, inventory_item):
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
+        if len(inventory_item.linked_items) > 1:
+            col_vals["text3"] = "Required"
         self.item = self.boards["parents"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
 
