@@ -1965,190 +1965,107 @@ class OrderItem():
 
     boards = {
         "inventory": monday_client.get_board_by_id(id=868065293),
-        "orders": monday_client.get_board_by_id(id=822509956)
+        "orders": monday_client.get_board_by_id(id=878945205),
+        "parents": monday_client.get_board_by_id(id=867934405)
     }
 
-    order_columns = [
-        ["sku", "text0", "text"],
-        ["unit_cost", "numbers04", "number"],
-        ["quant_ordered", "numbers8", "number"],
-        ["quant_received", "numbers0", "number"]
+    simple_columns = [
+        ["ordered", "numbers", "number"],
+        ["received", "numbers5", "number"],
+        ["unit_cost", "numbers0", "number"],
+        ["sku", "text", "text"]
     ]
 
-    def __init__(self, item_id):
 
-        start_time = time.time()
 
+    def __init__(self, item_id, user_id):
+
+        self.parent_id = None
         self.inventory_items = []
-        self.inventory_attributes = []
+        self.user_id = user_id
 
         self.id = item_id
         for item in monday_client.get_items(ids=[item_id], limit=1):
             self.item = item
-
+            break
+        self.name = self.item.name
         self.set_attributes()
 
-        self.collect_inventory_items()
 
-        print("--- %s seconds ---" % (time.time() - start_time))
 
     def set_attributes(self):
         for column in self.item.get_column_values():
-            for option in self.order_columns:
+            if column.id == "connect_boards":
+                self.parent_id = column.value["linkedPulseIds"][0]["linkedPulseId"]
+                continue
+            for option in self.simple_columns:
                 if column.id == option[1]:
                     value = getattr(column, option[2])
                     if not value and option[2] == "number":
                         value = 0
                     setattr(self, option[0], value)
 
+    def get_parent(self):
+        if not self.parent_id:
+            print("No Parent ID Found")
+            return False
+        else:
+            self.parent = ParentProduct(item_id=self.parent_id)
+            return True
+
+    def add_order_to_stock(self):
+
+        if not self.get_parent():
+            print("No Parent Item Found")
+            return [False, "noparent"]
+
+        elif self.received is None or self.received == 0:
+            manager.add_update(self.id, "error", notify=["Please check the order line for {} has a number in the 'Quantity Received' Column".format(self.name), self.user_id])
+            return [False, "noquantity"]
+
+        else:
+            self.collect_inventory_items()
+            stats = self.calculate_supply_price()
+
+            self.parent.item.change_multiple_column_values({
+                "inventory_oc_walk_in": str(stats[1]),
+                "status5": {"label": "No Movement"}
+            })
+
+            for pulse in self.inventory_items:
+                pulse.change_multiple_column_values({
+                    "supply_price": str(stats[0])
+                })
+
+            self.item.change_multiple_column_values({
+                "numbers2": str(self.parent.stock_level),
+                "numbers7": str(stats[1])
+            })
+
+            return [True]
 
     def collect_inventory_items(self):
-        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=self.sku)
+        col_val = create_column_value(id="text0", column_type=ColumnType.text, value=self.parent.sku)
         for item in self.boards["inventory"].get_items_by_column_values(col_val):
             self.inventory_items.append(item)
 
-    def create_inventory_attributes(self):
-        for item in self.inventory_items:
-            name = item.name
-            cost = item.get_column_value(id="supply_price").number
-            quantity = item.get_column_value(id="numbers").number
-            live = item.get_column_value(id="live").text
-        self.inventory_attributes.append([name, cost, quantity, live])
-
-    def compare_stock_levels(self):
-        stock = []
-        for item in self.inventory_items:
-            stock.append([item.name, item.get_column_value(id="numbers").number])
-        count = 1
-        while count < len(stock):
-            if stock[count-1] != stock[count]:
-                self.item.add_update("Stock Levels For These Items were misaligned and have now been corrected\n{}".format(stock))
-                return stock
-            else:
-                continue
-        return False
-
     def calculate_supply_price(self):
-        onhand_cost = self.inventory_attributes[0][1] * self.inventory_attributes[0][2]
-        ordered_cost = self.quant_received * self.unit_cost
-        average_cost = float((onhand_cost + ordered_cost)) / float((self.quant_received + self.inventory_attributes[0][2]))
-        return round(average_cost, 2)
+        on_hand_unit = self.inventory_items[0].get_column_value(id="supply_price").number
+        on_hand_quant = self.parent.item.get_column_value(id="inventory_oc_walk_in").number
+        if not on_hand_quant:
+            on_hand_quant = 0
+        on_hand_total = on_hand_unit * on_hand_quant
+        new_unit = self.unit_cost
+        new_quant = self.received
+        new_total = new_unit * new_quant
+        total_quant = new_quant + on_hand_quant
+        new_supply = round((new_total + on_hand_total) / (total_quant), 3)
+        return [new_supply, total_quant]
 
-    def add_to_stock(self):
-        self.create_inventory_attributes()
-        total_stock = self.quant_received + self.inventory_attributes[0][2]
-        col_vals = {
-            "numbers": total_stock,
-            "status6": {"index": 15}
-        }
-        if self.inventory_attributes[0][3] != "Live":
-                col_vals["supply_price"] = self.unit_cost
-                col_vals["live"] = {"label": "Live"}
-        else:
-            col_vals["supply_price"] = self.calculate_supply_price()
-        for item in self.inventory_items:
-            item.change_multiple_column_values(col_vals)
-        self.item.change_multiple_column_values({
-            "numbers6": self.inventory_attributes[0][2],
-            "numbers_1": total_stock
-        })
 
     def order_placed(self):
         for item in self.inventory_items:
             item.change_multiple_column_values({"status6": {"index": 0}})
-
-# class InventoryItemOLD():
-
-#     boards = {
-#         "inventory": monday_client.get_board_by_id(id=868065293),
-#         "orders": monday_client.get_board_by_id(id=822509956),
-#         "parents": monday_client.get_board_by_id(id=867934405)
-#     }
-
-#     columns = [
-#         ["sku", "text0", "text"],
-#         ["device", "numbers3", "number"],
-#         ["repair", "device", "number"],
-#         ["colour", "numbers44", "number"],
-#         ["live", "live", "text"],
-#         ["vend_id", "text", "text"],
-#         ["sale_price", "retail_price", "number"],
-#         ["parent_id", "text1", "text"],
-#         ["model", "type", "text"]
-#     ]
-
-#     price_key = {
-#         "Glass Only": "numbers7",
-#         "Glass & Touch": "numbers1",
-#         "Glass, Touch & Backlight": "numbers_17",
-#         "Glass, Touch & LCD": "numbers2",
-#         "China Screen": "supply_price"
-#     }
-
-#     def __init__(self, item_id=False, item_object=False, refurb=False):
-#         start_time = time.time()
-#         if item_id:
-#             for item in monday_client.get_items(ids=[item_id], limit=1):
-#                 self.item = item
-#         elif item_object:
-#             self.item = item_object
-#         self.id = self.item.id
-#         self.name = self.item.name.replace('"', "inch")
-#         if refurb:
-#             self.columns.append(["supply_price", self.price_key[refurb], "number"])
-#         else:
-#             self.columns.append(["supply_price", "supply_price", "number"])
-#         for column in self.item.get_column_values():
-#             for option in self.columns:
-#                 if column.id == option[1]:
-#                     setattr(self, option[0], getattr(column, option[2]))
-#         if not self.supply_price:
-#             self.supply_price = self.item.get_column_value(id="supply_price").number
-#         self.linked_items = self.check_linked_products(self.sku)
-#         self.parent_product = False
-#         print("--- %s seconds ---" % (time.time() - start_time))
-
-#     def check_linked_products(self, sku):
-#         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
-#         links = self.boards["inventory"].get_items_by_column_values(col_val)
-#         if len(links) == 1:
-#             return [self.item]
-#         elif len(links) > 1:
-#             return links
-
-#     def get_parent(self):
-#         if not self.parent_id:
-#             return False
-#         else:
-#             results = self.boards["parents"].get_items(ids=[self.parent_id], limit=1)
-#             if len(results) > 1:
-#                 return False
-#             elif len(results) < 1:
-#                 return False
-#             else:
-#                 for pulse in results:
-#                     self.parent_product = ParentProduct(self.parent_id)
-#                     return True
-
-#     def add_to_product_catalogue(self, user_id):
-
-#         # Check for Required Info
-#         for attribute in ["sku", "model"]:
-#             if not getattr(self, attribute):
-#                 manager.add_update(self.id, "error", notify=["Unable to Add Product as no {} has been provided".format(attribute.capitalize()), user_id])
-#                 return False
-
-#         # Check for Linked Products ??
-#         # Check Parents & Add If Necessary
-#         if self.get_parent():
-#             self.item.change_column_value(column_id="text1", column_value=self.parent_product.id)
-#         else:
-#             to_add = ParentProduct()
-#             to_add.add_to_parents_board(self)
-#             self.item.change_column_value(column_id="text1", column_value=to_add.id)
-
-#         # Otherwise, Complete Linking Process
-
 
 class InventoryItem():
 
@@ -2174,7 +2091,6 @@ class InventoryItem():
     ]
 
     status_columns = [
-
     ]
 
     price_key = {
@@ -2262,7 +2178,6 @@ class InventoryItem():
         if len(names) > 1:
             parent.add_update(body="\n".join(names))
             parent.change_column_value(column_id="text3", column_value="Required")
-
 
 
 class ParentProduct():
