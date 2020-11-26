@@ -12,8 +12,6 @@ from flask import Flask, request
 from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb
 from manage import manager
 
-print("App Changed")
-
 # APP SET UP
 app = Flask(__name__)
 
@@ -369,13 +367,9 @@ def stock_received():
         return data[1]
     else:
         data = data[1]
-
     order_item = OrderItem(int(data["event"]["pulseId"]), int(data["event"]["userId"]))
-
     order_item.add_order_to_stock()
-
     print("--- %s seconds ---" % (time.time() - start_time))
-
     return "Stock Received Route Complete"
 
 # Stock Count Complete

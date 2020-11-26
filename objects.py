@@ -2014,34 +2014,27 @@ class OrderItem():
             return True
 
     def add_order_to_stock(self):
-
         if not self.get_parent():
             print("No Parent Item Found")
             return [False, "noparent"]
-
         elif self.received is None or self.received == 0:
             manager.add_update(self.id, "error", notify=["Please check the order line for {} has a number in the 'Quantity Received' Column".format(self.name), self.user_id])
             return [False, "noquantity"]
-
         else:
             self.collect_inventory_items()
             stats = self.calculate_supply_price()
-
             self.parent.item.change_multiple_column_values({
                 "inventory_oc_walk_in": str(stats[1]),
                 "status5": {"label": "No Movement"}
             })
-
             for pulse in self.inventory_items:
                 pulse.change_multiple_column_values({
                     "supply_price": str(stats[0])
                 })
-
             self.item.change_multiple_column_values({
                 "numbers2": str(self.parent.stock_level),
                 "numbers7": str(stats[1])
             })
-
             return [True]
 
     def collect_inventory_items(self):
@@ -2061,11 +2054,6 @@ class OrderItem():
         total_quant = new_quant + on_hand_quant
         new_supply = round((new_total + on_hand_total) / (total_quant), 3)
         return [new_supply, total_quant]
-
-
-    def order_placed(self):
-        for item in self.inventory_items:
-            item.change_multiple_column_values({"status6": {"index": 0}})
 
 class InventoryItem():
 
@@ -2101,7 +2089,6 @@ class InventoryItem():
     }
 
     def __init__(self, item_id=False, item_object=False, refurb=False):
-        start_time = time.time()
         if item_id:
             for item in monday_client.get_items(ids=[item_id], limit=1):
                 self.item = item
@@ -2122,7 +2109,6 @@ class InventoryItem():
             self.supply_price = self.item.get_column_value(id="supply_price").number
         self.linked_items = self.check_linked_products(self.sku)
         self.parent_product = False
-        print("--- %s seconds ---" % (time.time() - start_time))
 
     def check_linked_products(self, sku):
         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
@@ -2237,8 +2223,6 @@ class ParentProduct():
             self.stock_level = int(self.stock_level)
         except TypeError:
             self.stock_level = int(0)
-
-        print("INventory created")
 
     def add_to_parents_board(self, inventory_item):
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
