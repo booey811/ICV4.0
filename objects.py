@@ -2329,6 +2329,8 @@ class ParentProduct():
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
         if len(inventory_item.linked_items) > 1:
             col_vals["text3"] = "Required"
+        col_vals["status"] = {"label": inventory_item.category}
+        col_vals["status6"] = {"label": inventory_item.type}
         self.item = self.boards["parents"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
 
