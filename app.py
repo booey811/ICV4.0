@@ -9,7 +9,7 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup
 from manage import manager
 
 # APP SET UP
@@ -435,6 +435,21 @@ def screen_refurbishment_tested():
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
 
+# Refurb Group Calculation
+@app.route("/monday/refurb/calculate", methods=["POST"])
+def calculate_refurb_group():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+    user_id = int(data["event"]["userId"])
+    refurb_group = RefurbGroup(int(data["event"]["pulseId"]), user_id)
+    refurb_group.calculate_batch()
+    print("--- %s seconds ---" % (time.time() - start_time))
+    return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
 # ROUTES // VEND
 # Sale Update
