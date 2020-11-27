@@ -2005,6 +2005,11 @@ class NewRefurbUnit():
     def calculate_line(self, unit_cost):
 
 
+        sale = self.get_sale_price()
+        if not sale:
+            print("No Sale Price Provided")
+            return False
+
         screen = float(self.select_screen_cost())
         faceId = float(self.select_faceid_cost())
         glass = float(self.select_rear_glass_cost())
@@ -2016,7 +2021,6 @@ class NewRefurbUnit():
 
         time = float(self.calculate_time_cost())
 
-        sale = self.get_sale_price()
 
 
         self.item.change_multiple_column_values({
@@ -2036,6 +2040,8 @@ class NewRefurbUnit():
                 self.reference_id = pulse.id
                 self.price = pulse.get_column_value(id="numbers0").number
                 break
+        if not self.price:
+            return False
 
     def select_screen_cost(self):
         refurb_key = {
@@ -2120,9 +2126,9 @@ class RefurbGroup():
 
     def calculate_batch(self):
         count = 1
+        unit_cost = self.calculate_unit_price()
         for item in self.group_items:
             print("===== {} =====".format(item.name))
-            unit_cost = self.calculate_unit_price()
             NewRefurbUnit(item.id).calculate_line(unit_cost)
             print(count)
             count += 1
