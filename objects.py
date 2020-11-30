@@ -2145,7 +2145,7 @@ class RefurbGroup():
         for item in self.group_items:
             print("===== {} =====".format(item.name))
             if item.get_column_value(id="numbers").number:
-                manager.add_update(item.id, "system", notify=["Refurbished Unit: {} Has already been calculated (Delete the value in 'Time Required' to re-calculate", self.user_id])
+                manager.add_update(item.id, "system", notify=["Refurbished Unit: {} Has already been calculated (Delete the value in 'Time Required' to re-calculate".format(self.name), self.user_id])
             else:
                 NewRefurbUnit(item.id, self.user_id).calculate_line(unit_cost)
             print(count)

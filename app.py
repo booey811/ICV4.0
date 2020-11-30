@@ -447,7 +447,7 @@ def calculate_refurb_group():
         data = data[1]
     user_id = int(data["event"]["userId"])
     refurb_unit = NewRefurbUnit(int(data["event"]["pulseId"]), user_id)
-
+    refurb_unit.calculate_line()
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
