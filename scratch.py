@@ -15,6 +15,11 @@ gabe_id = 4251271
 # =====================================================================================================================
 # =====================================================================================================================
 
-test = NewRefurbUnit(881442318, gabe_id)
+print("Beginning INIT")
+test = NewRefurbUnit(881443933, gabe_id)
+print("Finished INIT")
 
+print("Starting Func")
 test.calculate_line()
+print("Ending Func")
+

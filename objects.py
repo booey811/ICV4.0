@@ -1976,8 +1976,22 @@ class NewRefurbUnit():
         ["face_id", "status7", "text"],
         ["batch_cost", "numbers5", "number"],
         ["rear_glass", "status69", "text"],
-        ["unit_cost", "numbers64", "number"]
+        ["unit_cost", "numbers64", "number"],
+        ["comments", "long_text", "text"],
+        ["screen_index", "status0", "index"]
     ]
+
+    inventory_convert = {
+        "iPhone 8": 10,
+        "iPhone 8 Plus": 11,
+        "iPhone X": 12,
+        "iPhone XR": 15,
+        "iPhone XS": 13,
+        "iPhone XS Max": 14,
+        "iPhone 11": 76,
+        "iPhone 11 Pro": 77,
+        "iPhone 11 Pro Max": 78
+    }
 
     def __init__(self, item_id, user_id):
 
@@ -2070,48 +2084,76 @@ class NewRefurbUnit():
         refurb_key = {
             1: "numbers7",
             8: "numbers1",
-            109: "numbers_17"
+            109: "numbers_17",
+            2: "supply_price"
         }
-        print(self.model)
-        screen_column_index = self.item.get_column_value(id="status0").index
-        if screen_column_index in refurb_key:
-            cost_id = refurb_key[screen_column_index]
+
+        string = tuple([(self.inventory_convert[self.model],), (69,), ()])
+        search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
+        results = self.boards["inventory"].get_items_by_column_values(search_val)
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify=["Cannot Locate Screen Cost on Inventory Board: {}".format(string), self.user_id])
+            return False
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify=["Too Many Screen Costs Found on Inventory Board: {}".format(string), self.user_id])
+            return False
         else:
-            cost_id = "supply_price"
-        for item in self.inventory_by_model:
-            if item.get_column_value(id="device").number == 69:
-                price = item.get_column_value(id=cost_id).number
+            for pulse in results:
+                item = pulse
+                price = pulse.get_column_value(id=str(refurb_key[self.screen_index])).number
                 break
-        if not price:
-            price = item.get_column_value(id="supply_price").number
-        return price
+            if not price:
+                price = item.get_column_value(id="supply_price").number
+            if not price:
+                manager.add_update(self.id, "error", notify=["Unable to Ascertain Price of Screen Required", self.user_id])
+                return False
+            return price
 
     def select_faceid_cost(self):
         if self.face_id == "FaceID Ok":
             return 0
-        for pulse in self.inventory_by_model:
-            if pulse.get_column_value(id="device").number == 99:
+        string = tuple([(self.inventory_convert[self.model],), (99,), ()])
+        search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
+        results = self.boards["inventory"].get_items_by_column_values(search_val)
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify=["Cannot Locate Face ID Cost on Inventory Board: {}".format(string)])
+            return False
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify=["Too Many Face ID Costs Found on Inventory Board: {}".format(string)])
+            return False
+        else:
+            for pulse in results:
                 price = pulse.get_column_value(id="supply_price").number
-                return price
+                break
+            return price
 
     def select_rear_glass_cost(self):
         if self.rear_glass == "Seems OK":
             return 0
-        model_val = create_column_value(id="type", column_type=ColumnType.text, value=self.model)
-        results = self.boards["inventory"].get_items_by_column_values(model_val)
-        for item in self.inventory_by_model:
-            if item.get_column_value(id="device").number == 82:
-                price = item.get_column_value(id="supply_price").number
-                return price
+
+        string = tuple([(self.inventory_convert[self.model],), (82,), (17,)])
+        search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
+        results = self.boards["inventory"].get_items_by_column_values(search_val)
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify=["Cannot Locate Rear Glass (Space Grey) Cost on Inventory Board: {}".format(string)])
+            return False
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify=["Too Many Rear Glass (Space Grey) Costs Found on Inventory Board: {}".format(string)])
+            return False
+        else:
+            for pulse in results:
+                price = pulse.get_column_value(id="supply_price").number
+                break
+            return price
 
 
     def calculate_time_cost(self):
         time = 1
-        if self.item.get_column_value(id="status7").index != 1:
+        if self.face_id != "FaceID Ok":
             time += 1
-        if self.item.get_column_value(id="status69").index != 1:
+        if self.rear_glass != "Seems OK":
             time += 1
-        if self.item.get_column_value(id="long_text").text:
+        if self.comments:
             time += 0.5
         return time
 
