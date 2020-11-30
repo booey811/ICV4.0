@@ -1975,7 +1975,8 @@ class NewRefurbUnit():
         ["network", "status1", "text"],
         ["face_id", "status7", "text"],
         ["batch_cost", "numbers5", "number"],
-        ["rear_glass", "status69", "text"]
+        ["rear_glass", "status69", "text"],
+        ["unit_cost", "numbers64", "number"]
     ]
 
     def __init__(self, item_id, user_id):
@@ -1994,9 +1995,6 @@ class NewRefurbUnit():
         self.get_inventory_by_model()
 
 
-
-
-
     def set_attributes(self):
         for column in self.column_values_raw:
             for attribute in self.columns:
@@ -2008,21 +2006,23 @@ class NewRefurbUnit():
         self.inventory_by_model = self.boards["inventory"].get_items_by_column_values(model_val)
 
 
-    def calculate_line(self, unit_cost):
+    def calculate_line(self):
         if not self.get_sale_price():
             print("No Sale Price Provided")
+            return False
+
+        if not self.unit_cost:
+            manager.add_update(self.id, "error", notify=["Refurbished Calculator: {} Has Not Been Assigned a Unit Cost, PLease Correct This and Try Again".format(self.name), self.user_id])
             return False
 
         screen = float(self.select_screen_cost())
         faceId = float(self.select_faceid_cost())
         glass = float(self.select_rear_glass_cost())
         parts_cost = screen + faceId + glass
-        unit_cost = float(unit_cost)
-        total_cost = parts_cost + unit_cost
+        total_cost = parts_cost + self.unit_cost
         time = float(self.calculate_time_cost())
 
         self.item.change_multiple_column_values({
-            "numbers64": unit_cost,
             "numbers": time,
             "numbers1": parts_cost,
             "numbers0": self.price,

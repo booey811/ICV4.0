@@ -9,7 +9,7 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit
 from manage import manager
 
 # APP SET UP
@@ -446,8 +446,8 @@ def calculate_refurb_group():
     else:
         data = data[1]
     user_id = int(data["event"]["userId"])
-    refurb_group = RefurbGroup(int(data["event"]["pulseId"]), user_id)
-    refurb_group.calculate_batch()
+    refurb_unit = NewRefurbUnit(int(data["event"]["pulseId"]), user_id)
+
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
