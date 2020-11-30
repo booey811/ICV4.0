@@ -2050,7 +2050,7 @@ class NewRefurbUnit():
         results = self.boards["refurb_ref"].get_items_by_column_values(search_val)
 
         if len(results) == 0:
-            manager.add_update(self.id, "error", notify["Refurbished Unit: {} -- Cannot Find An Entry on The Estimates Board for {}".format(search_string), self.user_id])
+            manager.add_update(self.id, "error", notify=["Refurbished Unit: {} -- Cannot Find An Entry on The Estimates Board for {}".format(search_string), self.user_id])
             self.price = False
         elif len(results) == 1:
             for pulse in results:
@@ -2058,27 +2058,15 @@ class NewRefurbUnit():
                 self.price = pulse.get_column_value(id="numbers0").number
                 break
         elif len(results) > 1:
-            manager.add_update(self.id, "error", notify["Refurbished Unit: {} -- Multiple Entries Found on Estimates Board for {}".format(search_string), self.user_id])
+            manager.add_update(self.id, "error", notify=["Refurbished Unit: {} -- Multiple Entries Found on Estimates Board for {}".format(search_string), self.user_id])
             self.price = False
 
         if not self.price:
-            manager.add_update(self.id, "error", notify["Refurbished Unit: {} -- No Price Provided for {}".format(search_string), self.user_id])
+            manager.add_update(self.id, "error", notify=["Refurbished Unit: {} -- No Price Provided for {}".format(search_string), self.user_id])
             self.price = False
 
         return self.price
 
-
-
-        # references = self.boards["refurbs"].get_group(id="new_group56225").get_items()
-        # model_val =  self.item.get_column_value(id="status4")
-        # storage_val = self.item.get_column_value(id="status6")
-        # for pulse in references:
-        #     if pulse.get_column_value(id="status4").text == model_val.text and pulse.get_column_value(id="status6").text == storage_val.text:
-        #         self.reference_id = pulse.id
-        #         self.price = pulse.get_column_value(id="numbers0").number
-        #         break
-        # if not self.price:
-        #     return False
 
     def select_screen_cost(self):
         refurb_key = {
