@@ -1963,7 +1963,8 @@ class NewRefurbUnit():
 
     boards = {
         "refurbs": monday_client.get_board_by_id(876594047),
-        "inventory": monday_client.get_board_by_id(868065293)
+        "inventory": monday_client.get_board_by_id(868065293),
+        "refurb_ref": monday_client.get_board_by_id(883161436)
     }
 
     columns = [
@@ -1977,9 +1978,13 @@ class NewRefurbUnit():
         ["rear_glass", "status69", "text"]
     ]
 
-    def __init__(self, item_id):
+    def __init__(self, item_id, user_id):
 
         self.id = item_id
+        self.user_id = user_id
+
+        self.price = False
+
         for pulse in self.boards["refurbs"].get_items(ids=[item_id], limit=1):
             self.item = pulse
             self.name = self.item.name.replace('"', "")
@@ -1990,6 +1995,8 @@ class NewRefurbUnit():
 
 
 
+
+
     def set_attributes(self):
         for column in self.column_values_raw:
             for attribute in self.columns:
@@ -1997,16 +2004,12 @@ class NewRefurbUnit():
                     setattr(self, attribute[0], getattr(column, attribute[2], None))
 
     def get_inventory_by_model(self):
-
         model_val = create_column_value(id="type", column_type=ColumnType.text, value=self.model)
         self.inventory_by_model = self.boards["inventory"].get_items_by_column_values(model_val)
 
 
     def calculate_line(self, unit_cost):
-
-
-        sale = self.get_sale_price()
-        if not sale:
+        if not self.get_sale_price():
             print("No Sale Price Provided")
             return False
 
@@ -2014,34 +2017,54 @@ class NewRefurbUnit():
         faceId = float(self.select_faceid_cost())
         glass = float(self.select_rear_glass_cost())
         parts_cost = screen + faceId + glass
-
         unit_cost = float(unit_cost)
-
         total_cost = parts_cost + unit_cost
-
         time = float(self.calculate_time_cost())
-
-
 
         self.item.change_multiple_column_values({
             "numbers64": unit_cost,
             "numbers": time,
             "numbers1": parts_cost,
-            "numbers0": self.get_sale_price(),
+            "numbers0": self.price,
             "numbers52": total_cost
         })
 
     def get_sale_price(self):
-        references = self.boards["refurbs"].get_group(id="new_group56225").get_items()
-        model_val =  self.item.get_column_value(id="status4")
-        storage_val = self.item.get_column_value(id="status6")
-        for pulse in references:
-            if pulse.get_column_value(id="status4").text == model_val.text and pulse.get_column_value(id="status6").text == storage_val.text:
+
+        search_string = self.item.get_column_value(id="status4").text + " " + self.item.get_column_value(id="status6").text
+        search_val = create_column_value(id="text", column_type=ColumnType.text, value=search_string)
+        results = self.boards["refurb_ref"].get_items_by_column_values(search_val)
+
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify["Refurbished Unit: {} -- Cannot Find An Entry on The Estimates Board for {}".format(search_string), self.user_id])
+            self.price = False
+        elif len(results) == 1:
+            for pulse in results:
                 self.reference_id = pulse.id
                 self.price = pulse.get_column_value(id="numbers0").number
                 break
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify["Refurbished Unit: {} -- Multiple Entries Found on Estimates Board for {}".format(search_string), self.user_id])
+            self.price = False
+
         if not self.price:
-            return False
+            manager.add_update(self.id, "error", notify["Refurbished Unit: {} -- No Price Provided for {}".format(search_string), self.user_id])
+            self.price = False
+
+        return self.price
+
+
+
+        # references = self.boards["refurbs"].get_group(id="new_group56225").get_items()
+        # model_val =  self.item.get_column_value(id="status4")
+        # storage_val = self.item.get_column_value(id="status6")
+        # for pulse in references:
+        #     if pulse.get_column_value(id="status4").text == model_val.text and pulse.get_column_value(id="status6").text == storage_val.text:
+        #         self.reference_id = pulse.id
+        #         self.price = pulse.get_column_value(id="numbers0").number
+        #         break
+        # if not self.price:
+        #     return False
 
     def select_screen_cost(self):
         refurb_key = {
@@ -2064,23 +2087,18 @@ class NewRefurbUnit():
         return price
 
     def select_faceid_cost(self):
-
         if self.face_id == "FaceID Ok":
             return 0
-
         for pulse in self.inventory_by_model:
             if pulse.get_column_value(id="device").number == 99:
                 price = pulse.get_column_value(id="supply_price").number
                 return price
 
     def select_rear_glass_cost(self):
-
         if self.rear_glass == "Seems OK":
             return 0
-
         model_val = create_column_value(id="type", column_type=ColumnType.text, value=self.model)
         results = self.boards["inventory"].get_items_by_column_values(model_val)
-
         for item in self.inventory_by_model:
             if item.get_column_value(id="device").number == 82:
                 price = item.get_column_value(id="supply_price").number
@@ -2108,14 +2126,11 @@ class RefurbGroup():
     ]
 
     def __init__(self, item_id, user_id):
-
         for pulse in self.boards["refurbs"].get_items(ids=[item_id], limit=1):
-            self.refurb_unit = NewRefurbUnit(item_id)
+            self.refurb_unit = NewRefurbUnit(item_id, user_id)
             self.group_id = pulse._Item__group_id
             break
-
         self.user_id = user_id
-
         self.group_items = self.boards["refurbs"].get_group(self.group_id).get_items()
 
 
@@ -2129,11 +2144,12 @@ class RefurbGroup():
         unit_cost = self.calculate_unit_price()
         for item in self.group_items:
             print("===== {} =====".format(item.name))
-            NewRefurbUnit(item.id).calculate_line(unit_cost)
+            if item.get_column_value(id="numbers").number:
+                manager.add_update(item.id, "system", notify=["Refurbished Unit: {} Has already been calculated (Delete the value in 'Time Required' to re-calculate", self.user_id])
+            else:
+                NewRefurbUnit(item.id, self.user_id).calculate_line(unit_cost)
             print(count)
             count += 1
-
-
         manager.add_update(self.refurb_unit.id, "system", notify=["Refurbished Phones Batch Calculation Complete", self.user_id])
 
 
