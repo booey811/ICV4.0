@@ -1312,7 +1312,7 @@ class Repair():
                     manager.add_update(
                         monday_id=self.id,
                         update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
-                        notify=["Please check {}'s Repair Details".format(self.name), self.user_id],
+                        notify=["Please check {}'s Repair Details".format(self.name), 4251271], # Notify Gabe
                         user="error",
                         status=["status_17", "Error - Not Found"]
                     )
