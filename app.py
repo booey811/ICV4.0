@@ -232,7 +232,6 @@ def monday_notifications_column():
         return data[1]
     else:
         data = data[1]
-
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     new_notification = repair.monday.dropdown_value_webhook_comparison(data)
     if new_notification:
@@ -242,7 +241,6 @@ def monday_notifications_column():
         repair.monday.textlocal_notification()
     else:
         print("new notification returned false")
-
     repair.debug_print(debug=os.environ["DEBUG"])
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Monday Notificaions Column Change Route Complete"
@@ -258,9 +256,7 @@ def monday_eod_column_new():
         return data[1]
     else:
         data = data[1]
-
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-
     repair.monday.adjust_stock_alt()
     print("--- %s seconds ---" % (time.time() - start_time))
     return "New End Of Day Route Complete"
@@ -413,8 +409,13 @@ def screen_refurbishment_complete():
     else:
         data = data[1]
     user_id = data["event"]["userId"]
-    order = ParentProduct(user_id=int(data["event"]["userId"]), item_id=int(data["event"]["pulseId"]))
-    order.refurb_order_creation()
+
+    screen = ScreenRefurb(user_id=user_id, item_id=int(data["event"]["pulseId"]))
+
+    screen.add_to_test_queue()
+
+    # order = ParentProduct(user_id=int(data["event"]["userId"]), item_id=int(data["event"]["pulseId"]))
+    # order.refurb_order_creation()
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Complete Route Completed"
 
