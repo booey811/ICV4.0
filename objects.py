@@ -1311,8 +1311,8 @@ class Repair():
                 if len(inventory_items)!= len(self.m_repairs):
                     manager.add_update(
                         monday_id=self.id,
-                        update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour),
-                        notify=["Please check {}'s Repair Details".format(self.name), 4251271], # Notify Gabe
+                        update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour), # Notify Gabe
+                        notify=["Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour).format(self.name), 4251271],
                         user="error",
                         status=["status_17", "Error - Not Found"]
                     )
