@@ -1959,6 +1959,228 @@ class RefurbUnit():
                 "status4": {"label": "Returned"}
             })
 
+class NewRefurbUnit():
+
+    boards = {
+        "refurbs": monday_client.get_board_by_id(876594047),
+        "inventory": monday_client.get_board_by_id(868065293),
+        "refurb_ref": monday_client.get_board_by_id(883161436)
+    }
+
+    columns = [
+        ["imei_sn", "text3", "text"],
+        ["model", "status4", "text"],
+        ["colour", "status2", "text"],
+        ["storage", "status6", "text"],
+        ["network", "status1", "text"],
+        ["face_id", "status7", "text"],
+        ["batch_cost", "numbers5", "number"],
+        ["rear_glass", "status69", "text"],
+        ["unit_cost", "numbers64", "number"],
+        ["comments", "long_text", "text"],
+        ["screen_index", "status0", "index"]
+    ]
+
+    inventory_convert = {
+        "iPhone 8": 10,
+        "iPhone 8 Plus": 11,
+        "iPhone X": 12,
+        "iPhone XR": 15,
+        "iPhone XS": 13,
+        "iPhone XS Max": 14,
+        "iPhone 11": 76,
+        "iPhone 11 Pro": 77,
+        "iPhone 11 Pro Max": 78
+    }
+
+    def __init__(self, item_id, user_id):
+
+        self.id = item_id
+        self.user_id = user_id
+
+        self.price = False
+
+        for pulse in self.boards["refurbs"].get_items(ids=[item_id], limit=1):
+            self.item = pulse
+            self.name = self.item.name.replace('"', "")
+            break
+        self.column_values_raw = self.item.get_column_values()
+        self.set_attributes()
+        self.get_inventory_by_model()
+
+
+    def set_attributes(self):
+        for column in self.column_values_raw:
+            for attribute in self.columns:
+                if column.id == attribute[1]:
+                    setattr(self, attribute[0], getattr(column, attribute[2], None))
+
+    def get_inventory_by_model(self):
+        model_val = create_column_value(id="type", column_type=ColumnType.text, value=self.model)
+        self.inventory_by_model = self.boards["inventory"].get_items_by_column_values(model_val)
+
+
+    def calculate_line(self):
+        if not self.get_sale_price():
+            print("No Sale Price Provided")
+            return False
+
+        if not self.unit_cost:
+            manager.add_update(self.id, "error", notify=["Refurbished Calculator: {} Has Not Been Assigned a Unit Cost, PLease Correct This and Try Again".format(self.name), self.user_id])
+            return False
+
+        screen = float(self.select_screen_cost())
+        faceId = float(self.select_faceid_cost())
+        glass = float(self.select_rear_glass_cost())
+        parts_cost = screen + faceId + glass
+        total_cost = parts_cost + self.unit_cost
+        time = float(self.calculate_time_cost())
+
+        self.item.change_multiple_column_values({
+            "numbers": time,
+            "numbers1": parts_cost,
+            "numbers0": self.price,
+            "numbers52": total_cost
+        })
+
+    def get_sale_price(self):
+
+        search_string = self.item.get_column_value(id="status4").text + " " + self.item.get_column_value(id="status6").text
+        search_val = create_column_value(id="text", column_type=ColumnType.text, value=search_string)
+        results = self.boards["refurb_ref"].get_items_by_column_values(search_val)
+
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify=["Refurbished Unit -- Cannot Find An Entry on The Estimates Board for {}".format(search_string), self.user_id])
+            self.price = False
+        elif len(results) == 1:
+            for pulse in results:
+                self.reference_id = pulse.id
+                self.price = pulse.get_column_value(id="numbers0").number
+                break
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify=["Refurbished Unit -- Multiple Entries Found on Estimates Board for {}".format(search_string), self.user_id])
+            self.price = False
+
+        if not self.price:
+            manager.add_update(self.id, "error", notify=["Refurbished Unit -- No Price Provided for {}".format(search_string), self.user_id])
+            self.price = False
+
+        return self.price
+
+
+    def select_screen_cost(self):
+        refurb_key = {
+            1: "numbers7",
+            8: "numbers1",
+            109: "numbers_17",
+            2: "supply_price"
+        }
+
+        string = tuple([(self.inventory_convert[self.model],), (69,), ()])
+        search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
+        results = self.boards["inventory"].get_items_by_column_values(search_val)
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify=["Cannot Locate Screen Cost on Inventory Board: {}".format(string), self.user_id])
+            return False
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify=["Too Many Screen Costs Found on Inventory Board: {}".format(string), self.user_id])
+            return False
+        else:
+            for pulse in results:
+                item = pulse
+                price = pulse.get_column_value(id=str(refurb_key[self.screen_index])).number
+                break
+            if not price:
+                price = item.get_column_value(id="supply_price").number
+            if not price:
+                manager.add_update(self.id, "error", notify=["Unable to Ascertain Price of Screen Required", self.user_id])
+                return False
+            return price
+
+    def select_faceid_cost(self):
+        if self.face_id == "FaceID Ok":
+            return 0
+        string = tuple([(self.inventory_convert[self.model],), (99,), ()])
+        search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
+        results = self.boards["inventory"].get_items_by_column_values(search_val)
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify=["Cannot Locate Face ID Cost on Inventory Board: {}".format(string)])
+            return False
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify=["Too Many Face ID Costs Found on Inventory Board: {}".format(string)])
+            return False
+        else:
+            for pulse in results:
+                price = pulse.get_column_value(id="supply_price").number
+                break
+            return price
+
+    def select_rear_glass_cost(self):
+        if self.rear_glass == "Seems OK":
+            return 0
+
+        string = tuple([(self.inventory_convert[self.model],), (82,), (17,)])
+        search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
+        results = self.boards["inventory"].get_items_by_column_values(search_val)
+        if len(results) == 0:
+            manager.add_update(self.id, "error", notify=["Cannot Locate Rear Glass (Space Grey) Cost on Inventory Board: {}".format(string)])
+            return False
+        elif len(results) > 1:
+            manager.add_update(self.id, "error", notify=["Too Many Rear Glass (Space Grey) Costs Found on Inventory Board: {}".format(string)])
+            return False
+        else:
+            for pulse in results:
+                price = pulse.get_column_value(id="supply_price").number
+                break
+            return price
+
+
+    def calculate_time_cost(self):
+        time = 1
+        if self.face_id != "FaceID Ok":
+            time += 1
+        if self.rear_glass != "Seems OK":
+            time += 1
+        if self.comments:
+            time += 0.5
+        return time
+
+class RefurbGroup():
+
+    boards = {
+        "refurbs": monday_client.get_board_by_id(876594047)
+    }
+
+    columns = [
+        [""]
+    ]
+
+    def __init__(self, item_id, user_id):
+        for pulse in self.boards["refurbs"].get_items(ids=[item_id], limit=1):
+            self.refurb_unit = NewRefurbUnit(item_id, user_id)
+            self.group_id = pulse._Item__group_id
+            break
+        self.user_id = user_id
+        self.group_items = self.boards["refurbs"].get_group(self.group_id).get_items()
+
+
+    def calculate_unit_price(self):
+        batch_price = self.refurb_unit.batch_cost
+        unit_price = round(batch_price / len(self.group_items), 3)
+        return str(unit_price)
+
+    def calculate_batch(self):
+        count = 1
+        unit_cost = self.calculate_unit_price()
+        for item in self.group_items:
+            print("===== {} =====".format(item.name))
+            if item.get_column_value(id="numbers").number:
+                manager.add_update(item.id, "system", notify=["Refurbished Unit: {} Has already been calculated (Delete the value in 'Time Required' to re-calculate".format(self.name), self.user_id])
+            else:
+                NewRefurbUnit(item.id, self.user_id).calculate_line(unit_cost)
+            print(count)
+            count += 1
+        manager.add_update(self.refurb_unit.id, "system", notify=["Refurbished Phones Batch Calculation Complete", self.user_id])
 
 
 class OrderItem():
