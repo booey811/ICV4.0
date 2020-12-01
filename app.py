@@ -578,6 +578,21 @@ def gophr_webhook():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Gophr Webhook Route Completed Successfully"
 
+
+# ROUTES // STUART
+# Callback Function
+@app.route("/stuart/test", methods=["POST"])
+def stuart_test_route():
+    data = request.get_data().decode("utf-8")
+
+    f = open("stuart_responses.txt", "w")
+    f.writeline(data)
+    f.close()
+
+    print(data)
+
+    return ""
+
 # Top Line Driver Code
 if __name__ == "__main__":
     app.run(load_dotenv=True)

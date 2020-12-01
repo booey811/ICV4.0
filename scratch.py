@@ -15,11 +15,8 @@ gabe_id = 4251271
 # =====================================================================================================================
 # =====================================================================================================================
 
-print("Beginning INIT")
-test = NewRefurbUnit(881443933, gabe_id)
-print("Finished INIT")
 
-print("Starting Func")
-test.calculate_line()
-print("Ending Func")
 
+test = Repair(monday=886195598)
+
+test.monday.stuart_details_creation()

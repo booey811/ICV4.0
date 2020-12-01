@@ -1101,7 +1101,30 @@ class Repair():
             self.item.change_multiple_column_values(values)
             self.parent.debug(end="add_to_zendesk")
 
+        def stuart_details_creation(self):
 
+            print(self.id)
+
+            address = [
+                self.address2,
+                self.address1,
+                self.postcode
+            ]
+            address = [line for line in address if line]
+            address_string = " ".join(address)
+
+            reference = " ".join(self.id, self.status, self.name, self.company)
+
+
+            conversion = [
+                ["phone", "phone"],
+                ["email", "email"],
+            ]
+
+            # Need to Create Dictionary
+
+
+            pprint(details)
 
         def gophr_booking(self, from_client=True):
             self.parent.debug(start="gophr_booking")
@@ -2624,3 +2647,5 @@ class ScreenRefurb():
                 "numbers6": int(parent.stock_level),
                 "numbers3": new_quantity
             })
+
+
