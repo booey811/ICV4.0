@@ -10,56 +10,131 @@ class StuartSandBox():
     def __init__(self):
         pass
 
-    def format_details(self, client_details, monday_status):
+    def authenticate(self, production=False):
+
+        payload = {
+            "scope": "api",
+            "grant_type": "client_credentials",
+            "client_id": os.environ["STUARTIDSAND"]
+            "client_secret": os.environ["STUARTSECRETSAND"]
+        }
+
+        if production:
+            url = "https://api.stuart.com/v2/ouath/token"
+            payload["client_id"] = os.environ["STUARTID"]
+            payload["client_secret"] = os.environ["STUARTSECRET"]
+        else:
+            url = "https://sandbox-api.stuart.com/v2/oauth/token"
+
+        payload = json.dumps(payload)
+
+        headers = {'content-type': "application/json"}
+
+        response = requests.request('POST', url, data=payload, headers=headers)
+
+        print(response)
+
+        info = json.loads(response.text)
+
+        print(info)
+
+        print(info["access_token"])
+
+
+    def validate_address(self, address_string, direction, production=False):
+
+        if production:
+            url = "https://api.stuart.com/v2/addresses/validate"
+        else:
+            url = "https://sandbox-api.stuart.com/v2/addresses/validate"
+
+        payload = {
+            "address": address_string,
+            "type": direction
+        }
+
+        payload = json.dumps(payload)
+
+        headers = {
+            'content-type': "application/json",
+            'authorization': "Bearer {}".format(os.environ["STUARTTOKENSAND"])
+            }
+
+        response = requests.request("GET", url, data=payload, headers=headers)
+
+
+        p(response)
+        print()
+        print("=====================")
+        print()
+        job_info = json.loads(response.text)
+        p(job_info)
+
+
+    def format_details(self, client_details, monday_object):
         """Takes delivery details (client address, phone, email, direction) and creates the structure required for the create_job function
 
         Args:
             client_details (dict): Dictionary for client details
-            monday_status (string): Status of Courier Job (Collecting or Returning)
+            monday_object (MondayRepair): Monday Object (For Status and ID Info)
 
         Returns:
             dict: Data structure for create_job func
         """
 
-        icorrect = "" # WIll be icorrects address details for use in below !!! SAME FORMAT AS ARGUMENT FOR THIS FUNCTION
+        icorrect = {
+            'address': 'iCorrect 12 Margaret Street W1W 8JQ',
+            'email': 'support@icorrect.co.uk',
+            'phone': '02070998517'
+        }
 
-        if monday_status == "Book Return Courier":
+        if monday_object.status == "Book Return Courier":
             collect = icorrect
             deliver = client_details
-            assignment_code = "RETURN: {}".format(self.id)
+            assignment_code = "RETURN: {}".format(monday_object.id)
+            direction = "delivering"
         else:
             collect = client_details
             deliver = icorrect
-            assignment_code = "COLLECTION: {}".format(self.id)
+            assignment_code = "COLLECTION: {}".format(monday_object.id)
+            direction = 'picking'
+
+        self.validate_address(client_details["address"], direction)
+
+        return
+
+        p(collect)
+        p(deliver)
+
 
         # Map to Result
 
         result = {
             "job": {
-                "assignment_code": " {}}",
+                "assignment_code": "{}".format(assignment_code),
                 "pickups": [{
-                    "address": "{}", 
-                    "comment": "{}",
+                    "address": "{}".format(collect["address"]),
+                    # "comment": "{}",
                     "contact": {
-                        "firstname": "Client",
-                        "lastname": "Sucker",
-                        "phone": "+447984305338",
-                        "email": "gabriel@icorrect.co.uk",
-                        "company": "iCorrect"
+                        "firstname": "{}".format(collect["firstname"]),
+                        "lastname": "{}",
+                        "phone": "{}",
+                        "email": "{}",
+                        "company": "{}"
                     }
                 }],
                 "dropoffs": [{
                     "package_type": "small",
                     # "package_description": "The blue one.",
-                    "client_reference": "Ref TEST 1", # Must Be Unique
-                    "address": "30 Warwick Street W1B 5NH",
+                    "client_reference": "{}", # Must Be Unique
+                    "address": "{}",
                     # "comment": "2nd floor on the left",
                     "contact": {
-                        "firstname": "Dany",
-                        "lastname": "Dan",
-                        "phone": "+33611112222",
-                        "email": "client1@email.com",
-                        "company": "Sample Company Inc."
+                        "firstname": "{}",
+                        "lastname": "{}",
+                        "phone": "{}",
+                        "email": "{}",
+                        "company": "{}"
                     }
                 }]
             }
@@ -99,11 +174,3 @@ class StuartSandBox():
         return
 
 
-    def create_job(self):
-        pass
-
-
-
-ls = ""
-
-print(ls.strip())

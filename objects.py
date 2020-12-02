@@ -1113,18 +1113,25 @@ class Repair():
             address = [line for line in address if line]
             address_string = " ".join(address)
 
-            reference = " ".join(self.id, self.status, self.name, self.company)
+            reference = " ".join([self.id, self.status, self.name, self.company_name])
 
 
             conversion = [
-                ["phone", "phone"],
+                ["number", "phone"],
                 ["email", "email"],
             ]
 
-            # Need to Create Dictionary
+            details = {line[1]:getattr(self, line[0]) for line in conversion}
+
+            details["reference"] = reference
+            details["address"] = address_string
+            details["firstname"] = self.name.split()[0]
+            details["lastname"] = self.name.split()[1]
 
 
             pprint(details)
+
+            return details
 
         def gophr_booking(self, from_client=True):
             self.parent.debug(start="gophr_booking")
