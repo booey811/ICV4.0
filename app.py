@@ -9,7 +9,7 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit, StuartClient
 from manage import manager
 
 # APP SET UP
@@ -220,6 +220,30 @@ def monday_status_change():
     repair.debug_print(debug=os.environ["DEBUG"])
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Status Change Route Completed Successfully"
+
+# Status - Courier Booked NEW!!!!!!!!!!!!!
+@app.route("/monday/book-courier/collection", methods=["POST"])
+def book_collection():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
+    stuart = StuartClient()
+
+    booking_details = repair.monday.stuart_details_creation()
+
+    if stuart.validate_address(booking_details):
+
+        courier_info = stuart.format_details(booking_details, repair.monday.id, "collecting")
+
+        stuart.create_job(courier_info)
+
+    return "Book Courier Route Complete"
 
 # Notifications Column
 @app.route("/monday/notifications", methods=["POST"])

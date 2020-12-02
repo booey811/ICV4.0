@@ -1108,17 +1108,20 @@ class Repair():
             address = [
                 self.address2,
                 self.address1,
+                "London",
                 self.postcode
             ]
             address = [line for line in address if line]
             address_string = " ".join(address)
 
-            reference = " ".join([self.id, self.status, self.name, self.company_name])
+            reference_items = [self.id, self.status, self.name, self.company_name]
 
+            reference = " ".join([item for item in reference_items if item])
 
             conversion = [
                 ["number", "phone"],
                 ["email", "email"],
+                ["company_name", "company"]
             ]
 
             details = {line[1]:getattr(self, line[0]) for line in conversion}
@@ -1127,6 +1130,11 @@ class Repair():
             details["address"] = address_string
             details["firstname"] = self.name.split()[0]
             details["lastname"] = self.name.split()[1]
+
+            if self.status == "Book Return Courier":
+                details["direction"] = "delivering"
+            else:
+                details["direction"] = "picking"
 
 
             pprint(details)
@@ -2337,6 +2345,7 @@ class InventoryItem():
         "Glass Only": "numbers7",
         "Glass & Touch": "numbers1",
         "Glass, Touch & LCD": "numbers_17",
+        "Glass, Touch & Backlight": "numbers_17",
         "China Screen": "supply_price"
     }
 
@@ -2656,3 +2665,147 @@ class ScreenRefurb():
             })
 
 
+
+class StuartClient():
+
+    def __init__(self, production=False):
+        self.production = production
+        self.authenticate(production=self.production)
+
+    def authenticate(self, production=False):
+        payload = {
+            "scope": "api",
+            "grant_type": "client_credentials",
+            "client_id": os.environ["STUARTIDSAND"],
+            "client_secret": os.environ["STUARTSECRETSAND"]
+        }
+        if production:
+            url = "https://api.stuart.com/v2/ouath/token"
+            payload["client_id"] = os.environ["STUARTID"]
+            payload["client_secret"] = os.environ["STUARTSECRET"]
+        else:
+            url = "https://api.sandbox.stuart.com/oauth/token"
+        payload = json.dumps(payload)
+        headers = {'content-type': "application/json"}
+        response = requests.request('POST', url, data=payload, headers=headers)
+        info = json.loads(response.text)
+        self.token = info["access_token"]
+
+
+    def validate_address(self, client_details, production=False):
+        if production:
+            url = "https://api.stuart.com/v2/addresses/validate"
+        else:
+            url = "https://sandbox-api.stuart.com/v2/addresses/validate"
+
+        payload = {
+            "address": client_details["address"],
+            "type": client_details["direction"],
+            "phone": client_details["phone"]
+        }
+
+        headers = {'authorization': "Bearer {}".format(self.token)}
+        response = requests.request("GET", url, data=payload, headers=headers)
+        job_info = json.loads(response.text)
+        return job_info["success"]
+
+
+    def format_details(self, client_details, monday_id, direction):
+        """Takes delivery details (client address, phone, email, direction) and creates the structure required for the create_job function
+
+        Args:
+            client_details (dict): Dictionary for client details
+            monday_object (MondayRepair): Monday Object (For Status and ID Info)
+
+        Returns:
+            dict: Data structure for create_job func
+        """
+
+        icorrect = {
+            'address': 'iCorrect 12 Margaret Street London W1W 8JQ',
+            'email': 'support@icorrect.co.uk',
+            'phone': '02070998517',
+            'firstname': 'Gabriel',
+            'lastname': 'Barr',
+            "reference": client_details["reference"],
+            "company": "iCorrect Ltd"
+        }
+
+        if direction == 'delivering':
+            collect = icorrect
+            deliver = client_details
+            assignment_code = "RETURN: {}".format(monday_id)
+
+        elif direction == "collecting":
+            collect = client_details
+            deliver = icorrect
+            assignment_code = "COLLECTION: {}".format(monday_id)
+
+
+        # Map to Result
+
+        result = {
+            "job": {
+                "assignment_code": assignment_code,
+                "pickups": [{
+                    "address": collect["address"],
+                    # "comment": "{}",
+                    "contact": {
+                        "firstname": collect["firstname"],
+                        "lastname": collect["lastname"],
+                        "phone": collect["phone"],
+                        "email": collect["email"],
+                        "company": collect["company"]
+                    }
+                }],
+                "dropoffs": [{
+                    "package_type": "small",
+                    # "package_description": "The blue one.",
+                    "client_reference": deliver["reference"],
+                    "address": deliver["address"],
+                    # "comment": "2nd floor on the left",
+                    "contact": {
+                        "firstname": deliver["firstname"],
+                        "lastname": deliver["lastname"],
+                        "phone": deliver["phone"],
+                        "email": deliver["email"],
+                        "company": deliver["company"]
+                    }
+                }]
+            }
+        }
+
+        return result
+
+    def create_job(self, payload, production=False):
+        """Takes a dictionoary of job details and sends a request
+
+        Args:
+            payload (dictionary): Dictionary of details returned by the format_details function
+        """
+
+        if production:
+            url = "https://api.stuart.com/v2/jobs"
+        else:
+            url = "https://sandbox-api.stuart.com/v2/jobs"
+
+        payload = json.dumps(payload)
+
+        headers = {
+            'content-type': "application/json",
+            'authorization': "Bearer {}".format(self.token)
+            }
+
+        response = requests.request("POST", url, data=payload, headers=headers)
+
+
+
+        print()
+        print("=====================")
+        print()
+        print(response)
+        job_info = json.loads(response.text)
+        print(job_info)
+
+
+        return
