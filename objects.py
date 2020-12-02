@@ -2573,6 +2573,19 @@ class ScreenRefurb():
             self.refurb_quantity = create_from_parent.add_quantity
             self.sku = create_from_parent.sku
 
+    def add_to_test_queue(self):
+
+        test_group = self.boards["screen_refurbs"].get_group(id="new_group5426")
+
+        col_vals = {
+            "text": self.sku,
+            "numbers": self.refurb_quantity
+        }
+
+        test_group.add_item(item_name=self.name, column_values=col_vals)
+
+        self.item.change_multiple_column_values({"numbers": None})
+
     def add_to_screen_refurbs(self):
         col_vals = {
             "numbers": self.refurb_quantity,
