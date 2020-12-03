@@ -231,18 +231,13 @@ def book_collection():
     else:
         data = data[1]
 
+    user_id = data["event"]["userId"]
+
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     stuart = StuartClient()
+    stuart.arrange_courier(repair, user_id, "collecting")
 
-    booking_details = repair.monday.stuart_details_creation()
-
-    if stuart.validate_address(booking_details):
-
-        courier_info = stuart.format_details(booking_details, repair.monday.id, "collecting")
-
-        stuart.create_job(courier_info)
-
-    return "Book Courier Route Complete"
+    return "Book Courier Collection Route Complete"
 
 # Notifications Column
 @app.route("/monday/notifications", methods=["POST"])
@@ -606,15 +601,21 @@ def gophr_webhook():
 # Callback Function
 @app.route("/stuart/test", methods=["POST"])
 def stuart_test_route():
+    pass
     data = request.get_data().decode("utf-8")
 
-    f = open("stuart_responses.txt", "w")
-    f.writeline(data)
-    f.close()
+    data = json.loads(data)
 
-    print(data)
+    if data["type"] == 'update':
 
-    return ""
+        job_id = data["data"]["job"]["deliveries"][0]["id"]
+        stuart = StuartClient()
+        stuart.add_to_stuart_data(job_id, data)
+        print(type(data))
+        pprint(data)
+        print(data["type"])
+
+    return "Stuart Webhook Route Complete"
 
 # Top Line Driver Code
 if __name__ == "__main__":
