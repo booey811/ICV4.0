@@ -138,8 +138,7 @@ def monday_status_change():
             pass
 
         elif repair.monday.status == "Book Courier":
-            repair.debug("STATUS - BOOK COURIER")
-            repair.monday.gophr_booking(from_client=True)
+            pass
 
         elif repair.monday.status == "Courier Booked":
             pass
