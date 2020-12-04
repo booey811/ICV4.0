@@ -1353,8 +1353,13 @@ class Repair():
             tracked = False
             warning = False
 
-            for item in self.create_inventory_items():
+            inventory_items = self.create_inventory_items()
+
+            for item in inventory_items:
                 repair_stats.append(item.stock_check())
+
+            if len(inventory_items) != len(self.repairs):
+                not_complete = True
 
             for item in repair_stats:
                 if item["tracked"]:
@@ -1367,6 +1372,9 @@ class Repair():
                 update = 'Estimated Stock Levels:\n\n{}'.format("\n".join([str(item["name"]) + ': ' + str(item['stock'])]))
             else:
                 update = 'Roughly Estimated Stock Levels\nSome of These Products Are Not Tracked:\n\n{}'.format("\n".join(([str(item["name"]) + ': ' + str(item['stock'])])))
+
+            if not_complete:
+                update.append("\n\nThis is not a full check, and some repairs may have been missed while checking")
 
 
             if warning or not tracked:
