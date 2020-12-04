@@ -1346,6 +1346,47 @@ class Repair():
 
                     log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
                     log.add_update(update)
+                    
+        def stock_checker(self, user_id):
+            
+            repair_stats = []
+            tracked = False
+            warning = False
+            
+            for item in self.create_inventory_items():
+                repair_stats.append(item.stock_check())
+                
+            for item in repair_stats:
+                if item["tracked"]:
+                    tracked = True
+                    
+                if item["stock"] < 5:
+                    warning = True
+                    
+            if tracked:
+                update = 'Estimated Stock Levels:\n\n{}'.format("\n".join([str(item["name"]) + ': ' + str(item['stock'])]))
+            else:
+                update = 'Roughly Estimated Stock Levels\nSome of These Products Are Not Tracked:\n\n{}'.format("\n".join(([str(item["name"]) + ': ' + str(item['stock'])])))
+
+
+            if warning or not tracked:
+                manager.add_update(
+                    self.id,
+                    'error',
+                    notify=['LOW OR NO STOCK: Please Click Me For More Info', user_id],
+                    update=update,
+                    checkbox=['check3', False]
+                )
+                
+            else:
+                manager.add_update(
+                    self.id,
+                    'system',
+                    notify=['There is enough stock for the {} repair'.format(self.name), user_id],
+                    checkbox=['check3', False]
+                )               
+                
+
 
         def create_sale_stats(self, inventory_items):
             total_sale = 0
@@ -2310,7 +2351,11 @@ class InventoryItem():
         "China Screen": "supply_price"
     }
 
-    def __init__(self, item_id=False, item_object=False, refurb=False):
+    def __init__(self, item_id=False, item_object=False, refurb=False, repair_id=False):
+        
+        # Normal Set Up
+        if repair_id:
+            self.repair_id = repair_id
         if item_id:
             for item in monday_client.get_items(ids=[item_id], limit=1):
                 self.item = item
@@ -2329,8 +2374,11 @@ class InventoryItem():
                     setattr(self, option[0], getattr(column, option[2]))
         if not self.supply_price:
             self.supply_price = self.item.get_column_value(id="supply_price").number
-        self.linked_items = self.check_linked_products(self.sku)
+        self.linked_items = None
         self.parent_product = False
+            
+
+            
 
     def check_linked_products(self, sku):
         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
@@ -2339,6 +2387,18 @@ class InventoryItem():
             return [self.item]
         elif len(links) > 1:
             return links
+        
+    def stock_check(self):
+        if not self.parent_id:
+            return False
+        else:
+            self.get_parent()
+
+            result = self.parent_product.check_stock()
+                
+            return result    
+                    
+
 
     def get_parent(self):
         if not self.parent_id:
@@ -2380,6 +2440,7 @@ class InventoryItem():
             print("Found Multiple Pulses on Parent Board")
             return False
         names = []
+        self.check_linked_products()
         for item in self.linked_items:
             item.change_column_value(column_id="text1", column_value=parent.id)
             names.append(item.name)
@@ -2400,7 +2461,8 @@ class ParentProduct():
         ["sku", "better_sku", "text"],
         ["model", "type", "text"],
         ["stock_level", "inventory_oc_walk_in", "number"],
-        ["add_quantity", "numbers", "number"]
+        ["add_quantity", "numbers", "number"],
+        ["tracking", "text", 'text']
     ]
     price_key = {
         "Glass Only": "numbers7",
@@ -2446,8 +2508,21 @@ class ParentProduct():
         except TypeError:
             self.stock_level = int(0)
 
+            
+    def check_stock(self):
+        
+        stats = {
+            "name": self.name,
+            "stock": int(self.stock_level),
+            "tracked": self.tracking
+        }
+        
+        return stats
+        
+
     def add_to_parents_board(self, inventory_item):
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
+        inventory_item.check_linked_products()
         if len(inventory_item.linked_items) > 1:
             col_vals["text3"] = "Required"
         col_vals["status"] = {"label": inventory_item.category}
