@@ -11,6 +11,7 @@ from flask import Flask, request
 
 from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit
 from manage import manager
+import keys
 
 # APP SET UP
 app = Flask(__name__)
@@ -364,11 +365,15 @@ def stock_checker():
     else:
         data = data[1]
 
-    repair = Repair(monday=int(data["event"]["pulseId"]))
-    repair.monday.stock_checker(user_id=int(data["event"]["userId"]))
+    user_id = int(data["event"]["userId"])
+
+    if user_id in keys.monday.user_ids:
+        print("Stock Column Adjusted By System -- Ignored")
+    else:
+        repair = Repair(monday=int(data["event"]["pulseId"]))
+        repair.monday.stock_checker(user_id=int(data["event"]["userId"]))
 
     return 'Stock Check Route Complete'
-
 
 # Stock Orders Received
 @app.route("/monday/stock/received", methods=["POST"])
