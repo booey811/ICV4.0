@@ -2554,12 +2554,6 @@ class ParentProduct():
             )
             return False
 
-        elif self.add_quantity == 0:
-            manager.add_update(
-                self.id,
-                "error",
-                notify=["Unable to include Stock Count for {}. You have set the count quantity as 0, so please check and try again".format(self.name), self.user_id]
-            )
         else:
             count = CountItem(create_from_inventory=self)
             count.add_to_count_board()
