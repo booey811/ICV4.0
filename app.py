@@ -363,14 +363,12 @@ def stock_checker():
         return data[1]
     else:
         data = data[1]
-    
-    pprint(data)
-    
-    break
-        
+
     repair = Repair(monday=int(data["event"]["pulseId"]))
     repair.monday.stock_checker(user_id=int(data["event"]["userId"]))
-        
+
+    return 'Stock Check Route Complete'
+
 
 # Stock Orders Received
 @app.route("/monday/stock/received", methods=["POST"])

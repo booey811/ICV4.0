@@ -1346,23 +1346,23 @@ class Repair():
 
                     log = self.parent.boards["new_sales"].add_item(item_name=self.name, column_values=col_vals)
                     log.add_update(update)
-                    
+
         def stock_checker(self, user_id):
-            
+
             repair_stats = []
             tracked = False
             warning = False
-            
+
             for item in self.create_inventory_items():
                 repair_stats.append(item.stock_check())
-                
+
             for item in repair_stats:
                 if item["tracked"]:
                     tracked = True
-                    
+
                 if item["stock"] < 5:
                     warning = True
-                    
+
             if tracked:
                 update = 'Estimated Stock Levels:\n\n{}'.format("\n".join([str(item["name"]) + ': ' + str(item['stock'])]))
             else:
@@ -1377,15 +1377,15 @@ class Repair():
                     update=update,
                     checkbox=['check3', False]
                 )
-                
+
             else:
                 manager.add_update(
                     self.id,
                     'system',
                     notify=['There is enough stock for the {} repair'.format(self.name), user_id],
                     checkbox=['check3', False]
-                )               
-                
+                )
+
 
 
         def create_sale_stats(self, inventory_items):
@@ -2352,7 +2352,7 @@ class InventoryItem():
     }
 
     def __init__(self, item_id=False, item_object=False, refurb=False, repair_id=False):
-        
+
         # Normal Set Up
         if repair_id:
             self.repair_id = repair_id
@@ -2376,9 +2376,9 @@ class InventoryItem():
             self.supply_price = self.item.get_column_value(id="supply_price").number
         self.linked_items = None
         self.parent_product = False
-            
 
-            
+
+
 
     def check_linked_products(self, sku):
         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
@@ -2387,7 +2387,7 @@ class InventoryItem():
             return [self.item]
         elif len(links) > 1:
             return links
-        
+
     def stock_check(self):
         if not self.parent_id:
             return False
@@ -2395,9 +2395,9 @@ class InventoryItem():
             self.get_parent()
 
             result = self.parent_product.check_stock()
-                
-            return result    
-                    
+
+            return result
+
 
 
     def get_parent(self):
@@ -2508,17 +2508,17 @@ class ParentProduct():
         except TypeError:
             self.stock_level = int(0)
 
-            
+
     def check_stock(self):
-        
+
         stats = {
             "name": self.name,
             "stock": int(self.stock_level),
             "tracked": self.tracking
         }
-        
+
         return stats
-        
+
 
     def add_to_parents_board(self, inventory_item):
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
@@ -2567,7 +2567,8 @@ class ParentProduct():
             self.item.change_multiple_column_values({
                 "numbers": 0,
                 "status5": {"label": "Counted Today"},
-                "inventory_oc_walk_in": new_stock
+                "inventory_oc_walk_in": new_stock,
+                "text": 'Yes'
             })
 
 
