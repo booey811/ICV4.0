@@ -1360,6 +1360,8 @@ class Repair():
 
             if len(inventory_items) != len(self.repairs):
                 not_complete = True
+            else:
+                not_complete = False
 
             for item in repair_stats:
                 if item["tracked"]:
