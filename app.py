@@ -11,6 +11,7 @@ from flask import Flask, request
 
 from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit
 from manage import manager
+import keys
 
 # APP SET UP
 app = Flask(__name__)
@@ -352,6 +353,27 @@ def refurb_unit_sold():
     refurb.refurb_unit_sold()
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Refurb Complete & Calculations Route Complete"
+
+# Stock Check
+@app.route("/monday/stock/check", methods=["POST"])
+def stock_checker():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    user_id = int(data["event"]["userId"])
+
+    if user_id in keys.monday.user_ids:
+        print("Stock Column Adjusted By System -- Ignored")
+    else:
+        repair = Repair(monday=int(data["event"]["pulseId"]))
+        repair.monday.stock_checker(user_id=int(data["event"]["userId"]))
+
+    return 'Stock Check Route Complete'
 
 # Stock Orders Received
 @app.route("/monday/stock/received", methods=["POST"])
