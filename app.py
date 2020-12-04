@@ -608,12 +608,20 @@ def stuart_test_route():
 
     if data["type"] == 'update':
 
+        if data["pickupAt"]:
+            # Has Been Picked Up
+            print("Has Been Picked Up")
+            pass
+
+        elif data["dropoffAt"]:
+            # Has Been Delivered
+            print("Has Been Delivered")
+
         job_id = data["data"]["job"]["deliveries"][0]["id"]
         stuart = StuartClient()
         stuart.add_to_stuart_data(job_id, data)
-        print(type(data))
         pprint(data)
-        print(data["type"])
+
 
     return "Stuart Webhook Route Complete"
 

@@ -2877,9 +2877,29 @@ class StuartClient():
         name = str(repair_object.monday.name) + " " + direction.capitalize()
         if not self.production:
             name += " {}".format("SANDBOX")
+
+        booking_hour = int(datetime.now().hour)
+        booking_minute = int(datetime.now().minute)
+
+        cost_ex = int(job_info['pricing']['price_tax_excluded'])
+        vat = int(job_info['pricing']['tax_amount'])
+
+        distance = int(job_info['distance'])
+
+        assignment_code = job_info['assignment_code']
+
+        estimated_time = int(job_info['duration'])
+
         col_vals = {
-            "text": str(job_info["id"])
+            "text": str(job_info["id"]),
+            'hour': {"hour": booking_hour, 'minute': booking_minute},
+            'numbers': cost_ex,
+            'numbers8': vat,
+            'numbers_1': distance,
+            'numbers7': estimated_time,
+            'text9': assignment_code
         }
+
         item = self.boards["stuart_dump"].add_item(item_name=name, column_values=col_vals)
         item.add_update("\n".join([str(item) + ": " + str(job_info[item]) for item in job_info]))
 
