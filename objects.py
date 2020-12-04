@@ -2450,8 +2450,8 @@ class InventoryItem():
             print("Found Multiple Pulses on Parent Board")
             return False
         names = []
-        self.check_linked_products(self.sku)
-        for item in self.linked_items:
+        linked_items = self.check_linked_products(self.sku)
+        for item in linked_items:
             item.change_column_value(column_id="text1", column_value=parent.id)
             names.append(item.name)
         if len(names) > 1:
@@ -2532,8 +2532,8 @@ class ParentProduct():
 
     def add_to_parents_board(self, inventory_item):
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
-        inventory_item.check_linked_products(self.sku)
-        if len(inventory_item.linked_items) > 1:
+        linked_items = inventory_item.check_linked_products(self.sku)
+        if len(linked_items) > 1:
             col_vals["text3"] = "Required"
         col_vals["status"] = {"label": inventory_item.category}
         col_vals["status6"] = {"label": inventory_item.type}
