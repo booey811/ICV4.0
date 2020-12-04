@@ -14,12 +14,13 @@ gabe_id = 4251271
 
 # =====================================================================================================================
 # =====================================================================================================================
+print("Begin INIT")
+test = Repair(monday=889287132)
+print("End INIT")
 
-print("Beginning INIT")
-test = NewRefurbUnit(881443933, gabe_id)
-print("Finished INIT")
+print("Begin Process")
+test.monday.stock_checker(gabe_id)
+print("End Process")
 
-print("Starting Func")
-test.calculate_line()
-print("Ending Func")
+print()
 
