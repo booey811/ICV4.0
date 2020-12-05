@@ -174,8 +174,7 @@ def monday_status_change():
             pass
 
         elif repair.monday.status == "Book Return Courier":
-            repair.debug("STATUS - BOOK RETURN COURIER")
-            repair.monday.gophr_booking(from_client=False)
+            pass
 
         elif repair.monday.status == "Return Booked":
             pass
@@ -233,9 +232,26 @@ def book_collection():
 
     user_id = data["event"]["userId"]
 
-    repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     stuart = StuartClient()
-    stuart.arrange_courier(repair, user_id, "collecting")
+    stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "collecting")
+
+    return "Book Courier Collection Route Complete"
+
+# Status - Courier Return Booked NEW!!!!!!!!!!!!!
+@app.route("/monday/book-courier/return", methods=["POST"])
+def book_return():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    user_id = data["event"]["userId"]
+
+    stuart = StuartClient()
+    stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "delivering")
 
     return "Book Courier Collection Route Complete"
 
@@ -599,21 +615,19 @@ def gophr_webhook():
 
 # ROUTES // STUART
 # Callback Function
-@app.route("/stuart/test", methods=["POST"])
-def stuart_test_route():
-    pass
+@app.route("/stuart/updates", methods=["POST"])
+def staurt_responses():
     data = request.get_data().decode("utf-8")
 
     data = json.loads(data)
 
     if data["type"] == 'update':
 
-        if data["pickupAt"]:
+        if data['job']["status"] == 'delivering':
             # Has Been Picked Up
             print("Has Been Picked Up")
-            pass
 
-        elif data["dropoffAt"]:
+        elif data['job']["status"] == 'delivered':
             # Has Been Delivered
             print("Has Been Delivered")
 

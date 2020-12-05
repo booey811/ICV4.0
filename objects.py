@@ -1699,7 +1699,9 @@ class Repair():
                 "postcode": 360006582758,
                 "imei_sn": 360004242638,
                 "passcode": 360005102118,
+                "tracking_link": 360006704157
             }
+            
             tag_fields = {
                 "status": keys.monday.status_column_dictionary["Status"]["values"],
                 "service": keys.monday.status_column_dictionary["Service"]["values"],
@@ -2711,7 +2713,9 @@ class StuartClient():
                     update="Booking Details:\n{}".format("\n".join(update)),
                     status=["status4", "Courier Booked"]
                 )
-
+                if repair_object.zendesk:
+                    repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
+                    
                 self.dump_to_stuart_data(info, repair_object, direction)
 
                 return True
