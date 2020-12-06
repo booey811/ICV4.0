@@ -39,7 +39,7 @@ class Manager():
     def __init__(self):
         pass
 
-    def add_update(self, monday_id, user, update=False, status=False, notify=False, non_main=False):
+    def add_update(self, monday_id, user, update=False, status=False, notify=False, non_main=False, checkbox=False):
         # Select Client (Which User Will be posting updates/notificaitons)
         """Adds updates or notifies monday users, with options to adjust statuses
 
@@ -81,6 +81,26 @@ class Manager():
                 client.create_notification(text=notify[0], user_id=notify[1], target_id=monday_id, target_type=NotificationTargetType.Project)
             else:
                 print("notify list has not been provided correctly")
+                
+        # Check checkbox value if needed
+        if checkbox:
+            
+            if len(checkbox) == 2:
+                            
+                for pulse in self.monday_clients['system'][0].get_items(ids=[monday_id], limit=1):
+                    if checkbox[1]:
+                        values = {'check3': {'checked': 'true'}}
+                    elif not checkbox[1]:
+                        values = {"check3": None}
+                    item.change_multiple_column_values(values)
+                    break
+                
+                
+                
+                
+            
 
 
 manager = Manager()
+
+manager.add_update(887375617, 'system', checkbox=["check3", False])

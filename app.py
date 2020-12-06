@@ -11,6 +11,7 @@ from flask import Flask, request
 
 from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit, StuartClient
 from manage import manager
+import keys
 
 # APP SET UP
 app = Flask(__name__)
@@ -266,7 +267,6 @@ def monday_notifications_column():
         return data[1]
     else:
         data = data[1]
-
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
     new_notification = repair.monday.dropdown_value_webhook_comparison(data)
     if new_notification:
@@ -276,7 +276,6 @@ def monday_notifications_column():
         repair.monday.textlocal_notification()
     else:
         print("new notification returned false")
-
     repair.debug_print(debug=os.environ["DEBUG"])
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Monday Notificaions Column Change Route Complete"
@@ -292,9 +291,7 @@ def monday_eod_column_new():
         return data[1]
     else:
         data = data[1]
-
     repair = Repair(webhook_payload=data, monday=int(data["event"]["pulseId"]))
-
     repair.monday.adjust_stock_alt()
     print("--- %s seconds ---" % (time.time() - start_time))
     return "New End Of Day Route Complete"
@@ -391,6 +388,27 @@ def refurb_unit_sold():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Refurb Complete & Calculations Route Complete"
 
+# Stock Check
+@app.route("/monday/stock/check", methods=["POST"])
+def stock_checker():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    user_id = int(data["event"]["userId"])
+
+    if user_id in keys.monday.user_ids:
+        print("Stock Column Adjusted By System -- Ignored")
+    else:
+        repair = Repair(monday=int(data["event"]["pulseId"]))
+        repair.monday.stock_checker(user_id=int(data["event"]["userId"]))
+
+    return 'Stock Check Route Complete'
+
 # Stock Orders Received
 @app.route("/monday/stock/received", methods=["POST"])
 def stock_received():
@@ -447,8 +465,13 @@ def screen_refurbishment_complete():
     else:
         data = data[1]
     user_id = data["event"]["userId"]
-    order = ParentProduct(user_id=int(data["event"]["userId"]), item_id=int(data["event"]["pulseId"]))
-    order.refurb_order_creation()
+
+    screen = ScreenRefurb(user_id=user_id, item_id=int(data["event"]["pulseId"]))
+
+    screen.add_to_test_queue()
+
+    # order = ParentProduct(user_id=int(data["event"]["userId"]), item_id=int(data["event"]["pulseId"]))
+    # order.refurb_order_creation()
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Complete Route Completed"
 
