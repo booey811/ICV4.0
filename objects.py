@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import time
 from pprint import pprint
 from urllib import request as urlrequest
@@ -1101,7 +1101,44 @@ class Repair():
             self.item.change_multiple_column_values(values)
             self.parent.debug(end="add_to_zendesk")
 
+        def stuart_details_creation(self):
 
+            print(self.id)
+
+            address = [
+                self.address2,
+                self.address1,
+                "London",
+                self.postcode
+            ]
+            address = [line for line in address if line]
+            address_string = " ".join(address)
+
+            time = str(datetime.now().hour) + ":" + str(datetime.now().minute)
+            reference = "{} -- {}".format(self.id, str(time))
+
+            conversion = [
+                ["number", "phone"],
+                ["email", "email"],
+                ["company_name", "company"]
+            ]
+
+            details = {line[1]:getattr(self, line[0]) for line in conversion}
+
+            details["reference"] = reference
+            details["address"] = address_string
+            details["firstname"] = self.name.split()[0]
+            details["lastname"] = self.name.split()[1]
+
+            if self.status == "Book Return Courier":
+                details["direction"] = "delivering"
+            else:
+                details["direction"] = "picking"
+
+
+            pprint(details)
+
+            return details
 
         def gophr_booking(self, from_client=True):
             self.parent.debug(start="gophr_booking")
@@ -1713,7 +1750,9 @@ class Repair():
                 "postcode": 360006582758,
                 "imei_sn": 360004242638,
                 "passcode": 360005102118,
+                "tracking_link": 360006704157
             }
+            
             tag_fields = {
                 "status": keys.monday.status_column_dictionary["Status"]["values"],
                 "service": keys.monday.status_column_dictionary["Service"]["values"],
@@ -2358,6 +2397,7 @@ class InventoryItem():
         "Glass Only": "numbers7",
         "Glass & Touch": "numbers1",
         "Glass, Touch & LCD": "numbers_17",
+        "Glass, Touch & Backlight": "numbers_17",
         "China Screen": "supply_price"
     }
 
@@ -2717,3 +2757,281 @@ class ScreenRefurb():
                 "numbers6": int(parent.stock_level),
                 "numbers3": new_quantity
             })
+
+
+
+class StuartClient():
+
+    boards = {
+        "stuart_dump": manager.monday_clients["system"][0].get_board_by_id(891724597)
+    }
+
+    def __init__(self, production=False):
+        self.production = production
+        self.authenticate(production=self.production)
+
+    def authenticate(self, production=False):
+        payload = {
+            "scope": "api",
+            "grant_type": "client_credentials",
+            "client_id": os.environ["STUARTIDSAND"],
+            "client_secret": os.environ["STUARTSECRETSAND"]
+        }
+        if production:
+            url = "https://api.stuart.com/v2/ouath/token"
+            payload["client_id"] = os.environ["STUARTID"]
+            payload["client_secret"] = os.environ["STUARTSECRET"]
+        else:
+            url = "https://api.sandbox.stuart.com/oauth/token"
+        payload = json.dumps(payload)
+        headers = {'content-type': "application/json"}
+        response = requests.request('POST', url, data=payload, headers=headers)
+        info = json.loads(response.text)
+        self.token = info["access_token"]
+
+    def arrange_courier(self, repair_object, user_id, direction):
+        
+        if not repair_object.number:
+            manager.add_update(
+                repair_object.id,
+                'error',
+                notify=[
+                    'Unable to Book Courier: Please provide a phone number',
+                    user_id
+                ]
+            )
+            return False
+
+        booking_details = repair_object.monday.stuart_details_creation()
+        address_verification = self.validate_address(booking_details)
+        if address_verification == 200:
+            courier_info = self.format_details(booking_details, repair_object.monday.id, direction)
+            paramter_verification = self.validate_job_parameters(courier_info)
+            if paramter_verification == 200:
+                info = self.create_job(courier_info)
+                update = [str(item) + ": " + str(info[item]) for item in info]
+                if direction == 'collecting':
+                    status = ["status4", "Courier Booked"]
+                else:
+                    status = ["status4", "Return Booked"]
+                manager.add_update(
+                    repair_object.monday.id,
+                    "system",
+                    update="Booking Details:\n{}".format("\n".join(update)),
+                    status=status
+                )
+                if repair_object.zendesk:
+                    repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
+                    
+                self.dump_to_stuart_data(info, repair_object, direction)
+
+                return True
+
+            elif parameter_verification[0] in [422, 401]:
+                update = [item + ": " + booking_details[item] for item in booking_details]
+                manager.add_update(
+                    repair_object.monday.id,
+                    "error",
+                    notify=["There is an issue with the address you have entered. Please check item updates", user_id],
+                    update="Booking Details:\n{}\n\n{}".format("\n".join(update), address_verification[1])
+                )
+                return False
+
+        elif address_verification[0] in [422, 401]:
+            update = [item + ": " + booking_details[item] for item in booking_details]
+            manager.add_update(
+                repair_object.monday.id,
+                "error",
+                notify=["There is an issue with the address you have entered. Please check item updates", user_id],
+                update="Booking Details:\n{}\n\n{}".format("\n".join(update), address_verification[1])
+            )
+            return False
+
+        else:
+            print("Else Route: arrange_courier")
+
+
+    def validate_address(self, client_details):
+        if self.production:
+            url = "https://api.stuart.com/v2/addresses/validate"
+        else:
+            url = "https://sandbox-api.stuart.com/v2/addresses/validate"
+
+        payload = {
+            "address": client_details["address"],
+            "type": client_details["direction"],
+            "phone": client_details["phone"]
+        }
+
+        headers = {'authorization': "Bearer {}".format(self.token)}
+        response = requests.request("GET", url, data=payload, headers=headers)
+        job_info = json.loads(response.text)
+
+        return self.validation_return(response, job_info)
+
+    def validation_return(self, response, job_info):
+
+        if response.status_code == 422:
+            return [422, job_info["message"]]
+        elif response.status_code == 401:
+            return [401, job_info["message"]]
+        elif response.status_code == 200:
+            return 200
+
+    def validate_job_parameters(self, client_details):
+        if self.production:
+            url = "https://api.stuart.com/v2/jobs/validate"
+        else:
+            url = "https://sandbox-api.stuart.com/v2/jobs/validate"
+
+        payload = json.dumps(client_details)
+
+        headers = {
+            'content-type': "application/json",
+            'authorization': "Bearer {}".format(self.token)
+            }
+        response = requests.request("POST", url, data=payload, headers=headers)
+        job_info = json.loads(response.text)
+        return self.validation_return(response, job_info)
+
+
+
+    def format_details(self, client_details, monday_id, direction):
+        """Takes delivery details (client address, phone, email, direction) and creates the structure required for the create_job function
+
+        Args:
+            client_details (dict): Dictionary for client details
+            monday_object (MondayRepair): Monday Object (For Status and ID Info)
+
+        Returns:
+            dict: Data structure for create_job func
+        """
+        icorrect = {
+            'address': 'iCorrect 12 Margaret Street London W1W 8JQ',
+            'email': 'support@icorrect.co.uk',
+            'phone': '02070998517',
+            'firstname': 'Gabriel',
+            'lastname': 'Barr',
+            "reference": client_details["reference"],
+            "company": "iCorrect Ltd"
+        }
+
+        assignment_code = "{} {}".format(monday_id, date.today())
+
+        if direction == 'delivering':
+            collect = icorrect
+            deliver = client_details
+            assignment_code += "*RETURN"
+
+        elif direction == "collecting":
+            collect = client_details
+            deliver = icorrect
+            assignment_code += "*COLLECTION"
+        result = {
+            "job": {
+                "assignment_code": assignment_code,
+                "pickups": [{
+                    "address": collect["address"],
+                    # "comment": "{}",
+                    "contact": {
+                        "firstname": collect["firstname"],
+                        "lastname": collect["lastname"],
+                        "phone": collect["phone"],
+                        "email": collect["email"],
+                        "company": collect["company"]
+                    }
+                }],
+                "dropoffs": [{
+                    "package_type": "small",
+                    # "package_description": "The blue one.",
+                    "client_reference": deliver["reference"],
+                    "address": deliver["address"],
+                    # "comment": "2nd floor on the left",
+                    "contact": {
+                        "firstname": deliver["firstname"],
+                        "lastname": deliver["lastname"],
+                        "phone": deliver["phone"],
+                        "email": deliver["email"],
+                        "company": deliver["company"]
+                    }
+                }]
+            }
+        }
+        return result
+
+    def create_job(self, payload, production=False):
+        """Takes a dictionoary of job details and sends a request
+
+        Args:
+            payload (dictionary): Dictionary of details returned by the format_details function
+        """
+
+        if production:
+            url = "https://api.stuart.com/v2/jobs"
+        else:
+            url = "https://sandbox-api.stuart.com/v2/jobs"
+
+        payload = json.dumps(payload)
+
+        headers = {
+            'content-type': "application/json",
+            'authorization': "Bearer {}".format(self.token)
+            }
+
+        response = requests.request("POST", url, data=payload, headers=headers)
+
+        job_info = json.loads(response.text)
+
+        return job_info
+
+    def dump_to_stuart_data(self, job_info, repair_object, direction):
+        name = str(repair_object.monday.name) + " " + direction.capitalize()
+        if not self.production:
+            name += " {}".format("SANDBOX")
+
+        booking_hour = int(datetime.now().hour)
+        booking_minute = int(datetime.now().minute)
+
+        cost_ex = int(job_info['pricing']['price_tax_excluded'])
+        vat = int(job_info['pricing']['tax_amount'])
+
+        distance = int(job_info['distance'])
+
+        assignment_code = job_info['assignment_code']
+
+        estimated_time = int(job_info['duration'])
+
+        col_vals = {
+            "text": str(job_info["id"]),
+            'hour': {"hour": booking_hour, 'minute': booking_minute},
+            'numbers': cost_ex,
+            'numbers8': vat,
+            'numbers_1': distance,
+            'numbers7': estimated_time,
+            'text9': assignment_code
+        }
+
+        item = self.boards["stuart_dump"].add_item(item_name=name, column_values=col_vals)
+        item.add_update("\n".join([str(item) + ": " + str(job_info[item]) for item in job_info]))
+
+    def add_to_stuart_data(self, job_id, data, column=False):
+
+        search_val = create_column_value(id="text", column_type=ColumnType.text, value=str(job_id))
+        results = self.boards["stuart_dump"].get_items_by_column_values(search_val)
+        if len(results) == 0:
+            print("No Pulse Found on Stuart Data")
+            return False
+        elif len(results) == 1:
+            print('FOUND ON STUART BOARD')
+            for pulse in results:
+                item = pulse
+            hour = int(datetime.now().hour)
+            minute = int(datetime.now().minute)
+            if column:
+                item.change_multiple_column_values({
+                    column: {'hour': hour, 'minute': minute}
+                })
+            item.add_update(data)
+        elif len(results) > 1:
+            print("Too Many Pulses Found on Stuart Data")
+            return False
