@@ -620,21 +620,26 @@ def staurt_responses():
     data = request.get_data().decode("utf-8")
 
     data = json.loads(data)
+    
+    if data['event'] == 'delivery' and data['type'] == 'update':
+        
+        print(data)
 
-    if data["type"] == 'update':
-
-        if data['job']["status"] == 'delivering':
-            # Has Been Picked Up
+        job_id = data["data"]["id"]
+        stuart = StuartClient()
+        if data['data']["status"] == 'delivering':
+            print('COLLECTION UPDATE')
+            stuart.add_to_stuart_data(job_id, data, column='booking_time')
             print("Has Been Picked Up")
 
-        elif data['job']["status"] == 'delivered':
-            # Has Been Delivered
+        elif data['data']["status"] == 'delivered':
+            print('DELIVERING UPDATE')
+            stuart.add_to_stuart_data(job_id, data, column='collection_time')
             print("Has Been Delivered")
 
-        job_id = data["data"]["job"]["deliveries"][0]["id"]
-        stuart = StuartClient()
-        stuart.add_to_stuart_data(job_id, data)
-        pprint(data)
+
+
+
 
 
     return "Stuart Webhook Route Complete"

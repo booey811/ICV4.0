@@ -2697,6 +2697,17 @@ class StuartClient():
         self.token = info["access_token"]
 
     def arrange_courier(self, repair_object, user_id, direction):
+        
+        if not repair_object.number:
+            manager.add_update(
+                repair_object.id,
+                'error',
+                notify=[
+                    'Unable to Book Courier: Please provide a phone number',
+                    user_id
+                ]
+            )
+            return False
 
         booking_details = repair_object.monday.stuart_details_creation()
         address_verification = self.validate_address(booking_details)
@@ -2706,12 +2717,15 @@ class StuartClient():
             if paramter_verification == 200:
                 info = self.create_job(courier_info)
                 update = [str(item) + ": " + str(info[item]) for item in info]
-                print(update)
+                if direction == 'collecting':
+                    status = ["status4", "Courier Booked"]
+                else:
+                    status = ["status4", "Return Booked"]
                 manager.add_update(
                     repair_object.monday.id,
                     "system",
                     update="Booking Details:\n{}".format("\n".join(update)),
-                    status=["status4", "Courier Booked"]
+                    status=status
                 )
                 if repair_object.zendesk:
                     repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
@@ -2907,17 +2921,23 @@ class StuartClient():
         item = self.boards["stuart_dump"].add_item(item_name=name, column_values=col_vals)
         item.add_update("\n".join([str(item) + ": " + str(job_info[item]) for item in job_info]))
 
-    def add_to_stuart_data(self, job_id, data):
+    def add_to_stuart_data(self, job_id, data, column=False):
 
-        search_val = create_column_value(id="text", column_type=ColumnType.text, value=job_id)
+        search_val = create_column_value(id="text", column_type=ColumnType.text, value=str(job_id))
         results = self.boards["stuart_dump"].get_items_by_column_values(search_val)
         if len(results) == 0:
             print("No Pulse Found on Stuart Data")
             return False
         elif len(results) == 1:
+            print('FOUND ON STUART BOARD')
             for pulse in results:
                 item = pulse
-            print(item.name)
+            hour = int(datetime.now().hour)
+            minute = int(datetime.now().minute)
+            if column:
+                item.change_multiple_column_values({
+                    column: {'hour': hour, 'minute': minute}
+                })
             item.add_update(data)
         elif len(results) > 1:
             print("Too Many Pulses Found on Stuart Data")
