@@ -9,7 +9,7 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit, StuartClient
 from manage import manager
 import keys
 
@@ -139,8 +139,7 @@ def monday_status_change():
             pass
 
         elif repair.monday.status == "Book Courier":
-            repair.debug("STATUS - BOOK COURIER")
-            repair.monday.gophr_booking(from_client=True)
+            pass
 
         elif repair.monday.status == "Courier Booked":
             pass
@@ -176,8 +175,7 @@ def monday_status_change():
             pass
 
         elif repair.monday.status == "Book Return Courier":
-            repair.debug("STATUS - BOOK RETURN COURIER")
-            repair.monday.gophr_booking(from_client=False)
+            pass
 
         elif repair.monday.status == "Return Booked":
             pass
@@ -221,6 +219,42 @@ def monday_status_change():
     repair.debug_print(debug=os.environ["DEBUG"])
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Status Change Route Completed Successfully"
+
+# Status - Courier Booked NEW!!!!!!!!!!!!!
+@app.route("/monday/book-courier/collection", methods=["POST"])
+def book_collection():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    user_id = data["event"]["userId"]
+
+    stuart = StuartClient()
+    stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "collecting")
+
+    return "Book Courier Collection Route Complete"
+
+# Status - Courier Return Booked NEW!!!!!!!!!!!!!
+@app.route("/monday/book-courier/return", methods=["POST"])
+def book_return():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    user_id = data["event"]["userId"]
+
+    stuart = StuartClient()
+    stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "delivering")
+
+    return "Book Courier Collection Route Complete"
 
 # Notifications Column
 @app.route("/monday/notifications", methods=["POST"])
@@ -600,6 +634,36 @@ def gophr_webhook():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Gophr Webhook Route Completed Successfully"
+
+
+# ROUTES // STUART
+# Callback Function
+@app.route("/stuart/updates", methods=["POST"])
+def staurt_responses():
+    data = request.get_data().decode("utf-8")
+
+    data = json.loads(data)
+    
+    if data['event'] == 'job' and data['type'] == 'update':
+
+        job_id = data["data"]["id"]
+        stuart = StuartClient()
+        if data['data']['currentDelivery']["status"] == 'delivering':
+            print('COLLECTION UPDATE')
+            stuart.add_to_stuart_data(job_id, data, column='booking_time')
+            print("Has Been Picked Up")
+
+        elif data['data']['currentDelivery']["status"] == 'delivered':
+            print('DELIVERING UPDATE')
+            stuart.add_to_stuart_data(job_id, data, column='collection_time')
+            print("Has Been Delivered")
+
+
+
+
+
+
+    return "Stuart Webhook Route Complete"
 
 # Top Line Driver Code
 if __name__ == "__main__":
