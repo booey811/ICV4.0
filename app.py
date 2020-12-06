@@ -621,18 +621,16 @@ def staurt_responses():
 
     data = json.loads(data)
     
-    if data['event'] == 'delivery' and data['type'] == 'update':
-        
-        print(data)
+    if data['event'] == 'job' and data['type'] == 'update':
 
         job_id = data["data"]["id"]
         stuart = StuartClient()
-        if data['data']["status"] == 'delivering':
+        if data['data']['currentDelivery']["status"] == 'delivering':
             print('COLLECTION UPDATE')
             stuart.add_to_stuart_data(job_id, data, column='booking_time')
             print("Has Been Picked Up")
 
-        elif data['data']["status"] == 'delivered':
+        elif data['data']['currentDelivery']["status"] == 'delivered':
             print('DELIVERING UPDATE')
             stuart.add_to_stuart_data(job_id, data, column='collection_time')
             print("Has Been Delivered")
