@@ -233,7 +233,7 @@ def book_collection():
 
     user_id = data["event"]["userId"]
 
-    stuart = StuartClient()
+    stuart = StuartClient(production=True)
     stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "collecting")
 
     return "Book Courier Collection Route Complete"
@@ -251,7 +251,7 @@ def book_return():
 
     user_id = data["event"]["userId"]
 
-    stuart = StuartClient()
+    stuart = StuartClient(production=True)
     stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "delivering")
 
     return "Book Courier Collection Route Complete"
