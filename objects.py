@@ -37,9 +37,8 @@ class Repair():
 
     # Monday Boards
     boards = {
-        "logging": monday_client.get_board_by_id(id=736027251),
+        # "logging": monday_client.get_board_by_id(id=736027251),
         "inventory": monday_client.get_board_by_id(id=868065293),
-        "inventory2": monday_client.get_board_by_id(id=703218230),
         "main": monday_client.get_board_by_id(id=349212843),
         "usage": monday_client.get_board_by_id(id=722437885),
         "zendesk_tags": monday_client.get_board_by_id(id=765453815),
@@ -2768,26 +2767,36 @@ class StuartClient():
 
     def __init__(self, production=False):
         self.production = production
-        self.authenticate(production=self.production)
+        self.authenticate()
 
-    def authenticate(self, production=False):
-        payload = {
-            "scope": "api",
-            "grant_type": "client_credentials",
-            "client_id": os.environ["STUARTIDSAND"],
-            "client_secret": os.environ["STUARTSECRETSAND"]
-        }
-        if production:
-            url = "https://api.stuart.com/v2/ouath/token"
-            payload["client_id"] = os.environ["STUARTID"]
-            payload["client_secret"] = os.environ["STUARTSECRET"]
+    def authenticate(self):
+
+        if self.production:
+            url = "https://api.stuart.com/oauth/token"
+            payload = "client_id={}&client_secret={}&scope=api&grant_type=client_credentials".format(os.environ["STUARTID"], os.environ["STUARTSECRET"])
+            headers = {'content-type': 'application/x-www-form-urlencoded'}
+            response = requests.request("POST", url, data=payload, headers=headers)
+
         else:
+            payload = {
+                "scope": "api",
+                "grant_type": "client_credentials",
+                "client_id": os.environ["STUARTIDSAND"],
+                "client_secret": os.environ["STUARTSECRETSAND"]
+            }            
             url = "https://api.sandbox.stuart.com/oauth/token"
-        payload = json.dumps(payload)
-        headers = {'content-type': "application/json"}
+            payload = json.dumps(payload)
+            headers = {'content-type': "application/json"}
+
         response = requests.request('POST', url, data=payload, headers=headers)
+        print(response)
+        print(response.text)
         info = json.loads(response.text)
         self.token = info["access_token"]
+        print()
+        print()
+        print()
+        print(self.token)
 
     def arrange_courier(self, repair_object, user_id, direction):
         
