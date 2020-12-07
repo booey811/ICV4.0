@@ -414,7 +414,10 @@ class Repair():
                 # Extract IMEI
                 if product["note"]:
                     if any(option in product["note"] for option in ["IMEI", "SN", "S/N"]):
-                        self.imei_sn = product["note"].split(":")[1].strip()
+                        try:
+                            self.imei_sn = product["note"].split(":")[1].strip()
+                        except IndexError:
+                            self.pre_checks.append(product["note"])
                 # Check if product is a pre-check
                 if product["product_id"] in keys.vend.pre_checks:
                     self.pre_checks.append(keys.vend.pre_checks[product["product_id"]])
