@@ -198,8 +198,8 @@ class Repair():
             if self.zendesk:
                 col_vals["text1"] = str(self.zendesk.ticket_id)
             time = str(now.strftime("%X"))
-            log = self.boards["logging"].add_item(item_name=time + " // " + str(self.name) + " -- FROM APPV4", column_values=col_vals)
-            log.add_update("\n".join(self.debug_string))
+            # log = self.boards["logging"].add_item(item_name=time + " // " + str(self.name) + " -- FROM APPV4", column_values=col_vals)
+            # log.add_update("\n".join(self.debug_string))
         elif debug == "console":
             print("\n".join(self.debug_string))
         else:
