@@ -1464,7 +1464,10 @@ class Repair():
             inventory_items = []
             for repair in self.repairs:
                 if repair == 35:
-                    inventory_items.append(InventoryItem(item_id=827372849))
+                    inventory_items.append(InventoryItem(item_id=901008625))
+                    continue
+                if repair == 43:
+                    inventory_items.append(InventoryItem(item_id=901006495))
                     continue
                 search = tuple([(self.device[0],), (repair,), (self.m_colour,)])
                 col_val = create_column_value(id="text99", column_type=ColumnType.text, value=search)
