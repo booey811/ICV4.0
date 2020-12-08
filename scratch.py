@@ -18,3 +18,6 @@ gabe_id = 4251271
 
 stuart = StuartClient(production=True)
 
+repair = Repair(monday=894398624)
+
+stuart.arrange_courier(repair, gabe_id, 'delivering')

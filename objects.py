@@ -2832,8 +2832,8 @@ class StuartClient():
                     update="Booking Details:\n{}".format("\n".join(update)),
                     status=status
                 )
-                if repair_object.zendesk:
-                    repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
+                # if repair_object.zendesk:
+                #     repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
 
                 self.dump_to_stuart_data(info, repair_object, direction)
 
@@ -2978,17 +2978,21 @@ class StuartClient():
             payload (dictionary): Dictionary of details returned by the format_details function
         """
 
-        if production:
+        if self.production:
             url = "https://api.stuart.com/v2/jobs"
         else:
             url = "https://sandbox-api.stuart.com/v2/jobs"
 
         payload = json.dumps(payload)
 
+        print(self.token)
+
         headers = {
             'content-type': "application/json",
-            'authorization': "Bearer {}".format(self.token)
+            'authorization': str("Bearer ") + str(self.token)
             }
+
+        print(headers)
 
         response = requests.request("POST", url, data=payload, headers=headers)
 
