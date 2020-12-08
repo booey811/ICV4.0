@@ -2818,26 +2818,47 @@ class StuartClient():
         address_verification = self.validate_address(booking_details)
         if address_verification == 200:
             courier_info = self.format_details(booking_details, repair_object.monday.id, direction)
-            paramter_verification = self.validate_job_parameters(courier_info)
-            if paramter_verification == 200:
+            parameter_verification = self.validate_job_parameters(courier_info)
+            if parameter_verification == 200:
                 info = self.create_job(courier_info)
-                update = [str(item) + ": " + str(info[item]) for item in info]
-                if direction == 'collecting':
-                    status = ["status4", "Courier Booked"]
+                if info[0] in [401, 422, 503]:
+                    manager.add_update(
+                        repair_object.monday.id,
+                        "error",
+                        update="Unable to Book Courier - Gabe will look into it",
+                        notify=["Unable to book courier - failure in create_job: {}".format(info), keys.monday.user_ids['gabe']],
+                        status=['status4', '!! See Updates !!']
+                    )
+                    return False
+
+                elif info[0] == 201:
+                    update = [str(item) + ": " + str(info[item]) for item in info]
+                    if direction == 'collecting':
+                        status = ["status4", "Courier Booked"]
+                    else:
+                        status = ["status4", "Return Booked"]
+                    manager.add_update(
+                        repair_object.monday.id,
+                        "system",
+                        update="Booking Details:\n{}".format("\n".join(update)),
+                        status=status
+                    )
+
+                    if repair_object.zendesk:
+                        repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
+
+                    self.dump_to_stuart_data(info, repair_object, direction)
+                    return True
+
                 else:
-                    status = ["status4", "Return Booked"]
-                manager.add_update(
-                    repair_object.monday.id,
-                    "system",
-                    update="Booking Details:\n{}".format("\n".join(update)),
-                    status=status
-                )
-                # if repair_object.zendesk:
-                #     repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
-
-                self.dump_to_stuart_data(info, repair_object, direction)
-
-                return True
+                    manager.add_update(
+                        repair_object.monday.id,
+                        "error",
+                        notify=["There is an issue with the arrangement of this courier", keys.monday.user_ids['gabe']],
+                        update="There was an issue while trying to book this courier - Gabe is looking into it",
+                        status=['status4', '!! See Updates !!']
+                    )
+                    return False
 
             elif parameter_verification[0] in [422, 401]:
                 update = [item + ": " + booking_details[item] for item in booking_details]
@@ -2845,7 +2866,8 @@ class StuartClient():
                     repair_object.monday.id,
                     "error",
                     notify=["There is an issue with the address you have entered. Please check item updates", user_id],
-                    update="Booking Details:\n{}\n\n{}".format("\n".join(update), address_verification[1])
+                    update="Booking Details:\n{}\n\n{}".format("\n".join(update), address_verification[1]),
+                    status=['status4', '!! See Updates !!']
                 )
                 return False
 
@@ -2855,7 +2877,8 @@ class StuartClient():
                 repair_object.monday.id,
                 "error",
                 notify=["There is an issue with the address you have entered. Please check item updates", user_id],
-                update="Booking Details:\n{}\n\n{}".format("\n".join(update), address_verification[1])
+                update="Booking Details:\n{}\n\n{}".format("\n".join(update), address_verification[1]),
+                status=['status4', '!! See Updates !!']
             )
             return False
 
@@ -2888,7 +2911,7 @@ class StuartClient():
         elif response.status_code == 401:
             return [401, job_info["message"]]
         elif response.status_code == 200:
-            return 200
+            return [200, job_info]
 
     def validate_job_parameters(self, client_details):
         if self.production:
@@ -2998,7 +3021,7 @@ class StuartClient():
 
         job_info = json.loads(response.text)
 
-        return job_info
+        return [response.status_code, job_info]
 
     def dump_to_stuart_data(self, job_info, repair_object, direction):
         name = str(repair_object.monday.name) + " " + direction.capitalize()
