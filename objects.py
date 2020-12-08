@@ -1754,7 +1754,7 @@ class Repair():
                 "passcode": 360005102118,
                 "tracking_link": 360006704157
             }
-            
+
             tag_fields = {
                 "status": keys.monday.status_column_dictionary["Status"]["values"],
                 "service": keys.monday.status_column_dictionary["Service"]["values"],
@@ -2786,7 +2786,7 @@ class StuartClient():
                 "grant_type": "client_credentials",
                 "client_id": os.environ["STUARTIDSAND"],
                 "client_secret": os.environ["STUARTSECRETSAND"]
-            }            
+            }
             url = "https://api.sandbox.stuart.com/oauth/token"
             payload = json.dumps(payload)
             headers = {'content-type': "application/json"}
@@ -2802,7 +2802,7 @@ class StuartClient():
         print(self.token)
 
     def arrange_courier(self, repair_object, user_id, direction):
-        
+
         if not repair_object.number:
             manager.add_update(
                 repair_object.id,
@@ -2834,7 +2834,7 @@ class StuartClient():
                 )
                 if repair_object.zendesk:
                     repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
-                    
+
                 self.dump_to_stuart_data(info, repair_object, direction)
 
                 return True
