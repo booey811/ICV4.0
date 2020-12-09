@@ -1,23 +1,21 @@
-
-import requests
-import json
-import os
 from pprint import pprint
 
-from moncli import create_column_value, ColumnType
 
 import settings
-from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem, CountItem, ParentProduct, RefurbGroup, NewRefurbUnit, StuartClient
-from manage import manager
+import objects
 import keys.messages
 
 gabe_id = 4251271
 
+
+# Failures: None, 5
+
+# Success: 3, 16
+
+
 # =====================================================================================================================
 # =====================================================================================================================
 
-stuart = StuartClient(production=True)
+test = objects.MainRefurbComplete(904688799, gabe_id)
 
-repair = Repair(monday=900548180)
-
-stuart.arrange_courier(repair, gabe_id, 'delivering')
+pprint(test.__dict__)

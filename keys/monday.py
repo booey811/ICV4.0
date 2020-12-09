@@ -2,6 +2,13 @@ user_ids = {
         "systems": 12304876, "errors": 15365289, "emails": 11581083, 'gabe': 4251271
 }
 
+main_groups = {
+    'today': 'new_group70029',
+    'meesha': 'new_group15927',
+    'cajigal': 'new_group39025',
+    'mcadam': 'new_group38737',
+}
+
 col_ids_to_attributes = {
     'check': {'title': 'Invoiced?', 'value_type': ['checked'], 'attribute': "invoiced"},
     'link1': {'title': 'Ticket', 'value_type': ['url', 'text'], 'attribute': "zendesk_url"},

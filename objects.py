@@ -7,7 +7,7 @@ from pprint import pprint
 from urllib import request as urlrequest
 from urllib import parse
 
-from moncli import MondayClient, create_column_value, ColumnType, NotificationTargetType
+from moncli import MondayClient, create_column_value, ColumnType, NotificationTargetType, PeopleKind
 from moncli.api_v2.exceptions import MondayApiError
 from zenpy import Zenpy
 from zenpy.lib import exception as zenpyExceptions
@@ -3077,3 +3077,248 @@ class StuartClient():
         elif len(results) > 1:
             print("Too Many Pulses Found on Stuart Data")
             return False
+
+
+class RefurbRepair():
+
+    boards = {
+        'main': monday_client.get_board_by_id(349212843),
+        'refurbs': monday_client.get_board_by_id(876594047)
+    }
+
+    basic_stats = [
+        ['model', 'status4', 'text'],
+        ['grade', 'status_16', 'text'],
+        ['colour', 'status2', 'text'],
+        ['phone_check', 'status_14', 'text'],
+        ['imei', 'text3', 'text'],
+        ['code', 'text0', 'text'],
+        ['phase', 'status_122', 'text'],
+        ['status', 'status5', 'text']
+    ]
+
+    phase_face_id_raw = [
+        ['faceid', 'front_screen5', 'index', 99]
+    ]
+
+    phase_screen_rear_raw = [
+        ['screen', 'status_1', 'index', 96],
+        ['rear_glass', 'front_screen', 'index', 82]
+    ]
+
+
+
+    phase_internal_raw = [
+        ['battery', 'haptic2', 'index', 71],
+        ['microphone', 'rear_housing', 'index', 66],
+        ['charging_port', 'microphone', 'index', 54],
+        ['wireless', 'charging_port40', 'index', 101],
+        ['mute_vol_buttons', 'charging_port8', 'index', 75],
+        ['power_button', 'charging_port', 'index', 36],
+        ['earpiece', 'charging_port4', 'index', 73],
+        ['speaker', 'power_button', 'index', 88],
+        ['wifi', 'power_button9', 'index', 18],
+        ['bluetooth', 'wifi', 'index', 93],
+        ['rcam', 'bluetooth', 'index', 70],
+        ['fcam', 'rear_camera', 'index', 76],
+        ['lens', 'front_camera', 'index', 7],
+        ['siri', 'rear_lens', 'index', 102],
+        ['haptic', 'siri', 'index', 78],
+        ['nfc', 'haptic3', 'index', 85]
+    ]
+
+
+    def __init__(self, monday_id, user_id):
+        self.id = str(monday_id)
+        self.user_id = user_id
+
+        for pulse in self.boards["refurbs"].get_items(ids=[monday_id], limit=1):
+            self.item = pulse
+            self.name = self.item.name.replace('"', "")
+            break
+
+        self.phase_face_id = []
+        self.phase_screen_rear = []
+        self.phase_internal = []
+
+        self.all_columns = self.phase_face_id_raw + self.phase_screen_rear_raw + self.phase_internal_raw
+
+        self.column_values_raw = self.item.get_column_values()
+
+        self.set_attributes()
+
+        self.create_phases()
+
+    def set_attributes(self):
+        all_atts = self.phase_face_id_raw + self.phase_internal_raw + self.phase_screen_rear_raw + self.basic_stats
+        for column in self.column_values_raw:
+            for attribute in all_atts:
+                if column.id == attribute[1]:
+                    value = getattr(column, attribute[2], None)
+                    # Will Need to Put in a check to ensure all columns are filled in here once phonecheck API is integrated
+                    setattr(self, attribute[0], value)
+
+
+    def create_phases(self):
+        success = [3, 16, None, 5]
+        for column in self.phase_face_id_raw:
+            if getattr(self, column[0]) not in success:
+                self.phase_face_id.append(column[0])
+        for column in self.phase_screen_rear_raw:
+            if getattr(self, column[0]) not in success:
+                self.phase_screen_rear.append(column[0])
+        for column in self.phase_internal_raw:
+            if getattr(self, column[0]) not in success:
+                self.phase_internal.append(column[0])
+
+    def check_phases(self):
+        repairs = []
+        columns = self.phase_face_id_raw + self.phase_screen_rear_raw + self.phase_internal_raw
+        pprint(columns)
+        phases = {
+            1: 'Face ID',
+            2: 'Rear Glass/Screen IC',
+            3: 'Internals',
+            4: 'Repairs Complete'
+        }
+        count = 1
+        for phase in [self.phase_face_id, self.phase_screen_rear, self.phase_internal]:
+            for item in phase:
+                repairs.append([line[3] for line in columns if item == line[0]][0])
+            if repairs:
+                print('phase complete - to be ported to main')
+                self.new_phase = phases[count]
+                col_vals = {'status_122': {'label': self.new_phase}}
+                if self.new_phase == 'Repairs Complete':
+                    col_vals['status5'] == {'label': 'Ready For Testing'}
+                self.item.change_multiple_column_values(col_vals)
+                return repairs
+            count += 1
+        print('all repairs completed')
+        return False
+
+    def add_to_main(self, repairs):
+
+        # Need to determine group and assign to tech
+
+        groups = {
+            'Face ID': keys.monday.main_groups['meesha'],
+            'Rear Glass/Screen IC': keys.monday.main_groups['mcadam'],
+            'Internals': keys.monday.main_groups['today'],
+        }
+
+        name = 'REFURB: ({}) {} {} {}'.format(self.code, self.model, self.colour, self.new_phase.upper())
+
+        todays_date = str(date.today())
+
+        col_vals = {
+            'repair': {'ids': repairs},
+            'status': {'label': 'Refurb'},
+            'status24': {'label': 'Repair'},
+            'text84': self.id,
+            'date36': {'date': todays_date},
+            'status4': {'label': 'Awaiting Confirmation'},
+            'status5': {'label': 'Severed'},
+            'text4': self.imei
+        }
+
+        pprint(col_vals)
+
+        for group in self.boards['main'].get_groups():
+            if group.id == groups[self.new_phase]:
+                group.add_item(item_name=name, column_values=col_vals)
+                return True
+
+        self.boards["main"].add_item(item_name=name, column_values=col_vals)
+        return False
+
+class MainRefurbComplete():
+
+    boards = {
+        'main': monday_client.get_board_by_id(349212843),
+        'refurbs': monday_client.get_board_by_id(876594047)
+    }
+
+    columns = [
+        ['refurb_id', 'text84', 'text'],
+        ['repairs', 'repair', 'ids']
+    ]
+
+    column_conversions = {
+        71: 'haptic2',
+        66: 'rear_housing',
+        54: 'microphone',
+        101: 'charging_port40',
+        75: 'charging_port8',
+        36: 'charging_port',
+        73: 'charging_port4',
+        88: 'power_button',
+        18: 'power_button9',
+        93: 'wifi',
+        70: 'bluetooth',
+        76: 'rear_camera',
+        7: 'front_camera',
+        102: 'rear_lens',
+        78: 'siri',
+        85: 'haptic3',
+        82: 'front_screen',
+        99: 'front_screen5',
+        96: 'status_1',
+        69: 'status_1',
+        74: 'status_1',
+        84: 'status_1',
+        89: 'status_1',
+        90: 'status_1',
+        83: 'status_1',
+        90: 'status_1',
+    }
+
+    def __init__(self, monday_id, user_id):
+        self.id = monday_id
+        self.user_id = user_id
+
+        for pulse in self.boards['main'].get_items(ids=[monday_id], limit=1):
+            self.item = pulse
+            self.name = pulse.name
+            break
+
+        self.column_values_raw = self.item.get_column_values()
+
+        self.set_attributes()
+
+        for pulse in self.boards['refurbs'].get_items(ids=[self.refurb_id], limit=1):
+            self.refurb_item = pulse
+            break
+
+
+    def set_attributes(self):
+        for column in self.column_values_raw:
+            for attribute in self.columns:
+                    if column.id == attribute[1]:
+                        value = getattr(column, attribute[2], None)
+                        # Will Need to Put in a check to ensure all columns are filled in here once phonecheck API is integrated
+                        setattr(self, attribute[0], value)
+
+    def adjust_columns(self):
+        col_vals = {}
+        for repair in self.repairs:
+            col_vals[self.column_conversions[repair]] = {'index': 16}
+        self.refurb_item.change_multiple_column_values(col_vals)
+
+    def move_to_next_phase(self):
+
+        refurb = RefurbRepair(self.refurb_id, self.user_id)
+
+        repairs = refurb.check_phases()
+
+        print(repairs)
+
+        if repairs:
+            print('repairs exist')
+            refurb.add_to_main(repairs)
+        else:
+            refurb.item.change_multiple_column_values({
+                'status_122': {'label': 'Repairs Complete'},
+                'status5': {'label': 'Ready For Testing'}
+            })
+
