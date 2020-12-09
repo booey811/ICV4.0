@@ -2819,23 +2819,23 @@ class StuartClient():
 
         booking_details = repair_object.monday.stuart_details_creation()
         address_verification = self.validate_address(booking_details)
-        if address_verification == 200:
+        if address_verification[0] == 200:
             courier_info = self.format_details(booking_details, repair_object.monday.id, direction)
             parameter_verification = self.validate_job_parameters(courier_info)
-            if parameter_verification == 200:
+            if parameter_verification[0] == 200:
                 info = self.create_job(courier_info)
                 if info[0] in [401, 422, 503]:
                     manager.add_update(
                         repair_object.monday.id,
                         "error",
                         update="Unable to Book Courier - Gabe will look into it",
-                        notify=["Unable to book courier - failure in create_job: {}".format(info), keys.monday.user_ids['gabe']],
+                        notify=["Unable to book courier - failure in create_job: {}".format(info[1]), keys.monday.user_ids['gabe']],
                         status=['status4', '!! See Updates !!']
                     )
                     return False
 
                 elif info[0] == 201:
-                    update = [str(item) + ": " + str(info[item]) for item in info]
+                    update = [str(item) + ": " + str(info[1][item]) for item in info[1]]
                     if direction == 'collecting':
                         status = ["status4", "Courier Booked"]
                     else:
@@ -2848,9 +2848,9 @@ class StuartClient():
                     )
 
                     if repair_object.zendesk:
-                        repair_object.zendesk.update_custom_field('tracking_link', info['deliveries'][0]['tracking_url'])
+                        repair_object.zendesk.update_custom_field('tracking_link', info[1]['deliveries'][0]['tracking_url'])
 
-                    self.dump_to_stuart_data(info, repair_object, direction)
+                    self.dump_to_stuart_data(info[1], repair_object, direction)
                     return True
 
                 else:
