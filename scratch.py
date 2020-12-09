@@ -1,18 +1,21 @@
-
-import requests
-import json
-import os
 from pprint import pprint
 
-from moncli import create_column_value, ColumnType
 
 import settings
-from objects import Repair, MondayColumns, RefurbUnit, OrderItem, InventoryItem, CountItem, ParentProduct, RefurbGroup, NewRefurbUnit, StuartClient
-from manage import manager
+import objects
 import keys.messages
 
 gabe_id = 4251271
 
+
+# Failures: None, 5
+
+# Success: 3, 16
+
+
 # =====================================================================================================================
 # =====================================================================================================================
 
+test = objects.MainRefurbComplete(904688799, gabe_id)
+
+pprint(test.__dict__)
