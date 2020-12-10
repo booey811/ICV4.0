@@ -559,7 +559,7 @@ def phonecheck_complete():
 
     phonecheck = PhoneCheckResult(int(data["event"]["pulseId"]), int(data["event"]["userId"]))
 
-    print(phonecheck.__dict__)
+    phonecheck.record_check_info()
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
