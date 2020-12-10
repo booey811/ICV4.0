@@ -12,6 +12,8 @@ from moncli.api_v2.exceptions import MondayApiError
 from zenpy import Zenpy
 from zenpy.lib import exception as zenpyExceptions
 from zenpy.lib.api_objects import CustomField, Ticket, User, Comment
+import pycurl
+from io import BytesIO
 
 import settings
 import keys.vend
@@ -3321,4 +3323,52 @@ class MainRefurbComplete():
                 'status_122': {'label': 'Repairs Complete'},
                 'status5': {'label': 'Ready For Testing'}
             })
+
+
+class PhoneCheckResult():
+
+    boards = {
+        'main': monday_client.get_board_by_id(349212843),
+        'refurbs': monday_client.get_board_by_id(876594047)
+    }
+
+    def __init__(self, monday_id, user_id):
+
+        self.refurb_id = monday_id
+        self.user_id = user_id
+
+        for pulse in self.boards['main'].get_items(ids=[monday_id], limit=1):
+            self.refurb_item = pulse
+            break
+
+    def get_device_info(self):
+
+        dictionary = {
+            'Apikey': os.environ['PHONECHECK'],
+            'Username': 'icorrect1',
+            'IMEI': self.imei
+        }
+
+        form = urlencode(dictionary)
+
+        bytes_obj = io.BytesIO()
+        crl = pycurl.Curl()
+
+        crl.setopt(crl.URL, 'https://clientapiv2.phonecheck.com/cloud/cloudDB/GetDeviceInfo')
+
+        crl.setopt(crl.WRITEDATA, bytes_obj)
+
+        crl.setopt(crl.POSTFIELDS, form)
+
+        crl.perform()
+
+        crl.close()
+
+        response = bytes_obj.getvalue()
+
+        self.phone_check_raw = response.decode('utf8')
+
+        print(type(self.phone_check_raw))
+
+
 

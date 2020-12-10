@@ -16,6 +16,8 @@ gabe_id = 4251271
 # =====================================================================================================================
 # =====================================================================================================================
 
-test = objects.MainRefurbComplete(904688799, gabe_id)
+test = objects.Repair(monday=905739087)
 
-pprint(test.__dict__)
+stuart = objects.StuartClient(production=True)
+
+stuart.arrange_courier(test, gabe_id, 'collecting')

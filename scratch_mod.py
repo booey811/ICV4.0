@@ -1,42 +1,38 @@
-from moncli import create_column_value, ColumnType
+import pycurl
+from urllib.parse import urlencode
+import io
+import os
+from pprint import pprint
 
-from objects import Repair, InventoryItem, monday_client
-from keys.monday import status_column_dictionary
+import settings
 
-parents = monday_client.get_board_by_id(840389891)
-inventory = monday_client.get_board_by_id(703218230)
+data = {
+    'Apikey': os.environ['PHONECHECK'],
+    'Username': 'icorrect1',
+    'IMEI': '357281098586196'
+}
 
-col_val = create_column_value(id="processed5", column_type=ColumnType.text, value="Not Done")
+def test_request(dictionary_of_post_data):
 
-parent_results = parents.get_items_by_column_values(col_val)
-total_num = len(parent_results)
-count = 0
+    form = urlencode(dictionary_of_post_data)
 
-for parent_item in parent_results:
+    bytes_obj = io.BytesIO()
+    crl = pycurl.Curl()
 
-    search_term = parent_item.get_column_value(id="sku").text
+    crl.setopt(crl.URL, 'https://clientapiv2.phonecheck.com/cloud/cloudDB/GetDeviceInfo')
 
-    search_val = create_column_value(id="text0", column_type=ColumnType.text, value=search_term)
+    crl.setopt(crl.WRITEDATA, bytes_obj)
 
-    slaves = inventory.get_items_by_column_values(search_val)
+    crl.setopt(crl.POSTFIELDS, form)
 
-    return_vals = {
-        "processed5": "Complete"
-    }
+    crl.perform()
 
-    if len(slaves) == 1:
-        print("{}: Only Has One Slave".format(parent_item.name))
-        return_vals["link_required"] = {"label": "Finished"}
-    elif len(slaves) == 0:
-        print("{}: No Results Found")
-        return_vals["link_required"] = {"label": "Other Issue"}
-    else:
-        names = []
-        for inv_item in slaves:
-            names.append(inv_item.name.replace('"', " Inch"))
-        return_vals["link_required"] = {"label": "Adjustment Required"}
-        parent_item.add_update("\n".join(names))
-        parent_item.change_multiple_column_values(return_vals)
-        print("{}: Updated".format(parent_item.name))
-    count += 1
-    print("{}% Complete".format((count/total_num)*100))
+    crl.close()
+
+    response = bytes_obj.getvalue()
+
+    info = response.decode('utf8')
+
+    pprint(info)
+
+test_request(data)
