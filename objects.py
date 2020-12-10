@@ -2808,7 +2808,7 @@ class StuartClient():
 
         if not repair_object.number:
             manager.add_update(
-                repair_object.id,
+                repair_object.monday.id,
                 'error',
                 notify=[
                     'Unable to Book Courier: Please provide a phone number',
