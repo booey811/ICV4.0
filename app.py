@@ -9,7 +9,7 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete, PhoneCheckResult
 from manage import manager
 import keys
 
@@ -542,6 +542,24 @@ def refurb_phase_complete():
     pprint(refurb.__dict__)
     refurb.adjust_columns()
     refurb.move_to_next_phase()
+
+    print("--- %s seconds ---" % (time.time() - start_time))
+    return "Screen Refurbishment Tested - Add To Stock Route Complete"
+
+# Phone Check Data Added to Refurb Board
+@app.route('/monday/refurb/phonecheck', methods=['POST'])
+def phonecheck_complete():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    phonecheck = PhoneCheckResult(int(data["event"]["pulseId"]), int(data["event"]["userId"]))
+
+    phonecheck.record_check_info()
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
