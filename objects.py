@@ -3401,21 +3401,31 @@ class PhoneCheckResult():
 
     def convert_check_info(self, check_info):
 
-        self.batt_percentage = int(check_info['BatteryHealthPercentage'])
-
         col_vals = {
             'numbers17': int(check_info['BatteryHealthPercentage']),
             'text84': self.get_next_code()
         }
 
+        self.batt_percentage = int(check_info['BatteryHealthPercentage'])
+        if self.batt_percentage < 84:
+            col_vals['haptic2'] = {'index': 2}
+        else:
+            col_vals['haptic2'] = {'index': 3}
+
         all_checks = []
 
+        ignore = ['Face ID', 'LCD', 'Glass Cracked']
+
         for fault in check_info['Failed'].split(','):
+            if fault in ignore:
+                continue
             all_checks.append([fault, 'Failed'])
             if fault in self.standard_checks and self.standard_checks[fault]:
                 col_vals[self.standard_checks[fault]] = {'index': 2}
 
         for passed in check_info['Passed'].split(','):
+            if passed in ignore:
+                continue
             all_checks.append([passed, 'Passed'])
             if passed in self.standard_checks and self.standard_checks[passed]:
                 col_vals[self.standard_checks[passed]] = {'index': 3}
