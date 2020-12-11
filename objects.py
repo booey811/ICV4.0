@@ -3310,13 +3310,9 @@ class MainRefurbComplete():
     def move_to_next_phase(self):
 
         refurb = RefurbRepair(self.refurb_id, self.user_id)
-
         repairs = refurb.check_phases()
 
-        print(repairs)
-
         if repairs:
-            print('repairs exist')
             refurb.add_to_main(repairs)
         else:
             refurb.item.change_multiple_column_values({
@@ -3400,10 +3396,11 @@ class PhoneCheckResult():
         return check_info
 
     def convert_check_info(self, check_info):
-
+        code_to_apply = self.get_next_code()
         col_vals = {
             'numbers17': int(check_info['BatteryHealthPercentage']),
-            'text84': self.get_next_code()
+            'text84': code_to_apply,
+            'link1': {"url": "https://icorrect.monday.com/boards/876594047/pulses/{}".format(self.refurb_id), "text": str(code_to_apply)}
         }
 
         self.batt_percentage = int(check_info['BatteryHealthPercentage'])
@@ -3417,16 +3414,16 @@ class PhoneCheckResult():
         ignore = ['Face ID', 'LCD', 'Glass Cracked']
 
         for fault in check_info['Failed'].split(','):
+            all_checks.append([fault, 'Failed'])
             if fault in ignore:
                 continue
-            all_checks.append([fault, 'Failed'])
             if fault in self.standard_checks and self.standard_checks[fault]:
                 col_vals[self.standard_checks[fault]] = {'index': 2}
 
         for passed in check_info['Passed'].split(','):
+            all_checks.append([passed, 'Passed'])
             if passed in ignore:
                 continue
-            all_checks.append([passed, 'Passed'])
             if passed in self.standard_checks and self.standard_checks[passed]:
                 col_vals[self.standard_checks[passed]] = {'index': 3}
 
