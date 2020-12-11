@@ -3094,7 +3094,7 @@ class RefurbRepair():
         ['colour', 'status2', 'text'],
         ['phone_check', 'status_14', 'text'],
         ['imei', 'text3', 'text'],
-        ['code', 'text0', 'text'],
+        ['code', 'text84', 'text'],
         ['phase', 'status_122', 'text'],
         ['status', 'status5', 'text']
     ]
