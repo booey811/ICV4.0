@@ -1,23 +1,5 @@
-from pprint import pprint
+from manage import manager
 
 
-import settings
-import objects
-import keys.messages
-
-gabe_id = 4251271
-
-
-# Failures: None, 5
-
-# Success: 3, 16
-
-
-# =====================================================================================================================
-# =====================================================================================================================
-
-test = objects.Repair(monday=905739087)
-
-stuart = objects.StuartClient(production=True)
-
-stuart.arrange_courier(test, gabe_id, 'collecting')
+col_vals = {'link1': {"url": "https://icorrect.monday.com/boards/876594047/pulses/{}".format(887477065), "text": 'LINK TEST'}}
+manager.monday_clients['system'][0].get_board_by_id(349212843).add_item(item_name='LINK TEST', column_values=col_vals)
