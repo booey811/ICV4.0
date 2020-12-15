@@ -3399,10 +3399,8 @@ class PhoneCheckResult():
         code_to_apply = self.get_next_code()
         col_vals = {
             'numbers17': int(check_info['BatteryHealthPercentage']),
-            'text84': code_to_apply,
-            'link1': {"url": "https://icorrect.monday.com/boards/876594047/pulses/{}".format(self.refurb_id), "text": str(code_to_apply)}
+            'text84': code_to_apply
         }
-
         self.batt_percentage = int(check_info['BatteryHealthPercentage'])
         if self.batt_percentage < 84:
             col_vals['haptic2'] = {'index': 2}
@@ -3410,23 +3408,19 @@ class PhoneCheckResult():
             col_vals['haptic2'] = {'index': 3}
 
         all_checks = []
-
         ignore = ['Face ID', 'LCD', 'Glass Cracked']
-
         for fault in check_info['Failed'].split(','):
             all_checks.append([fault, 'Failed'])
             if fault in ignore:
                 continue
             if fault in self.standard_checks and self.standard_checks[fault]:
                 col_vals[self.standard_checks[fault]] = {'index': 2}
-
         for passed in check_info['Passed'].split(','):
             all_checks.append([passed, 'Passed'])
             if passed in ignore:
                 continue
             if passed in self.standard_checks and self.standard_checks[passed]:
                 col_vals[self.standard_checks[passed]] = {'index': 3}
-
         return [all_checks, col_vals]
 
 
@@ -3434,7 +3428,10 @@ class PhoneCheckResult():
 
         info = self.get_device_info()
         add_to_board = self.convert_check_info(info)
-        self.refurb_item.change_multiple_column_values(add_to_board[1])
+        for item in add_to_board[1]:
+            value = {item: add_to_board[1][item]}
+            print(value)
+            self.refurb_item.change_multiple_column_values(value)
         update = [str(item[0]) + ': ' + str(item[1]) for item in add_to_board[0]]
         self.refurb_item.add_update("\n".join(update))
 
