@@ -3356,7 +3356,7 @@ class MainRefurbComplete():
             })
 
 
-class PhoneCheckResult():
+class PhoneCheckResult:
     boards = {
         'main': monday_client.get_board_by_id(349212843),
         'refurbs': monday_client.get_board_by_id(876594047)
@@ -3444,18 +3444,25 @@ class PhoneCheckResult():
 
         all_checks = []
         ignore = ['Face ID', 'LCD', 'Glass Cracked']
+
         for fault in check_info['Failed'].split(','):
             all_checks.append([fault, 'Failed'])
             if fault in ignore:
                 continue
             if fault in self.standard_checks and self.standard_checks[fault]:
                 col_vals[self.standard_checks[fault]] = {'index': 2}
+
         for passed in check_info['Passed'].split(','):
             all_checks.append([passed, 'Passed'])
             if passed in ignore:
                 continue
-            if passed in self.standard_checks and self.standard_checks[passed]:
+
+            if (passed in self.standard_checks)\
+                    and (self.standard_checks[passed])\
+                    and (self.standard_checks[passed] not in col_vals):
+
                 col_vals[self.standard_checks[passed]] = {'index': 3}
+
         return [all_checks, col_vals]
 
     def record_check_info(self):

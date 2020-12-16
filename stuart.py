@@ -3,39 +3,35 @@ import os
 import json
 from pprint import pprint
 
-import settings
 
-
-
-class BackMarketSale():
-
-
+class BackMarketSale:
     api_headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Accept-Language': 'en-gb',
-        'Authorization': 'Basic {}'.format(os.environ['BACKMARKET']),
         'User-Agent': 'iCorrect'
     }
 
-    def __init__(self):
+    def __init__(self, production=False):
 
-        pass
+        if production:
+            url_start = 'https://preprod.backmarket.fr/ws'
+            self.api_headers['Authorization'] = 'Basic {}'.format(os.environ['BACKMARKET'])
+        else:
+            self.api_headers['Authorization'] = 'Basic {}'.format(os.environ['BACKMARKETSAND'])
+            url_start = 'https://www.backmarket.fr/ws'
 
     def get_order(self, back_market_id):
 
         # Test Request
-
-        url = 'https://www.backmarket.fr/ws/orders/{}'.format(back_market_id)
-
+        url = '{}/orders/{}'.format(self.url_start, back_market_id)
         response = requests.request('GET', url=url, headers=self.api_headers)
-
         print(response)
-
         formatted = json.loads(response.text)
-
         pprint(formatted)
 
+    def get_all_listings(self):
+        pass
 
 
 test = BackMarketSale()
