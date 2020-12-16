@@ -3,6 +3,8 @@ import os
 import json
 from pprint import pprint
 
+import settings
+
 
 class BackMarketSale:
     api_headers = {
@@ -15,25 +17,92 @@ class BackMarketSale:
     def __init__(self, production=False):
 
         if production:
-            url_start = 'https://preprod.backmarket.fr/ws'
             self.api_headers['Authorization'] = 'Basic {}'.format(os.environ['BACKMARKET'])
+            self.url_start = 'https://www.backmarket.fr/ws'
         else:
             self.api_headers['Authorization'] = 'Basic {}'.format(os.environ['BACKMARKETSAND'])
-            url_start = 'https://www.backmarket.fr/ws'
+            self.url_start = 'https://preprod.backmarket.fr/ws'
 
     def get_order(self, back_market_id):
 
-        # Test Request
         url = '{}/orders/{}'.format(self.url_start, back_market_id)
         response = requests.request('GET', url=url, headers=self.api_headers)
         print(response)
         formatted = json.loads(response.text)
         pprint(formatted)
 
-    def get_all_listings(self):
-        pass
+    def edit_listing(self, catalog_string):
+
+        url = '{}/listings'.format(self.url_start)
+        print(catalog_string)
+        body = {
+            "encoding": "latin1",
+            "delimiter": ";",
+            "quotechar": "\"",
+            "catalog": catalog_string
+        }
+
+        json.dumps(body)
+        response = requests.request('POST', url=url, headers=self.api_headers, data=body)
+
+        print(response)
+        print(response.text)
+
+
+    def create_catalog_string(self, listing_model):
+
+        catalog = ''
+        headers_list = []
+
+        for item in listing_model:
+            headers_list.append(item)
+
+        headers_string = ';'.join(headers_list) + ';\\n'
+
+        values_list = []
+
+        for item in listing_model:
+            values_list.append(str(listing_model[item]))
+
+        values_string = ';'.join(values_list)
+
+        final_string = headers_string + values_string + ';'
+
+        return final_string
+
+
+
+
+    def format_listing_model(self, backmarket_id, sku, quantity, price, grading, touchid_broken=False):
+
+        required = {
+            'backmarket_id': int(backmarket_id),  # REQUIRED[int] - Backmarket Product ID (Must be known)
+            'sku': str(sku),  # REQUIRED[string] - SKU of offer, taken from backmarket
+            'quantity': int(quantity),  # REQUIRED[string] - Quantity of units available for this sale
+            'price': int(price),  # REQUIRED[float] - Price of Sale
+            'state': int(grading),  # REQUIRED[int] - Grading of iPhone
+            'warranty': 12,  # REQUIRED[int] - Months of Warranty (6/12 minimum??)
+        }
+
+        optional = {
+            'comment': None,  # [string:500] Comment for the sale (description)
+            'currency': None,  # [string:10] Type of currency (Defaults to EUR)
+            'shipper_1': None,  # [string:**kwargs] Company that will ship the sale
+            'shipping_price_1': None,  # [float] Cost of this shipping option
+            'shipper_delay_1': None,  # [float] # Delay before the package will be collected (in hours)
+        }
+
+        for item in optional:
+            if optional[item]:
+                required[item] = optional[item]
+
+        return required
 
 
 test = BackMarketSale()
 
-test.get_order(9574898)
+listing_model = test.format_listing_model(159987, 'XR Red Mint', 1, 999, 0)
+
+catalog = test.create_catalog_string(listing_model)
+
+test.edit_listing(catalog)
