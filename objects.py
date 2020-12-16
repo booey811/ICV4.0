@@ -25,18 +25,16 @@ monday_client = MondayClient(
     user_name='systems@icorrect.co.uk',
     api_key_v1=os.environ["MONV1SYS"],
     api_key_v2=os.environ["MONV2SYS"]
-    )
+)
 
 zendesk_client = Zenpy(
     email='admin@icorrect.co.uk',
     token=os.environ["ZENDESKADMIN"],
     subdomain="icorrect"
-    )
-
+)
 
 
 class Repair():
-
     # Monday Boards
     boards = {
         # "logging": monday_client.get_board_by_id(id=736027251),
@@ -126,7 +124,8 @@ class Repair():
 
             if self.monday.z_ticket_id:
                 self.include_zendesk(self.monday.z_ticket_id)
-                self.monday.zendesk_url = "https://icorrect.zendesk.com/agent/tickets/{}".format(self.monday.z_ticket_id)
+                self.monday.zendesk_url = "https://icorrect.zendesk.com/agent/tickets/{}".format(
+                    self.monday.z_ticket_id)
 
         elif self.source == 'vend':
             col_val = create_column_value(id='text88', column_type=ColumnType.text, value=str(self.vend.id))
@@ -166,7 +165,8 @@ class Repair():
             elif self.source == "vend":
                 self.monday.columns.column_values["blocker"] = {"label": "Complete"}
                 self.monday.columns.column_values["text88"] = str(self.vend.id)
-            item = self.monday.item = self.boards["main"].add_item(item_name=name, column_values=self.monday.columns.column_values)
+            item = self.monday.item = self.boards["main"].add_item(item_name=name,
+                                                                   column_values=self.monday.columns.column_values)
             if self.zendesk:
                 self.zendesk.ticket.custom_fields.append(CustomField(id="360004570218", value=item.id))
                 zendesk_client.tickets.update(self.zendesk.ticket)
@@ -194,7 +194,7 @@ class Repair():
             now = datetime.now() + timedelta(hours=1)
             col_vals = {"status5": {"label": self.source.capitalize()}}
             if self.monday:
-                col_vals["text"]= self.monday.id
+                col_vals["text"] = self.monday.id
             if self.vend:
                 col_vals["text3"] = str(self.vend.id)
             if self.zendesk:
@@ -212,7 +212,6 @@ class Repair():
         email = None
         number = None
         name = None
-
 
         if self.monday:
             self.debug("Retrieving from Monday Object")
@@ -263,7 +262,8 @@ class Repair():
             results = self.boards["main"].get_items_by_column_values(col_val)
             if len(results) == 0:
                 answer = False
-                self.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(self.zendesk.ticket_id))
+                self.debug("No results returned from Main Board for Zendesk ID (RETURNING TRUE): {}".format(
+                    self.zendesk.ticket_id))
             elif len(results) == 1:
                 answer = False
                 self.debug("Only one pulse found")
@@ -282,7 +282,8 @@ class Repair():
             if comparison_type == "status":
                 count = 1
                 while count < len(self.associated_pulse_results):
-                    if self.associated_pulse_results[count - 1].get_column_value(id="status4").index != self.associated_pulse_results[count].get_column_value(id="status4").index:
+                    if self.associated_pulse_results[count - 1].get_column_value(id="status4").index != \
+                            self.associated_pulse_results[count].get_column_value(id="status4").index:
                         self.debug("Statuses do not match (RETURNING FALSE)")
                         answer = False
                         break
@@ -297,7 +298,6 @@ class Repair():
         self.debug(end="pulse_comparison")
         return answer
 
-
     def compare_app_objects(self, source, upstream):
 
         if source == "monday" and upstream == "vend":
@@ -306,7 +306,8 @@ class Repair():
             if not self.monday or not self.zendesk:
                 self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
             else:
-                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service",
+                                  "client", "repair_type"]:
                     monday = getattr(self.monday, attribute, None)
                     zendesk = getattr(self.zendesk, attribute, None)
                     correct = monday
@@ -319,7 +320,8 @@ class Repair():
                 self.debug("Monday/Zendesk Object Comparison Fail - Missing an Object")
             else:
                 updated_item = Repair.MondayRepair(repair_object=self, created=self.name)
-                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service",
+                                  "client", "repair_type"]:
                     monday = getattr(self.monday, attribute, None)
                     zendesk = getattr(self.zendesk, attribute, None)
                     correct = zendesk
@@ -465,7 +467,8 @@ class Repair():
             else:
                 self.sale_to_post = self.VendSale(self)
                 for code in self.parent.monday.vend_codes:
-                    self.sale_to_post.sale_attributes["register_sale_products"].append(self.sale_to_post.create_register_sale_products(code))
+                    self.sale_to_post.sale_attributes["register_sale_products"].append(
+                        self.sale_to_post.create_register_sale_products(code))
                 if self.parent.monday.client == "Warranty" or self.parent.monday.client == "Refurb":
                     self.sale_to_post.sale_attributes["status"] = "CLOSED"
                 else:
@@ -485,7 +488,7 @@ class Repair():
             headers = {
                 'content-type': "application/json",
                 'authorization': os.environ["VENDSYS"]
-                }
+            }
             response = requests.request("POST", url, data=payload, headers=headers)
             sale = json.loads(response.text)
             self.sale_info = sale["register_sale"]
@@ -566,7 +569,6 @@ class Repair():
             except MondayApiError:
                 self.parent.boards["usage"].add_item(item_name="Parse Error While Adding", column_values=col_vals)
 
-
         class VendSale():
 
             sale_attributes = {
@@ -623,7 +625,6 @@ class Repair():
                 self.vend_parent.parent.debug(end="create_register_sale_products")
                 return dictionary
 
-
             def get_pricing_info(self, dictionary):
                 self.vend_parent.parent.debug(start="get_pricing_info")
                 url = "https://icorrect.vendhq.com/api/products/{}".format(dictionary["product_id"])
@@ -645,7 +646,6 @@ class Repair():
                     self.vend_parent.parent.debug("Adding: {}".format(info["name"]))
                 self.vend_parent.parent.debug(end="get_pricing_info")
 
-
     class MondayRepair():
         def __init__(self, repair_object=False, monday_id=False, created=False):
             self.parent = repair_object
@@ -653,7 +653,7 @@ class Repair():
             self.v_id = None
             self.z_ticket_id = None
 
-            self.invoiced = None # Not currently used in program
+            self.invoiced = None  # Not currently used in program
             self.zendesk_url = None
             self.zenlink = None
             self.status = None
@@ -663,10 +663,10 @@ class Repair():
             self.company_name = None
             self.case = None
             self.refurb = None
-            self.booking_time = None # Not currently used in program
-            self.deadline = None # Not currently used in program
-            self.time = None # Not currently used in program
-            self.technician = None # Not currently used in program
+            self.booking_time = None  # Not currently used in program
+            self.deadline = None  # Not currently used in program
+            self.time = None  # Not currently used in program
+            self.technician = None  # Not currently used in program
             self.device = []
             self.repairs = []
             self.colour = None
@@ -680,9 +680,9 @@ class Repair():
             self.date_received = None
             self.number = None
             self.email = None
-            self.eta = None # Not currently used in program
-            self.date_repaired = None # Not currently used in program
-            self.date_collected = None # Not currently used in program
+            self.eta = None  # Not currently used in program
+            self.date_repaired = None  # Not currently used in program
+            self.date_collected = None  # Not currently used in program
             self.end_of_day = None
             self.deactivated = None
             self.notifications = []
@@ -774,16 +774,22 @@ class Repair():
                             if value.id == col_id:
                                 try:
                                     if keys.monday.col_ids_to_attributes[item]["value_type"][0] == "ids":
-                                        setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'], getattr(self, keys.monday.col_ids_to_attributes[item]['attribute']) + (getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0])))
+                                        setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'],
+                                                getattr(self, keys.monday.col_ids_to_attributes[item]['attribute']) + (
+                                                    getattr(value,
+                                                            keys.monday.col_ids_to_attributes[item]["value_type"][0])))
                                     else:
                                         setattr(self, keys.monday.col_ids_to_attributes[item]['attribute'],
-                                                getattr(value, keys.monday.col_ids_to_attributes[item]["value_type"][0]))
+                                                getattr(value,
+                                                        keys.monday.col_ids_to_attributes[item]["value_type"][0]))
                                 except KeyError:
                                     self.parent.debug(
-                                        "*811*ERROR: KEY: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
+                                        "*811*ERROR: KEY: Cannot set {} Attribute in Class".format(
+                                            keys.monday.col_ids_to_attributes[item]['attribute']))
                                 except TypeError:
                                     self.parent.debug(
-                                        "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(keys.monday.col_ids_to_attributes[item]['attribute']))
+                                        "*811*ERROR: TYPE: Cannot set {} Attribute in Class".format(
+                                            keys.monday.col_ids_to_attributes[item]['attribute']))
             self.parent.debug(end="retreive_column_data")
 
         def set_device_category(self, dropdown_text):
@@ -812,7 +818,9 @@ class Repair():
                     monday_id=self.id,
                     update="You have selected a placeholder repair - please select the repair you have completed and try again",
                     user="error",
-                    notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                    notify=[
+                        "You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(
+                            self.name), user_id],
                     status=["status4", "!! See Updates !!"]
                 )
                 return False
@@ -824,7 +832,9 @@ class Repair():
                         monday_id=self.id,
                         update="You have not selected a screen condition for this repair - please select an option from the dropdown menu and try again",
                         user="error",
-                        notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                        notify=[
+                            "You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(
+                                self.name), user_id],
                         status=["status4", "!! See Updates !!"]
                     )
                     return False
@@ -834,7 +844,9 @@ class Repair():
                         monday_id=self.id,
                         update="You have not selected a colour for the screen of this device - please select a colour option and try again",
                         user="error",
-                        notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                        notify=[
+                            "You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(
+                                self.name), user_id],
                         status=["status4", "!! See Updates !!"]
                     )
                     return False
@@ -844,7 +856,9 @@ class Repair():
                         monday_id=self.id,
                         update="You have not selected what refurb variety of screen was used with this repair - please select a refurbishmnet option and try again",
                         user="error",
-                        notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                        notify=[
+                            "You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(
+                                self.name), user_id],
                         status=["status4", "!! See Updates !!"]
                     )
                     return False
@@ -854,7 +868,9 @@ class Repair():
                     monday_id=self.id,
                     update="This device does not have an IMEI or SN given - please input this and try again",
                     user="error",
-                    notify=["You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(self.name), user_id],
+                    notify=[
+                        "You have missed out essential infromation from {}'s repair. Please check the pulse updates and correct this before proceeding".format(
+                            self.name), user_id],
                     status=["status4", "!! See Updates !!"]
                 )
                 return False
@@ -881,12 +897,14 @@ class Repair():
                 user_id = int(self.user_id)
                 target_id = 349212843
             if user == 'error':
-                client =  MondayClient(user_name='admin@icorrect.co.uk', api_key_v1=os.environ["MONV1ERR"], api_key_v2=os.environ["MONV2ERR"])
+                client = MondayClient(user_name='admin@icorrect.co.uk', api_key_v1=os.environ["MONV1ERR"],
+                                      api_key_v2=os.environ["MONV2ERR"])
                 for item in client.get_items(ids=[monday_id], limit=1):
                     monday_object = item
                     break
             elif user == 'email':
-                client =  MondayClient(user_name='icorrectltd@gmail.com', api_key_v1=os.environ["MONV1EML"], api_key_v2=os.environ["MONV2EML"])
+                client = MondayClient(user_name='icorrectltd@gmail.com', api_key_v1=os.environ["MONV1EML"],
+                                      api_key_v2=os.environ["MONV2EML"])
                 for item in client.get_items(ids=[monday_id], limit=1):
                     monday_object = item
                     break
@@ -902,7 +920,8 @@ class Repair():
 
         def send_notification(self, sender, message, user_id, target_id):
             self.parent.debug(start="send_notifcation")
-            sender.create_notification(text=message, user_id=user_id, target_id=target_id, target_type=NotificationTargetType.Project)
+            sender.create_notification(text=message, user_id=user_id, target_id=target_id,
+                                       target_type=NotificationTargetType.Project)
             self.parent.debug(message)
             self.parent.debug(end="send_notifcation")
 
@@ -912,7 +931,8 @@ class Repair():
                 self.parent.debug_print("No Repairs on Monday")
             self.convert_to_vend_codes()
             if len(self.vend_codes) != len(self.repairs):
-                self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes), len(self.repairs)))
+                self.parent.debug("Cannot Adjust Stock -- vend_codes {} :: {} m_repairs".format(len(self.vend_codes),
+                                                                                                len(self.repairs)))
                 manager.add_update(
                     monday_id=self.id,
                     update="Cannot Adjust Stock - Vend Codes Lost During Conversion",
@@ -935,7 +955,8 @@ class Repair():
                         usage_name = "{} - {}".format(self.repair_names[repair][0], self.client)
                         self.parent.boards["usage"].add_item(item_name=usage_name, column_values=col_vals)
                     except MondayApiError:
-                        self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage", column_values=col_vals)
+                        self.parent.boards["usage"].add_item(item_name="Experienced Parse Error While Adding to Usage",
+                                                             column_values=col_vals)
                         self.parent.debug("Experienced Parse Error While Adding to Usage")
                     finally:
                         self.item.change_multiple_column_values({"blocker": {"label": "Complete"}})
@@ -946,13 +967,16 @@ class Repair():
                             manager.add_update(
                                 monday_id=self.id,
                                 user="system",
-                                update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update), "https://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id))
+                                update="Repairs Processed:\n{}\n\nVend Sale:\n{}".format("\n".join(update),
+                                                                                         "https://icorrect.vendhq.com/register_sale/edit/id/{}".format(
+                                                                                             sale_id))
                             )
                         except MondayApiError:
                             manager.add_update(
                                 monday_id=self.id,
                                 user="system",
-                                update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(sale_id)
+                                update="Repairs Have Been Processed, but a Parsing error prevented them from being displayed here\n\nVend Sale:\nhttps://icorrect.vendhq.com/register_sale/edit/id/{}".format(
+                                    sale_id)
                             )
             self.parent.debug(end="adjust stock")
 
@@ -1043,7 +1067,7 @@ class Repair():
                 "Client",
                 "Type"
             ]
-            fields= {
+            fields = {
                 "imei_sn": 360004242638,
                 "id": 360004570218,
                 "passcode": 360005102118,
@@ -1063,7 +1087,7 @@ class Repair():
                 else:
                     info = User(name=self.name, email=self.email, phone=self.number)
                     user = zendesk_client.users.create(info)
-            custom_fields =[]
+            custom_fields = []
             for item in fields:
                 value = getattr(self, item, None)
                 addition = CustomField(id=fields[item], value=value)
@@ -1091,12 +1115,14 @@ class Repair():
             self.parent.zendesk.address_extractor()
             values = {
                 "text6": str(ticket_audit.ticket.id),
-                "link1": {"url": "https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id), "text": str(ticket_audit.ticket.id)},
+                "link1": {"url": "https://icorrect.zendesk.com/agent/tickets/{}".format(ticket_audit.ticket.id),
+                          "text": str(ticket_audit.ticket.id)},
                 "status5": {"label": "Active"},
                 "text5": user.email,
                 "text15": self.parent.zendesk.company_name
             }
-            attributes = [["number", "text00"], ["address1", "passcode"], ["address2", "dup__of_passcode"], ["postcode", "text93"]]
+            attributes = [["number", "text00"], ["address1", "passcode"], ["address2", "dup__of_passcode"],
+                          ["postcode", "text93"]]
             for attribute in attributes:
                 mon_val = getattr(self, attribute[0])
                 zen_val = getattr(self.parent.zendesk, attribute[0], None)
@@ -1127,7 +1153,7 @@ class Repair():
                 ["company_name", "company"]
             ]
 
-            details = {line[1]:getattr(self, line[0]) for line in conversion}
+            details = {line[1]: getattr(self, line[0]) for line in conversion}
 
             details["reference"] = reference
             details["address"] = address_string
@@ -1138,7 +1164,6 @@ class Repair():
                 details["direction"] = "delivering"
             else:
                 details["direction"] = "picking"
-
 
             pprint(details)
 
@@ -1204,12 +1229,14 @@ class Repair():
                         text_response["data"]["job_id"], text_response["data"]["price_gross"],
                         text_response["data"]["pickup_eta"][11:19], text_response["data"]["private_job_url"])
                 )
-                self.parent.zendesk.ticket.custom_fields.append(CustomField(id=360006704157, value=text_response["data"]["public_tracker_url"]))
+                self.parent.zendesk.ticket.custom_fields.append(
+                    CustomField(id=360006704157, value=text_response["data"]["public_tracker_url"]))
                 zendesk_client.tickets.update(self.parent.zendesk.ticket)
                 if from_client:
                     self.capture_gophr_data(info["pickup_postcode"], info["delivery_postcode"], text_response["data"])
                 else:
-                    self.capture_gophr_data(info["pickup_postcode"], info["delivery_postcode"], text_response["data"], collect=False)
+                    self.capture_gophr_data(info["pickup_postcode"], info["delivery_postcode"], text_response["data"],
+                                            collect=False)
                 result = True
             else:
                 # error_code = text_response["error"]["code"].replace('\"', "|")
@@ -1231,13 +1258,13 @@ class Repair():
                 name = "{} Return".format(self.name)
             pprint(gophr_response)
             column_values = {"text": collect_postcode,
-                            "text4": deliver_postcode,
-                            "distance": str(gophr_response["distance"]),
-                            "price__ex_vat_": str(gophr_response["price_net"]),
-                            "text0": str(gophr_response["job_id"]),
-                            "text9": str(gophr_response["min_realistic_time"]),
-                            "text5": self.id
-                            }
+                             "text4": deliver_postcode,
+                             "distance": str(gophr_response["distance"]),
+                             "price__ex_vat_": str(gophr_response["price_net"]),
+                             "text0": str(gophr_response["job_id"]),
+                             "text9": str(gophr_response["min_realistic_time"]),
+                             "text5": self.id
+                             }
             values = ["pickup_eta", "delivery_eta"]
             for option in values:
                 date = gophr_response[option].split("T")[0]
@@ -1251,7 +1278,7 @@ class Repair():
             self.parent.debug(end="capture_gophr_data")
 
         def adjust_gophr_data(self, monday_id, name=False, booking=False, collection=False, delivery=False):
-            col_val = create_column_value(id="text5", column_type=ColumnType.text, value = str(monday_id))
+            col_val = create_column_value(id="text5", column_type=ColumnType.text, value=str(monday_id))
             results = self.parent.boards["gophr"].get_items_by_column_values(col_val)
             if len(results) != 1:
                 self.parent.debug("Cannot Find Gophr Data Object")
@@ -1266,7 +1293,8 @@ class Repair():
                     if column[0]:
                         hour = datetime.now().hour
                         minute = datetime.now().minute
-                        col_val = create_column_value(id=column[1], column_type=ColumnType.hour, hour=hour, minute=minute)
+                        col_val = create_column_value(id=column[1], column_type=ColumnType.hour, hour=hour,
+                                                      minute=minute)
                         pulse.change_multiple_column_values([col_val])
 
         def textlocal_notification(self):
@@ -1280,7 +1308,7 @@ class Repair():
                 }
                 if self.repair_type == "Diagnostic" and self.status == "Received":
                     details["simple_reply"] = "true"
-                data =  parse.urlencode(details)
+                data = parse.urlencode(details)
                 data = data.encode('utf-8')
                 request = urlrequest.Request("https://api.txtlocal.com/send/?")
                 f = urlrequest.urlopen(request, data)
@@ -1329,13 +1357,18 @@ class Repair():
                 manager.add_update(
                     monday_id=self.id,
                     user="error",
-                    notify=["Please add {}'s Repairs to Vend Manually, I can't find one or more of the repairs that have been completed on this device".format(self.name), self.user_id]
+                    notify=[
+                        "Please add {}'s Repairs to Vend Manually, I can't find one or more of the repairs that have been completed on this device".format(
+                            self.name), self.user_id]
                 )
-                self.parent.debug("Vend Codes Lost During Conversion: D:{} Rs:{} C:{}".format(self.m_device, self.m_repairs, self.m_colour))
+                self.parent.debug(
+                    "Vend Codes Lost During Conversion: D:{} Rs:{} C:{}".format(self.m_device, self.m_repairs,
+                                                                                self.m_colour))
             else:
                 for code in self.vend_codes:
                     sale.sale_attributes["register_sale_products"].append(sale.create_register_sale_products(code))
-                sale.sale_attributes["register_sale_products"][0]["attributes"].append({"name": "line_note", "value": "IMEI/SN: {}".format(self.imei_sn)})
+                sale.sale_attributes["register_sale_products"][0]["attributes"].append(
+                    {"name": "line_note", "value": "IMEI/SN: {}".format(self.imei_sn)})
                 self.parent.vend.post_sale(sale.sale_attributes, sale_update=True)
 
         def adjust_stock_alt(self):
@@ -1349,11 +1382,14 @@ class Repair():
                 )
             else:
                 inventory_items = self.create_inventory_items()
-                if len(inventory_items)!= len(self.m_repairs):
+                if len(inventory_items) != len(self.m_repairs):
                     manager.add_update(
                         monday_id=self.id,
-                        update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour), # Notify Gabe
-                        notify=["Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(self.m_device, self.m_repairs, self.m_colour).format(self.name), 4251271],
+                        update="Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(
+                            self.m_device, self.m_repairs, self.m_colour),  # Notify Gabe
+                        notify=[
+                            "Vend Codes Lost During Conversion - Cannot Adjust Stock\nDevice: {}\nRepairs: {}\nColour: {}".format(
+                                self.m_device, self.m_repairs, self.m_colour).format(self.name), 4251271],
                         user="error",
                         status=["status_17", "Error - Not Found"]
                     )
@@ -1362,13 +1398,18 @@ class Repair():
                     for item in deductables:
                         deductables[item][0].get_parent()
                         val = deductables[item][0].parent_product.stock_level - deductables[item][1]
-                        deductables[item][0].parent_product.item.change_column_value(column_id="inventory_oc_walk_in", column_value=str(val))
+                        deductables[item][0].parent_product.item.change_column_value(column_id="inventory_oc_walk_in",
+                                                                                     column_value=str(val))
                         print("Adjusting Stock: {}".format(deductables[item][0].parent_product.name))
                     stats = self.create_sale_stats(inventory_items)
                     sale_items = []
                     for item in stats[0]:
                         sale_items.append("\n".join(item))
-                    update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items), "Multi Discount: £{}".format(stats[1]), "Total Sale Price: £{}".format(stats[2]), "Total Cost: £{}".format(stats[3]), "Margin: {}%".format(stats[4]))
+                    update = "SALE STATS:\n\n{}\n\n{}\n{}\n{}\n{}".format("\n\n".join(sale_items),
+                                                                          "Multi Discount: £{}".format(stats[1]),
+                                                                          "Total Sale Price: £{}".format(stats[2]),
+                                                                          "Total Cost: £{}".format(stats[3]),
+                                                                          "Margin: {}%".format(stats[4]))
                     manager.add_update(
                         monday_id=self.id,
                         user="system",
@@ -1412,13 +1453,14 @@ class Repair():
                     warning = True
 
             if tracked:
-                update = 'Estimated Stock Levels:\n\n{}'.format("\n".join([str(item["name"]) + ': ' + str(item['stock'])]))
+                update = 'Estimated Stock Levels:\n\n{}'.format(
+                    "\n".join([str(item["name"]) + ': ' + str(item['stock'])]))
             else:
-                update = 'Roughly Estimated Stock Levels\nSome of These Products Are Not Tracked:\n\n{}'.format("\n".join(([str(item["name"]) + ': ' + str(item['stock'])])))
+                update = 'Roughly Estimated Stock Levels\nSome of These Products Are Not Tracked:\n\n{}'.format(
+                    "\n".join(([str(item["name"]) + ': ' + str(item['stock'])])))
 
             if not_complete:
                 update.append("\n\nThis is not a full check, and some repairs may have been missed while checking")
-
 
             if warning or not tracked:
                 manager.add_update(
@@ -1436,8 +1478,6 @@ class Repair():
                     notify=['There is enough stock for the {} repair'.format(self.name), user_id],
                     checkbox=['check3', False]
                 )
-
-
 
         def create_sale_stats(self, inventory_items):
             total_sale = 0
@@ -1505,7 +1545,6 @@ class Repair():
                     deductables[item.sku] = [item, 1]
             return deductables
 
-
     class ZendeskRepair():
 
         def __init__(self, repair_object, zendesk_ticket_number, created=False):
@@ -1527,9 +1566,7 @@ class Repair():
             self.postcode = None
             self.company_name = None
 
-
             self.parent = repair_object
-
 
             if not created:
                 self.ticket_id = str(zendesk_ticket_number)
@@ -1558,7 +1595,6 @@ class Repair():
                     self.parent.debug("Unable to find Zendesk ticket: {}".format(self.ticket_id))
             else:
                 pass
-
 
         def address_extractor(self):
 
@@ -1707,7 +1743,8 @@ class Repair():
                         if item.get_column_value(id="status5").index == self.parent.monday.m_client:
                             if item.get_column_value(id="status0").index == self.parent.monday.m_type:
                                 macro_id = item.get_column_value(id="text").text
-                                name = "{} {} {} {}".format(item.name, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type)
+                                name = "{} {} {} {}".format(item.name, self.parent.monday.service,
+                                                            self.parent.monday.client, self.parent.monday.repair_type)
             if macro_id:
                 self.execute_macro(macro_id)
                 self.ticket.tags.extend([tag])
@@ -1719,8 +1756,11 @@ class Repair():
                     monday_id=self.parent.monday.id,
                     update="Cannot Send Macro - Please Let Gabe Know (No Macro On Macro Board)",
                     user="error"
-                    )
-                self.parent.debug("Could Not Get Macro ID from Macro Board\nNotication ID: {}\nService: {}\nClient: {}\nType: {}".format(notification_id, self.parent.monday.service, self.parent.monday.client, self.parent.monday.repair_type))
+                )
+                self.parent.debug(
+                    "Could Not Get Macro ID from Macro Board\nNotication ID: {}\nService: {}\nClient: {}\nType: {}".format(
+                        notification_id, self.parent.monday.service, self.parent.monday.client,
+                        self.parent.monday.repair_type))
             self.parent.debug(end="notifcations_check_and_send")
 
         def update_monday_notification_column(self, notification_id):
@@ -1739,12 +1779,12 @@ class Repair():
             zendesk_client.tickets.update(self.ticket)
             self.parent.debug(start="add_comment")
 
-
         def compare_with_monday(self):
             if not self.parent.monday:
                 self.parent.debug("Cannot Compare Monday and Zendesk Objects - Monday does not exist")
             else:
-                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service", "client", "repair_type"]:
+                for attribute in ["address1", "address2", "postcode", "imei_sn", "passcode", "status", "service",
+                                  "client", "repair_type"]:
                     monday = getattr(self.parent.monday, attribute, None)
                     zendesk = getattr(self, attribute, None)
 
@@ -1778,10 +1818,7 @@ class Repair():
                 print("field not found in method")
 
 
-
-
 class MondayColumns():
-
     """Object that contains relevant column information for when repairs are added to Monday.
 
         This will translate normal attributes to values that are usable through moncli
@@ -1793,16 +1830,16 @@ class MondayColumns():
         "statuses": {
 
             "values": {
-                "status": "status4", # Status Column
-                "service": "service", # Servcie Column
-                "client": "status", # Client Column
-                "repair_type": "status24", # Type Column
-                "case": "status_14", # Case Column
-                "colour": "status8", # Colour Column
-                "refurb": "status_15", # Refurb Type Column
-                "data": "status55", # Data Column
-                "end_of_day": "blocker", # End Of Day Column
-                "zenlink": "status5" # Zenlink Column
+                "status": "status4",  # Status Column
+                "service": "service",  # Servcie Column
+                "client": "status",  # Client Column
+                "repair_type": "status24",  # Type Column
+                "case": "status_14",  # Case Column
+                "colour": "status8",  # Colour Column
+                "refurb": "status_15",  # Refurb Type Column
+                "data": "status55",  # Data Column
+                "end_of_day": "blocker",  # End Of Day Column
+                "zenlink": "status5"  # Zenlink Column
             },
 
             "structure": lambda id, value: [id, {"label": value}]
@@ -1811,7 +1848,7 @@ class MondayColumns():
         "index_statuses": {
 
             "values": {
-                "colour": "status8", # Colour Column
+                "colour": "status8",  # Colour Column
             },
 
             "structure": lambda id, value: [id, {"index": value}]
@@ -1827,16 +1864,16 @@ class MondayColumns():
 
         "text": {
             "values": {
-                "email": "text5", # Email Column
-                "number": "text00", # Tel. No. Column
-                "z_ticket_id": "text6", # Zendesk ID Column
-                "v_id": "text6", # Vend Sale ID Column
-                "address1": "passcode", # Street Address Column
-                "address2": "dup__of_passcode", # Company/Flat Column
-                "postcode": "text93", # Postcode Column
-                "passcode": "text8", # Passcode Column
-                "imei_sn": "text4", # IMEI Column
-                "company_name": "text15" # Company Column
+                "email": "text5",  # Email Column
+                "number": "text00",  # Tel. No. Column
+                "z_ticket_id": "text6",  # Zendesk ID Column
+                "v_id": "text6",  # Vend Sale ID Column
+                "address1": "passcode",  # Street Address Column
+                "address2": "dup__of_passcode",  # Company/Flat Column
+                "postcode": "text93",  # Postcode Column
+                "passcode": "text8",  # Passcode Column
+                "imei_sn": "text4",  # IMEI Column
+                "company_name": "text15"  # Company Column
             },
 
             "structure": lambda id, value: [id, value]
@@ -1844,7 +1881,7 @@ class MondayColumns():
 
         "link": {
             "values": {
-                "zendesk_url": "link1" # Zenlink URL Column
+                "zendesk_url": "link1"  # Zenlink URL Column
             },
 
             "structure": lambda id, url, text: [id, {"url": url, "text": text}]
@@ -1853,10 +1890,10 @@ class MondayColumns():
 
         "dropdown": {
             "values": {
-                "device": "device0", # Device Column
-                "repairs": "repair", # Repairs Column
+                "device": "device0",  # Device Column
+                "repairs": "repair",  # Repairs Column
                 "screen_condition": "screen_condition",
-                "notifications": "dropdown8" # Notifications Column
+                "notifications": "dropdown8"  # Notifications Column
             },
 
             "structure": lambda id, value: [id, {"ids": value}]
@@ -1883,7 +1920,7 @@ class MondayColumns():
 
     def __init__(self, monday_object):
 
-        self.column_values  = {}
+        self.column_values = {}
 
         for category in self.attributes_to_ids:
 
@@ -1892,13 +1929,12 @@ class MondayColumns():
 
             for column in values:
                 if category == "link":
-                    diction = structure(values[column], getattr(monday_object, column), getattr(monday_object, "z_ticket_id"))
+                    diction = structure(values[column], getattr(monday_object, column),
+                                        getattr(monday_object, "z_ticket_id"))
                     self.column_values[diction[0]] = diction[1]
                 else:
                     diction = structure(values[column], getattr(monday_object, column))
                     self.column_values[diction[0]] = diction[1]
-
-
 
     def update_item(self, monday_object):
         values_to_change = {}
@@ -1927,7 +1963,6 @@ class MondayColumns():
 
 
 class RefurbUnit():
-
     # Monday Boards
     boards = {
         "inventory": monday_client.get_board_by_id(id=868065293),
@@ -1958,7 +1993,6 @@ class RefurbUnit():
             self.main_board_item = None
 
         self.imei_sn = self.item.name.split()[-1]
-
 
     def statuses_to_repairs(self):
         repairs = []
@@ -1993,7 +2027,8 @@ class RefurbUnit():
 
     def adjust_main_board_repairs(self):
 
-        self.main_board_item.change_multiple_column_values({"repair": {"ids": self.repairs_required}, "text4": str(self.imei_sn)})
+        self.main_board_item.change_multiple_column_values(
+            {"repair": {"ids": self.repairs_required}, "text4": str(self.imei_sn)})
 
     def get_cost_data(self):
 
@@ -2048,16 +2083,17 @@ class RefurbUnit():
             manager.add_update(
                 self.id,
                 "error",
-                notify=["There is no item on the Main Board for this Refurb. Please correct this so that stock and sales numbers can be proceesed"],
+                notify=[
+                    "There is no item on the Main Board for this Refurb. Please correct this so that stock and sales numbers can be proceesed"],
                 status=["status", "Cannot Sell"]
-                )
+            )
         else:
             self.main_board_item.change_multiple_column_values({
                 "status4": {"label": "Returned"}
             })
 
-class NewRefurbUnit():
 
+class NewRefurbUnit():
     boards = {
         "refurbs": monday_client.get_board_by_id(876594047),
         "inventory": monday_client.get_board_by_id(868065293),
@@ -2105,7 +2141,6 @@ class NewRefurbUnit():
         self.set_attributes()
         self.get_inventory_by_model()
 
-
     def set_attributes(self):
         for column in self.column_values_raw:
             for attribute in self.columns:
@@ -2116,14 +2151,15 @@ class NewRefurbUnit():
         model_val = create_column_value(id="type", column_type=ColumnType.text, value=self.model)
         self.inventory_by_model = self.boards["inventory"].get_items_by_column_values(model_val)
 
-
     def calculate_line(self):
         if not self.get_sale_price():
             print("No Sale Price Provided")
             return False
 
         if not self.unit_cost:
-            manager.add_update(self.id, "error", notify=["Refurbished Calculator: {} Has Not Been Assigned a Unit Cost, PLease Correct This and Try Again".format(self.name), self.user_id])
+            manager.add_update(self.id, "error", notify=[
+                "Refurbished Calculator: {} Has Not Been Assigned a Unit Cost, PLease Correct This and Try Again".format(
+                    self.name), self.user_id])
             return False
 
         screen = float(self.select_screen_cost())
@@ -2142,12 +2178,15 @@ class NewRefurbUnit():
 
     def get_sale_price(self):
 
-        search_string = self.item.get_column_value(id="status4").text + " " + self.item.get_column_value(id="status6").text
+        search_string = self.item.get_column_value(id="status4").text + " " + self.item.get_column_value(
+            id="status6").text
         search_val = create_column_value(id="text", column_type=ColumnType.text, value=search_string)
         results = self.boards["refurb_ref"].get_items_by_column_values(search_val)
 
         if len(results) == 0:
-            manager.add_update(self.id, "error", notify=["Refurbished Unit -- Cannot Find An Entry on The Estimates Board for {}".format(search_string), self.user_id])
+            manager.add_update(self.id, "error", notify=[
+                "Refurbished Unit -- Cannot Find An Entry on The Estimates Board for {}".format(search_string),
+                self.user_id])
             self.price = False
         elif len(results) == 1:
             for pulse in results:
@@ -2155,15 +2194,18 @@ class NewRefurbUnit():
                 self.price = pulse.get_column_value(id="numbers0").number
                 break
         elif len(results) > 1:
-            manager.add_update(self.id, "error", notify=["Refurbished Unit -- Multiple Entries Found on Estimates Board for {}".format(search_string), self.user_id])
+            manager.add_update(self.id, "error", notify=[
+                "Refurbished Unit -- Multiple Entries Found on Estimates Board for {}".format(search_string),
+                self.user_id])
             self.price = False
 
         if not self.price:
-            manager.add_update(self.id, "error", notify=["Refurbished Unit -- No Price Provided for {}".format(search_string), self.user_id])
+            manager.add_update(self.id, "error",
+                               notify=["Refurbished Unit -- No Price Provided for {}".format(search_string),
+                                       self.user_id])
             self.price = False
 
         return self.price
-
 
     def select_screen_cost(self):
         refurb_key = {
@@ -2177,10 +2219,13 @@ class NewRefurbUnit():
         search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
         results = self.boards["inventory"].get_items_by_column_values(search_val)
         if len(results) == 0:
-            manager.add_update(self.id, "error", notify=["Cannot Locate Screen Cost on Inventory Board: {}".format(string), self.user_id])
+            manager.add_update(self.id, "error",
+                               notify=["Cannot Locate Screen Cost on Inventory Board: {}".format(string), self.user_id])
             return False
         elif len(results) > 1:
-            manager.add_update(self.id, "error", notify=["Too Many Screen Costs Found on Inventory Board: {}".format(string), self.user_id])
+            manager.add_update(self.id, "error",
+                               notify=["Too Many Screen Costs Found on Inventory Board: {}".format(string),
+                                       self.user_id])
             return False
         else:
             for pulse in results:
@@ -2190,7 +2235,8 @@ class NewRefurbUnit():
             if not price:
                 price = item.get_column_value(id="supply_price").number
             if not price:
-                manager.add_update(self.id, "error", notify=["Unable to Ascertain Price of Screen Required", self.user_id])
+                manager.add_update(self.id, "error",
+                                   notify=["Unable to Ascertain Price of Screen Required", self.user_id])
                 return False
             return price
 
@@ -2201,10 +2247,12 @@ class NewRefurbUnit():
         search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
         results = self.boards["inventory"].get_items_by_column_values(search_val)
         if len(results) == 0:
-            manager.add_update(self.id, "error", notify=["Cannot Locate Face ID Cost on Inventory Board: {}".format(string)])
+            manager.add_update(self.id, "error",
+                               notify=["Cannot Locate Face ID Cost on Inventory Board: {}".format(string)])
             return False
         elif len(results) > 1:
-            manager.add_update(self.id, "error", notify=["Too Many Face ID Costs Found on Inventory Board: {}".format(string)])
+            manager.add_update(self.id, "error",
+                               notify=["Too Many Face ID Costs Found on Inventory Board: {}".format(string)])
             return False
         else:
             for pulse in results:
@@ -2220,17 +2268,18 @@ class NewRefurbUnit():
         search_val = create_column_value(id="text99", column_type=ColumnType.text, value=str(string))
         results = self.boards["inventory"].get_items_by_column_values(search_val)
         if len(results) == 0:
-            manager.add_update(self.id, "error", notify=["Cannot Locate Rear Glass (Space Grey) Cost on Inventory Board: {}".format(string)])
+            manager.add_update(self.id, "error", notify=[
+                "Cannot Locate Rear Glass (Space Grey) Cost on Inventory Board: {}".format(string)])
             return False
         elif len(results) > 1:
-            manager.add_update(self.id, "error", notify=["Too Many Rear Glass (Space Grey) Costs Found on Inventory Board: {}".format(string)])
+            manager.add_update(self.id, "error", notify=[
+                "Too Many Rear Glass (Space Grey) Costs Found on Inventory Board: {}".format(string)])
             return False
         else:
             for pulse in results:
                 price = pulse.get_column_value(id="supply_price").number
                 break
             return price
-
 
     def calculate_time_cost(self):
         time = 1
@@ -2242,8 +2291,8 @@ class NewRefurbUnit():
             time += 0.5
         return time
 
-class RefurbGroup():
 
+class RefurbGroup():
     boards = {
         "refurbs": monday_client.get_board_by_id(876594047)
     }
@@ -2260,7 +2309,6 @@ class RefurbGroup():
         self.user_id = user_id
         self.group_items = self.boards["refurbs"].get_group(self.group_id).get_items()
 
-
     def calculate_unit_price(self):
         batch_price = self.refurb_unit.batch_cost
         unit_price = round(batch_price / len(self.group_items), 3)
@@ -2272,16 +2320,18 @@ class RefurbGroup():
         for item in self.group_items:
             print("===== {} =====".format(item.name))
             if item.get_column_value(id="numbers").number:
-                manager.add_update(item.id, "system", notify=["Refurbished Unit: {} Has already been calculated (Delete the value in 'Time Required' to re-calculate".format(self.name), self.user_id])
+                manager.add_update(item.id, "system", notify=[
+                    "Refurbished Unit: {} Has already been calculated (Delete the value in 'Time Required' to re-calculate".format(
+                        self.name), self.user_id])
             else:
                 NewRefurbUnit(item.id, self.user_id).calculate_line(unit_cost)
             print(count)
             count += 1
-        manager.add_update(self.refurb_unit.id, "system", notify=["Refurbished Phones Batch Calculation Complete", self.user_id])
+        manager.add_update(self.refurb_unit.id, "system",
+                           notify=["Refurbished Phones Batch Calculation Complete", self.user_id])
 
 
 class OrderItem():
-
     boards = {
         "inventory": monday_client.get_board_by_id(id=868065293),
         "orders": monday_client.get_board_by_id(id=878945205),
@@ -2295,8 +2345,6 @@ class OrderItem():
         ["sku", "text", "text"]
     ]
 
-
-
     def __init__(self, item_id, user_id):
 
         self.parent_id = None
@@ -2309,8 +2357,6 @@ class OrderItem():
             break
         self.name = self.item.name
         self.set_attributes()
-
-
 
     def set_attributes(self):
         for column in self.item.get_column_values():
@@ -2337,7 +2383,9 @@ class OrderItem():
             print("No Parent Item Found")
             return [False, "noparent"]
         elif self.received is None or self.received == 0:
-            manager.add_update(self.id, "error", notify=["Please check the order line for {} has a number in the 'Quantity Received' Column".format(self.name), self.user_id])
+            manager.add_update(self.id, "error", notify=[
+                "Please check the order line for {} has a number in the 'Quantity Received' Column".format(self.name),
+                self.user_id])
             return [False, "noquantity"]
         else:
             self.collect_inventory_items()
@@ -2374,8 +2422,8 @@ class OrderItem():
         new_supply = round((new_total + on_hand_total) / (total_quant), 3)
         return [new_supply, total_quant]
 
-class InventoryItem():
 
+class InventoryItem():
     boards = {
         "inventory": monday_client.get_board_by_id(id=868065293),
         "orders": monday_client.get_board_by_id(id=822509956),
@@ -2434,9 +2482,6 @@ class InventoryItem():
         self.linked_items = None
         self.parent_product = False
 
-
-
-
     def check_linked_products(self, sku):
         col_val = create_column_value(id="text0", column_type=ColumnType.text, value=sku)
         links = self.boards["inventory"].get_items_by_column_values(col_val)
@@ -2454,8 +2499,6 @@ class InventoryItem():
             result = self.parent_product.check_stock()
 
             return result
-
-
 
     def get_parent(self):
         if not self.parent_id:
@@ -2475,7 +2518,8 @@ class InventoryItem():
         # Check for Required Info
         for attribute in ["sku", "model", "category", "type"]:
             if not getattr(self, attribute):
-                manager.add_update(self.id, "error", notify=["Unable to Add Product as no {} has been provided".format(attribute.capitalize()), user_id])
+                manager.add_update(self.id, "error", notify=[
+                    "Unable to Add Product as no {} has been provided".format(attribute.capitalize()), user_id])
                 return False
 
         if self.parent_id:
@@ -2507,7 +2551,6 @@ class InventoryItem():
 
 
 class ParentProduct():
-
     boards = {
         "parents": monday_client.get_board_by_id(id=867934405),
         "screen_refurbs": monday_client.get_board_by_id(id=874011166),
@@ -2528,6 +2571,7 @@ class ParentProduct():
         "Glass, Touch & LCD": "numbers2",
         "China Screen": "supply_price"
     }
+
     def __init__(self, user_id=False, item_id=False, create_from_inventory=False, refurb=False):
 
         if user_id:
@@ -2565,7 +2609,6 @@ class ParentProduct():
         except TypeError:
             self.stock_level = int(0)
 
-
     def check_stock(self):
 
         stats = {
@@ -2575,7 +2618,6 @@ class ParentProduct():
         }
 
         return stats
-
 
     def add_to_parents_board(self, inventory_item):
         col_vals = {attribute[1]: getattr(self, attribute[0]) for attribute in self.columns[:3]}
@@ -2592,10 +2634,11 @@ class ParentProduct():
             manager.add_update(
                 self.id,
                 "error",
-                notify=["You have not specified how many {}'s have been completed. Please correct this and try again", self.user_id]
+                notify=["You have not specified how many {}'s have been completed. Please correct this and try again",
+                        self.user_id]
             )
         else:
-            order =  ScreenRefurb(create_from_parent=self, user_id=self.user_id)
+            order = ScreenRefurb(create_from_parent=self, user_id=self.user_id)
             order.add_to_screen_refurbs()
             self.item.change_multiple_column_values({
                 "status5": {"label": "Refurb - Testing"},
@@ -2607,7 +2650,8 @@ class ParentProduct():
             manager.add_update(
                 self.id,
                 "error",
-                notify=["Unable to include Stock Count for {}. You have not entered a quantity for the count".format(self.name), self.user_id],
+                notify=["Unable to include Stock Count for {}. You have not entered a quantity for the count".format(
+                    self.name), self.user_id],
             )
             return False
 
@@ -2634,6 +2678,7 @@ class CountItem():
         ["counted", "numbers0", "number"],
         ["sku", "text", "text"]
     ]
+
     def __init__(self, user_id=False, item_id=False, create_from_inventory=False):
 
         if user_id:
@@ -2662,12 +2707,7 @@ class CountItem():
         self.id = self.item.id
 
 
-
-
-
-
 class ScreenRefurb():
-
     simple_columns = [
         ["refurb_quantity", "numbers", "number"],
         ["sku", "text", "text"],
@@ -2721,25 +2761,28 @@ class ScreenRefurb():
         self.item = self.boards["screen_refurbs"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
 
-
     def add_to_stock(self):
         if self.status == "Added To Stock":
             manager.add_update(
                 self.id,
                 "error",
-                notify=["{} x {} Have already Been Added To Our Total Stock. They have not been added again".format(self.tested_quantity, self.name), self.user_id])
+                notify=["{} x {} Have already Been Added To Our Total Stock. They have not been added again".format(
+                    self.tested_quantity, self.name), self.user_id])
             return False
         elif self.refurb_quantity is None or self.tested_quantity is None:
             manager.add_update(self.id,
-            "error",
-            status=["status6", "Missing Quantities"],
-            notify=["You have missed out Quantities from {}. Please correct this and try again".format(self.name), self.user_id])
+                               "error",
+                               status=["status6", "Missing Quantities"],
+                               notify=[
+                                   "You have missed out Quantities from {}. Please correct this and try again".format(
+                                       self.name), self.user_id])
         elif not self.sku:
             manager.add_update(
                 self.id,
                 "error",
                 status=["status6", "Missing SKU"],
-                notify=["Unable to Add {} x {} as no SKU has been provided. Please check this and try again".format(self.tested_quantity, self.name), self.user_id]
+                notify=["Unable to Add {} x {} as no SKU has been provided. Please check this and try again".format(
+                    self.tested_quantity, self.name), self.user_id]
             )
         else:
             search_val = create_column_value(id="better_sku", column_type=ColumnType.text, value=self.sku)
@@ -2766,9 +2809,7 @@ class ScreenRefurb():
             })
 
 
-
 class StuartClient():
-
     boards = {
         "stuart_dump": manager.monday_clients["system"][0].get_board_by_id(891724597)
     }
@@ -2781,7 +2822,8 @@ class StuartClient():
 
         if self.production:
             url = "https://api.stuart.com/oauth/token"
-            payload = "client_id={}&client_secret={}&scope=api&grant_type=client_credentials".format(os.environ["STUARTID"], os.environ["STUARTSECRET"])
+            payload = "client_id={}&client_secret={}&scope=api&grant_type=client_credentials".format(
+                os.environ["STUARTID"], os.environ["STUARTSECRET"])
             headers = {'content-type': 'application/x-www-form-urlencoded'}
             response = requests.request("POST", url, data=payload, headers=headers)
 
@@ -2831,7 +2873,8 @@ class StuartClient():
                         repair_object.monday.id,
                         "error",
                         update="Unable to Book Courier - Gabe will look into it",
-                        notify=["Unable to book courier - failure in create_job: {}".format(info[1]), keys.monday.user_ids['gabe']],
+                        notify=["Unable to book courier - failure in create_job: {}".format(info[1]),
+                                keys.monday.user_ids['gabe']],
                         status=['status4', '!! See Updates !!']
                     )
                     return False
@@ -2850,7 +2893,8 @@ class StuartClient():
                     )
 
                     if repair_object.zendesk:
-                        repair_object.zendesk.update_custom_field('tracking_link', info[1]['deliveries'][0]['tracking_url'])
+                        repair_object.zendesk.update_custom_field('tracking_link',
+                                                                  info[1]['deliveries'][0]['tracking_url'])
 
                     self.dump_to_stuart_data(info[1], repair_object, direction)
                     return True
@@ -2890,7 +2934,6 @@ class StuartClient():
         else:
             print("Else Route: arrange_courier")
 
-
     def validate_address(self, client_details):
         if self.production:
             url = "https://api.stuart.com/v2/addresses/validate"
@@ -2929,12 +2972,10 @@ class StuartClient():
         headers = {
             'content-type': "application/json",
             'authorization': "Bearer {}".format(self.token)
-            }
+        }
         response = requests.request("POST", url, data=payload, headers=headers)
         job_info = json.loads(response.text)
         return self.validation_return(response, job_info)
-
-
 
     def format_details(self, client_details, monday_id, direction):
         """Takes delivery details (client address, phone, email, direction) and creates the structure required for the create_job function
@@ -3018,7 +3059,7 @@ class StuartClient():
         headers = {
             'content-type': "application/json",
             'authorization': str("Bearer ") + str(self.token)
-            }
+        }
 
         print(headers)
 
@@ -3082,7 +3123,6 @@ class StuartClient():
 
 
 class RefurbRepair():
-
     boards = {
         'main': monday_client.get_board_by_id(349212843),
         'refurbs': monday_client.get_board_by_id(876594047)
@@ -3108,8 +3148,6 @@ class RefurbRepair():
         ['rear_glass', 'front_screen', 'index', 82]
     ]
 
-
-
     phase_internal_raw = [
         ['battery', 'haptic2', 'index', 71],
         ['microphone', 'rear_housing', 'index', 66],
@@ -3128,7 +3166,6 @@ class RefurbRepair():
         ['haptic', 'siri', 'index', 78],
         ['nfc', 'haptic3', 'index', 85]
     ]
-
 
     def __init__(self, monday_id, user_id):
         self.id = str(monday_id)
@@ -3159,7 +3196,6 @@ class RefurbRepair():
                     value = getattr(column, attribute[2], None)
                     # Will Need to Put in a check to ensure all columns are filled in here once phonecheck API is integrated
                     setattr(self, attribute[0], value)
-
 
     def create_phases(self):
         success = [3, 16, None, 5]
@@ -3234,8 +3270,8 @@ class RefurbRepair():
         self.boards["main"].add_item(item_name=name, column_values=col_vals)
         return False
 
-class MainRefurbComplete():
 
+class MainRefurbComplete():
     boards = {
         'main': monday_client.get_board_by_id(349212843),
         'refurbs': monday_client.get_board_by_id(876594047)
@@ -3292,14 +3328,13 @@ class MainRefurbComplete():
             self.refurb_item = pulse
             break
 
-
     def set_attributes(self):
         for column in self.column_values_raw:
             for attribute in self.columns:
-                    if column.id == attribute[1]:
-                        value = getattr(column, attribute[2], None)
-                        # Will Need to Put in a check to ensure all columns are filled in here once phonecheck API is integrated
-                        setattr(self, attribute[0], value)
+                if column.id == attribute[1]:
+                    value = getattr(column, attribute[2], None)
+                    # Will Need to Put in a check to ensure all columns are filled in here once phonecheck API is integrated
+                    setattr(self, attribute[0], value)
 
     def adjust_columns(self):
         col_vals = {}
@@ -3322,12 +3357,10 @@ class MainRefurbComplete():
 
 
 class PhoneCheckResult():
-
     boards = {
         'main': monday_client.get_board_by_id(349212843),
         'refurbs': monday_client.get_board_by_id(876594047)
     }
-
 
     # Missing From Phone Check
     # [Charging Port, Wireless]
@@ -3372,7 +3405,6 @@ class PhoneCheckResult():
             break
 
         self.imei = self.refurb_item.get_column_value(id='text3').text
-        print(self.imei)
 
     def get_device_info(self):
 
@@ -3393,16 +3425,17 @@ class PhoneCheckResult():
         response = bytes_obj.getvalue()
         self.phone_check_raw = response.decode('utf8')
         check_info = json.loads(self.phone_check_raw)
-        return check_info
+        if check_info:
+            return check_info
+        else:
+            return False
 
     def convert_check_info(self, check_info):
         code_to_apply = self.get_next_code()
         col_vals = {
             'numbers17': int(check_info['BatteryHealthPercentage']),
-            'text84': code_to_apply,
-            'link1': {"url": "https://icorrect.monday.com/boards/876594047/pulses/{}".format(self.refurb_id), "text": str(code_to_apply)}
+            'text84': code_to_apply
         }
-
         self.batt_percentage = int(check_info['BatteryHealthPercentage'])
         if self.batt_percentage < 84:
             col_vals['haptic2'] = {'index': 2}
@@ -3410,31 +3443,45 @@ class PhoneCheckResult():
             col_vals['haptic2'] = {'index': 3}
 
         all_checks = []
-
         ignore = ['Face ID', 'LCD', 'Glass Cracked']
-
         for fault in check_info['Failed'].split(','):
             all_checks.append([fault, 'Failed'])
             if fault in ignore:
                 continue
             if fault in self.standard_checks and self.standard_checks[fault]:
                 col_vals[self.standard_checks[fault]] = {'index': 2}
-
         for passed in check_info['Passed'].split(','):
             all_checks.append([passed, 'Passed'])
             if passed in ignore:
                 continue
             if passed in self.standard_checks and self.standard_checks[passed]:
                 col_vals[self.standard_checks[passed]] = {'index': 3}
-
         return [all_checks, col_vals]
-
 
     def record_check_info(self):
 
         info = self.get_device_info()
+
+        if not info:
+            manager.add_update(
+                self.refurb_id,
+                'error',
+                status=[
+                    'status_14',
+                    'Unable to Fetch'
+                ],
+                notify=[
+                    'Unable to Find this IMEI on Phonecheck',
+                    self.user_id
+                ]
+            )
+            return False
         add_to_board = self.convert_check_info(info)
-        self.refurb_item.change_multiple_column_values(add_to_board[1])
+        add_to_board[1]['status_14'] = {'label': 'Complete'}
+        for item in add_to_board[1]:
+            value = {item: add_to_board[1][item]}
+            print(value)
+            self.refurb_item.change_multiple_column_values(value)
         update = [str(item[0]) + ': ' + str(item[1]) for item in add_to_board[0]]
         self.refurb_item.add_update("\n".join(update))
 

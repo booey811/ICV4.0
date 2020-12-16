@@ -528,6 +528,7 @@ def repair_refurb():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
+
 # Main Board Refurb Phase Complete
 @app.route('/monday/refurb/phase-complete', methods=['POST'])
 def refurb_phase_complete():
@@ -545,6 +546,7 @@ def refurb_phase_complete():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
+
 
 # Phone Check Data Added to Refurb Board
 @app.route('/monday/refurb/phonecheck', methods=['POST'])
