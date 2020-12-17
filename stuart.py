@@ -114,4 +114,12 @@ class BackMarketSale:
 
 test = BackMarketSale()
 
-test.edit_listing(catalog_string='', test=True)
+real_catalog = test.format_listing_model(159447, 'SKU--4--XR.WHITE.64.UNL.MINT', 1, 999, 0)
+
+stringcat = test.create_catalog_string(real_catalog)
+
+print(stringcat)
+testcat = test.standard_catalog()
+print(testcat)
+
+test.edit_listing(catalog_string=stringcat)
