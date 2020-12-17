@@ -1,8 +1,4 @@
-from objects import PhoneCheckResult
-import keys
+from objects import ScreenRefurb
 
-user = keys.monday.user_ids['gabe']
-
-test = PhoneCheckResult(917174010, user)
-
-test.record_check_info()
+screen = ScreenRefurb(user_id=user_id, item_id=int(data["event"]["pulseId"]))
+screen.refurb_complete()
