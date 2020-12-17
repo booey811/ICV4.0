@@ -2629,21 +2629,21 @@ class ParentProduct():
         self.item = self.boards["parents"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
 
-    def refurb_order_creation(self):
-        if not self.add_quantity:
-            manager.add_update(
-                self.id,
-                "error",
-                notify=["You have not specified how many {}'s have been completed. Please correct this and try again",
-                        self.user_id]
-            )
-        else:
-            order = ScreenRefurb(create_from_parent=self, user_id=self.user_id)
-            order.add_to_screen_refurbs()
-            self.item.change_multiple_column_values({
-                "status5": {"label": "Refurb - Testing"},
-                "numbers": str(0)
-            })
+    # def refurb_order_creation(self):
+    #     if not self.add_quantity:
+    #         manager.add_update(
+    #             self.id,
+    #             "error",
+    #             notify=["You have not specified how many {}'s have been completed. Please correct this and try again",
+    #                     self.user_id]
+    #         )
+    #     else:
+    #         order = ScreenRefurb(create_from_parent=self, user_id=self.user_id)
+    #         order.add_to_screen_refurbs()
+    #         self.item.change_multiple_column_values({
+    #             "status5": {"label": "Refurb - Testing"},
+    #             "numbers": str(0)
+    #         })
 
     def stock_counted(self):
         if self.add_quantity is None:
@@ -2711,13 +2711,12 @@ class ScreenRefurb():
     simple_columns = [
         ["refurb_quantity", "numbers", "number"],
         ["sku", "text", "text"],
-        ["tested_quantity", "numbers0", "number"],
-        ["status", "status6", "text"]
+        ["tested_quantity", "numbers0", "number"]
     ]
 
     boards = {
-        "parents": monday_client.get_board_by_id(id=867934405),
-        "screen_refurbs": monday_client.get_board_by_id(id=874011166)
+        "parents": monday_client.get_board_by_id(id='867934405'),
+        "screen_refurbs": monday_client.get_board_by_id(id='874011166')
     }
 
     def __init__(self, user_id=False, item_id=False, create_from_parent=False):
@@ -2734,24 +2733,27 @@ class ScreenRefurb():
             for column in self.item.get_column_values():
                 for attribute in self.simple_columns:
                     if column.id == attribute[1]:
-                        setattr(self, attribute[0], getattr(column, attribute[2]))
+                        value = getattr(column, attribute[2])
+                        if attribute[2] == 'number' and not value:
+                            value = 0
+                        setattr(self, attribute[0], value)
         elif create_from_parent:
             self.name = create_from_parent.name
             self.refurb_quantity = create_from_parent.add_quantity
             self.sku = create_from_parent.sku
 
-    def add_to_test_queue(self):
-
-        test_group = self.boards["screen_refurbs"].get_group(id="new_group5426")
-
-        col_vals = {
-            "text": self.sku,
-            "numbers": self.refurb_quantity
-        }
-
-        test_group.add_item(item_name=self.name, column_values=col_vals)
-
-        self.item.change_multiple_column_values({"numbers": None})
+    # def add_to_test_queue(self):
+    #
+    #     test_group = self.boards["screen_refurbs"].get_group(id="new_group5426")
+    #
+    #     col_vals = {
+    #         "text": self.sku,
+    #         "numbers": self.refurb_quantity
+    #     }
+    #
+    #     test_group.add_item(item_name=self.name, column_values=col_vals)
+    #
+    #     self.item.change_multiple_column_values({"numbers": None})
 
     def add_to_screen_refurbs(self):
         col_vals = {
@@ -2761,29 +2763,25 @@ class ScreenRefurb():
         self.item = self.boards["screen_refurbs"].add_item(item_name=self.name, column_values=col_vals)
         self.id = self.item.id
 
-    def add_to_stock(self):
-        if self.status == "Added To Stock":
-            manager.add_update(
-                self.id,
-                "error",
-                notify=["{} x {} Have already Been Added To Our Total Stock. They have not been added again".format(
-                    self.tested_quantity, self.name), self.user_id])
-            return False
-        elif self.refurb_quantity is None or self.tested_quantity is None:
+    def refurb_complete(self):
+        # If Quantity is Empty
+        if not self.refurb_quantity:
             manager.add_update(self.id,
                                "error",
-                               status=["status6", "Missing Quantities"],
                                notify=[
                                    "You have missed out Quantities from {}. Please correct this and try again".format(
                                        self.name), self.user_id])
+
+        # No SKU - should never happen
         elif not self.sku:
             manager.add_update(
                 self.id,
                 "error",
-                status=["status6", "Missing SKU"],
                 notify=["Unable to Add {} x {} as no SKU has been provided. Please check this and try again".format(
                     self.tested_quantity, self.name), self.user_id]
             )
+
+        # Actual stock adjustment process
         else:
             search_val = create_column_value(id="better_sku", column_type=ColumnType.text, value=self.sku)
             results = self.boards["parents"].get_items_by_column_values(search_val)
@@ -2797,16 +2795,21 @@ class ScreenRefurb():
             else:
                 print("More Than One Parent Found - Cannot Adjust Stock :: {}".format(self.sku))
                 return False
-            new_quantity = int(int(parent.stock_level) + int(self.tested_quantity))
+            new_quantity = int(int(parent.stock_level) + int(self.refurb_quantity))
             parent.item.change_multiple_column_values({
                 "inventory_oc_walk_in": new_quantity,
-                "status5": {"label": "No Movement"}
             })
-            self.item.change_multiple_column_values({
-                "status6": {"label": "Added To Stock"},
+
+            col_vals = {
                 "numbers6": int(parent.stock_level),
-                "numbers3": new_quantity
-            })
+                "numbers3": new_quantity,
+                'numbers': self.refurb_quantity,
+                'text': self.sku
+            }
+
+            refurb_record = self.boards['screen_refurbs'].add_item(item_name=self.name, column_values=col_vals)
+
+            self.item.change_multiple_column_values({'numbers': 0})
 
 
 class StuartClient():
@@ -3228,7 +3231,7 @@ class RefurbRepair():
                 self.new_phase = phases[count]
                 col_vals = {'status_122': {'label': self.new_phase}}
                 if self.new_phase == 'Repairs Complete':
-                    col_vals['status5'] == {'label': 'Ready For Testing'}
+                    col_vals['status5'] = {'label': 'Ready For Testing'}
                 self.item.change_multiple_column_values(col_vals)
                 return repairs
             count += 1
