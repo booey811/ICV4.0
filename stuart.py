@@ -31,23 +31,27 @@ class BackMarketSale:
         formatted = json.loads(response.text)
         pprint(formatted)
 
-    def edit_listing(self, catalog_string):
+    def edit_listing(self, catalog_string, test=False):
 
         url = '{}/listings'.format(self.url_start)
         print(catalog_string)
-        body = {
-            "encoding": "latin1",
-            "delimiter": ";",
-            "quotechar": "\"",
-            "catalog": catalog_string
-        }
+        if test:
+            body = self.standard_catalog()
+        else:
+            body = {
+                "encoding": "latin1",
+                "delimiter": ";",
+                "quotechar": "\"",
+                "catalog": catalog_string
+            }
 
-        json.dumps(body)
+        print(body)
+
+        body = json.dumps(body)
         response = requests.request('POST', url=url, headers=self.api_headers, data=body)
 
         print(response)
         print(response.text)
-
 
     def create_catalog_string(self, listing_model):
 
@@ -69,9 +73,6 @@ class BackMarketSale:
         final_string = headers_string + values_string + ';'
 
         return final_string
-
-
-
 
     def format_listing_model(self, backmarket_id, sku, quantity, price, grading, touchid_broken=False):
 
@@ -98,11 +99,19 @@ class BackMarketSale:
 
         return required
 
+    def standard_catalog(self):
+
+        body = {
+            "encoding": "latin1",
+            "delimiter": ";",
+            "quotechar": "\"",
+            "header": True,
+            "catalog": "sku;backmarket_id;quantity;warranty_delay;price;state;\n1111111111112;1151;2;6;180;2;\n1111111111113;1151;13;12;220;1;"
+        }
+
+        return body
+
 
 test = BackMarketSale()
 
-listing_model = test.format_listing_model(159987, 'XR Red Mint', 1, 999, 0)
-
-catalog = test.create_catalog_string(listing_model)
-
-test.edit_listing(catalog)
+test.edit_listing(catalog_string='', test=True)
