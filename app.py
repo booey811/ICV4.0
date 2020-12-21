@@ -9,12 +9,14 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete, PhoneCheckResult
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, \
+    NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete, PhoneCheckResult, BackMarketSale
 from manage import manager
 import keys
 
 # APP SET UP
 app = Flask(__name__)
+
 
 # APP FUNCTIONS
 def monday_handshake(webhook):
@@ -46,6 +48,7 @@ def test_route():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "TEST COMPLETE"
 
+
 # ROUTES // ++++++++++++ TEST ROUTE == MONDAY ++++++++++++ \\
 @app.route("/811/test/monday", methods=["POST"])
 def test_route_monday():
@@ -61,6 +64,7 @@ def test_route_monday():
     print(data)
     print("--- %s seconds ---" % (time.time() - start_time))
     return "MONDAY TEST COMPLETE"
+
 
 # ROUTES // MONDAY
 # Zenlink Column
@@ -95,6 +99,7 @@ def monday_zenlink_column():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Zenlink Change Route Completed Successfully"
+
 
 # Status Change
 @app.route("/monday/status", methods=["POST", "GET"])
@@ -198,7 +203,7 @@ def monday_status_change():
                 return "Status Change Route Complete - Returning Early"
 
             if repair.monday.client == "End User" and repair.monday.service == "Walk-In":
-                    repair.monday.vend_sync()
+                repair.monday.vend_sync()
 
             # Check for corporate repairs
             elif repair.monday.end_of_day != "Complete":
@@ -221,6 +226,7 @@ def monday_status_change():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Status Change Route Completed Successfully"
 
+
 # Status - Courier Booked NEW!!!!!!!!!!!!!
 @app.route("/monday/book-courier/collection", methods=["POST"])
 def book_collection():
@@ -239,6 +245,7 @@ def book_collection():
 
     return "Book Courier Collection Route Complete"
 
+
 # Status - Courier Return Booked NEW!!!!!!!!!!!!!
 @app.route("/monday/book-courier/return", methods=["POST"])
 def book_return():
@@ -256,6 +263,7 @@ def book_return():
     stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "delivering")
 
     return "Book Courier Collection Route Complete"
+
 
 # Notifications Column
 @app.route("/monday/notifications", methods=["POST"])
@@ -297,6 +305,7 @@ def monday_eod_column_new():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "New End Of Day Route Complete"
 
+
 # Vend End of Day Column
 @app.route("/monday/eod/do_now", methods=["POST"])
 def monday_eod_column_do_now():
@@ -313,6 +322,7 @@ def monday_eod_column_do_now():
     repair.debug_print(debug=os.environ["DEBUG"])
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Monday End of Day Route Completed Successfully"
+
 
 # Updates Posted
 @app.route("/monday/updates", methods=["POST"])
@@ -340,6 +350,7 @@ def monday_update_added():
             repair.debug("Cannot Add Comment - No Zendesk Object Available")
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Monday Update Posted Route Complete"
+
 
 # Refurb Added to Main Board
 @app.route("/monday/refurb/add", methods=["POST"])
@@ -374,6 +385,7 @@ def refurb_price_calcs():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Refurb Complete & Calculations Route Complete"
 
+
 # Refurb Sold
 @app.route("/monday/refurb/sold", methods=["POST"])
 def refurb_unit_sold():
@@ -388,6 +400,7 @@ def refurb_unit_sold():
     refurb.refurb_unit_sold()
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Refurb Complete & Calculations Route Complete"
+
 
 # Stock Check
 @app.route("/monday/stock/check", methods=["POST"])
@@ -408,6 +421,7 @@ def stock_checker():
 
     return 'Stock Check Route Complete'
 
+
 # Stock Orders Received
 @app.route("/monday/stock/received", methods=["POST"])
 def stock_received():
@@ -423,6 +437,7 @@ def stock_received():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Stock Received Route Complete"
+
 
 # Stock Count Complete
 @app.route("/monday/stock/count", methods=["POST"])
@@ -440,6 +455,7 @@ def stock_count():
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Stock Count Route Complete"
 
+
 # Product Added
 @app.route("/monday/stock/add_product", methods=["POST"])
 def add_product():
@@ -455,6 +471,7 @@ def add_product():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Add Product Route Complete"
+
 
 # Screen Refurbishment Complete
 @app.route("/monday/screen-refurb/complete", methods=["POST"])
@@ -507,6 +524,7 @@ def calculate_refurb_group():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
+
 
 # Refurb Phone Checked and Added to Monday
 @app.route('/monday/refurb/repairing', methods=["POST"])
@@ -567,11 +585,31 @@ def phonecheck_complete():
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
 
+# Backmarket Order ID added to Monday - Get Info
+@app.route('/monday/refurb/backmarket-order', methods=['POST'])
+def get_backmarket_order():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    order = BackMarketSale(production=True, monday_id=data["event"]["pulseId"])
+
+    order.move_order_info_to_monday()
+
+    print("--- %s seconds ---" % (time.time() - start_time))
+    return "Screen Refurbishment Tested - Add To Stock Route Complete"
+
+
 # ROUTES // VEND
 # Sale Update
 @app.route("/vend/sale_update", methods=["POST"])
 def vend_sale_update():
     print("Vend Sale Update")
+
     def process(sale):
         start_time = time.time()
         sale = sale.decode('utf-8')
@@ -607,6 +645,7 @@ def vend_sale_update():
     thread.start()
     return "Vend Sale Update Route Completed Successfully"
 
+
 # ROUTES // ZENDESK
 # New Comment
 @app.route("/zendesk/comments", methods=["POST"])
@@ -638,6 +677,7 @@ def zendesk_comment_sent():
     repair.debug_print(debug=os.environ["DEBUG"])
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Zendesk Commments Route Completed Successfully"
+
 
 # Ticket Creates Pulse on Monday
 @app.route("/zendesk/creation", methods=["POST"])
@@ -718,6 +758,7 @@ def staurt_responses():
             print("Has Been Delivered")
 
     return "Stuart Webhook Route Complete"
+
 
 # Top Line Driver Code
 if __name__ == "__main__":

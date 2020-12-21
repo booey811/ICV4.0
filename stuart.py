@@ -4,14 +4,20 @@ import json
 from pprint import pprint
 
 import settings
+from manage import manager
 
 
 class BackMarketSale:
+
     api_headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Accept-Language': 'en-gb',
         'User-Agent': 'iCorrect'
+    }
+
+    boards = {
+        'main': manager.monday_clients['system'][0].get_board_by_id(876594047)
     }
 
     def __init__(self, production=False):
@@ -30,6 +36,9 @@ class BackMarketSale:
         print(response)
         formatted = json.loads(response.text)
         pprint(formatted)
+
+    def format_order_for_monday(self, order_dictionary):
+        print(order_dictionary)
 
     def edit_listing(self, catalog_string, test=False):
 
@@ -112,14 +121,6 @@ class BackMarketSale:
         return body
 
 
-test = BackMarketSale()
+test = BackMarketSale(production=True)
 
-real_catalog = test.format_listing_model(159447, 'SKU--4--XR.WHITE.64.UNL.MINT', 1, 999, 0)
-
-stringcat = test.create_catalog_string(real_catalog)
-
-print(stringcat)
-testcat = test.standard_catalog()
-print(testcat)
-
-test.edit_listing(catalog_string=stringcat)
+pprint(test.get_order(9784965))

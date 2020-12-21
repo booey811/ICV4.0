@@ -3506,3 +3506,178 @@ class PhoneCheckResult:
             'text0': replace_code
         })
         return new_code
+
+
+class BackMarketSale:
+
+    api_headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Accept-Language': 'en-gb',
+        'User-Agent': 'iCorrect'
+    }
+
+    boards = {
+    }
+
+    def __init__(self, monday_id=False, production=False):
+
+        if production:
+            self.api_headers['Authorization'] = 'Basic {}'.format(os.environ['BACKMARKET'])
+            self.url_start = 'https://www.backmarket.fr/ws'
+        else:
+            self.api_headers['Authorization'] = 'Basic {}'.format(os.environ['BACKMARKETSAND'])
+            self.url_start = 'https://preprod.backmarket.fr/ws'
+
+        self.refurb_item = None
+        self.refurb_id = None
+        self.refurb_name = None
+        self.refurb_col_vals = []
+
+        if monday_id:
+            self.get_refurb_pulse(monday_id)
+
+    def get_order(self, back_market_id):
+
+        url = '{}/orders/{}'.format(self.url_start, back_market_id)
+        response = requests.request('GET', url=url, headers=self.api_headers)
+        formatted = json.loads(response.text)
+
+        return formatted
+
+
+    def get_refurb_pulse(self, monday_id):
+        self.refurb_id = monday_id
+        for pulse in manager.monday_clients['system'][0].get_items(ids=[self.refurb_id], limit=1):
+            self.refurb_item = pulse
+            self.refurb_name = pulse.name
+            self.refurb_col_vals = pulse.get_column_values()
+            break
+
+    def format_order_for_monday(self, order_dictionary):
+        print(order_dictionary)
+
+    def move_order_info_to_monday(self):
+
+        for value in self.refurb_col_vals:
+            if value.id == 'text8':
+                backmarket_id = value.text
+
+        if not backmarket_id:
+            print('No Backmarket ID Provided  - Cannot Get Data')
+            return False
+
+        details = self.get_order(backmarket_id)
+
+        update_vals = []
+
+        update_dictionary = {
+            'numbers2': {
+                'attribute': 'number',
+                'value': details['price']
+            },
+            'text89': {
+                'attribute': 'text',
+                'value': details['billing_address']['first_name'] + ' ' + details['billing_address']['first_name']
+            },
+            'packing_sheet_': {
+                'attribute': 'text',
+                'value': details['tracking_url']
+            },
+            'text28': {
+                'attribute': 'text',
+                'value': str(details['orderlines'][0]['listing_id'])
+            }
+        }
+
+        for value in self.refurb_col_vals:
+            if value.id in update_dictionary:
+                setattr(value, update_dictionary[value.id]['attribute'], update_dictionary[value.id]['value'])
+                update_vals.append(value)
+
+        self.refurb_item.change_multiple_column_values(update_vals)
+        update_body = []
+        for item in details:
+            update_body.append('{}: {}'.format(item, details[item]))
+        self.refurb_item.add_update(body='\n'.join(update_body))
+
+
+    def edit_listing(self, catalog_string, test=False):
+
+        url = '{}/listings'.format(self.url_start)
+        print(catalog_string)
+        if test:
+            body = self.standard_catalog()
+        else:
+            body = {
+                "encoding": "latin1",
+                "delimiter": ";",
+                "quotechar": "\"",
+                "catalog": catalog_string
+            }
+
+        print(body)
+
+        body = json.dumps(body)
+        response = requests.request('POST', url=url, headers=self.api_headers, data=body)
+
+        print(response)
+        print(response.text)
+
+    def create_catalog_string(self, listing_model):
+
+        catalog = ''
+        headers_list = []
+
+        for item in listing_model:
+            headers_list.append(item)
+
+        headers_string = ';'.join(headers_list) + ';\\n'
+
+        values_list = []
+
+        for item in listing_model:
+            values_list.append(str(listing_model[item]))
+
+        values_string = ';'.join(values_list)
+
+        final_string = headers_string + values_string + ';'
+
+        return final_string
+
+    def format_listing_model(self, backmarket_id, sku, quantity, price, grading, touchid_broken=False):
+
+        required = {
+            'backmarket_id': int(backmarket_id),  # REQUIRED[int] - Backmarket Product ID (Must be known)
+            'sku': str(sku),  # REQUIRED[string] - SKU of offer, taken from backmarket
+            'quantity': int(quantity),  # REQUIRED[string] - Quantity of units available for this sale
+            'price': int(price),  # REQUIRED[float] - Price of Sale
+            'state': int(grading),  # REQUIRED[int] - Grading of iPhone
+            'warranty': 12,  # REQUIRED[int] - Months of Warranty (6/12 minimum??)
+        }
+
+        optional = {
+            'comment': None,  # [string:500] Comment for the sale (description)
+            'currency': None,  # [string:10] Type of currency (Defaults to EUR)
+            'shipper_1': None,  # [string:**kwargs] Company that will ship the sale
+            'shipping_price_1': None,  # [float] Cost of this shipping option
+            'shipper_delay_1': None,  # [float] # Delay before the package will be collected (in hours)
+        }
+
+        for item in optional:
+            if optional[item]:
+                required[item] = optional[item]
+
+        return required
+
+    def standard_catalog(self):
+
+        body = {
+            "encoding": "latin1",
+            "delimiter": ";",
+            "quotechar": "\"",
+            "header": True,
+            "catalog": "sku;backmarket_id;quantity;warranty_delay;price;state;\n1111111111112;1151;2;6;180;2;\n1111111111113;1151;13;12;220;1;"
+        }
+
+        return body
