@@ -9,8 +9,7 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, \
-
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup,\
     NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete, PhoneCheckResult, BackMarketSale
 
 from manage import manager
