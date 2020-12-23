@@ -3099,6 +3099,13 @@ class StuartClient():
             'text9': assignment_code
         }
 
+        if direction == 'collecting':
+            col_vals['text80'] = repair_object.monday.postcode
+            col_vals['collection_postcode'] = 'W1W 8JQ'
+        elif direction == 'delivering':
+            col_vals['text80'] = 'W1W 8JQ'
+            col_vals['collection_postcode'] = repair_object.monday.postcode
+
         item = self.boards["stuart_dump"].add_item(item_name=name, column_values=col_vals)
         item.add_update("\n".join([str(item) + ": " + str(job_info[item]) for item in job_info]))
 
