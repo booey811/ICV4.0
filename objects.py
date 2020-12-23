@@ -3080,14 +3080,14 @@ class StuartClient():
         booking_hour = int(datetime.now().hour)
         booking_minute = int(datetime.now().minute)
 
-        cost_ex = int(job_info['pricing']['price_tax_excluded'])
-        vat = int(job_info['pricing']['tax_amount'])
+        cost_ex = round(float((job_info['pricing']['price_tax_excluded'])), 2)
+        vat = round(float((job_info['pricing']['tax_amount'])), 2)
 
-        distance = int(job_info['distance'])
+        distance = round(float((job_info['distance'])), 2)
 
         assignment_code = job_info['assignment_code']
 
-        estimated_time = int(job_info['duration'])
+        estimated_time = round(float((job_info['duration'])), 2)
 
         col_vals = {
             "text": str(job_info["id"]),
