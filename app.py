@@ -9,8 +9,9 @@ import time
 
 from flask import Flask, request
 
-from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, \
-    NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete, PhoneCheckResult
+from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup,\
+    NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete, PhoneCheckResult, BackMarketSale
+
 from manage import manager
 import keys
 
@@ -564,6 +565,25 @@ def phonecheck_complete():
     phonecheck = PhoneCheckResult(int(data["event"]["pulseId"]), int(data["event"]["userId"]))
 
     phonecheck.record_check_info()
+
+    print("--- %s seconds ---" % (time.time() - start_time))
+    return "Screen Refurbishment Tested - Add To Stock Route Complete"
+
+
+# Backmarket Order ID added to Monday - Get Info
+@app.route('/monday/refurb/backmarket-order', methods=['POST'])
+def get_backmarket_order():
+    start_time = time.time()
+    webhook = request.get_data()
+    data = monday_handshake(webhook)
+    if data[0] is False:
+        return data[1]
+    else:
+        data = data[1]
+
+    order = BackMarketSale(production=True, monday_id=data["event"]["pulseId"])
+
+    order.move_order_info_to_monday()
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Tested - Add To Stock Route Complete"
