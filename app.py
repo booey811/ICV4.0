@@ -10,7 +10,9 @@ import time
 from flask import Flask, request
 
 from objects import Repair, RefurbUnit, OrderItem, CountItem, InventoryItem, ParentProduct, ScreenRefurb, RefurbGroup, \
+
     NewRefurbUnit, StuartClient, RefurbRepair, MainRefurbComplete, PhoneCheckResult, BackMarketSale
+
 from manage import manager
 import keys
 
@@ -35,8 +37,6 @@ def monday_handshake(webhook):
         return [False, authtoken]
     else:
         return [True, data]
-
-    print(data)
 
 
 # ROUTES // ++++++++++++ TEST ROUTE ++++++++++++ \\
@@ -122,7 +122,7 @@ def monday_status_change():
         print("Status Change: NO PREVIOUS STATUS ==> {}".format(data["event"]["value"]["label"]["text"]))
 
     # Check Whether monday.com user is System
-    if (data["event"]["userId"] in [15365289, 11581083]):
+    if data["event"]["userId"] in [15365289, 11581083]:
         repair.debug("Change made by System -- Ignored")
         if repair.zendesk and not repair.multiple_pulse_check_repair():
             repair.compare_app_objects("monday", "zendesk")
@@ -243,6 +243,7 @@ def book_collection():
     stuart = StuartClient(production=True)
     stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "collecting")
 
+    print("--- %s seconds ---" % (time.time() - start_time))
     return "Book Courier Collection Route Complete"
 
 
@@ -262,6 +263,7 @@ def book_return():
     stuart = StuartClient(production=True)
     stuart.arrange_courier(Repair(webhook_payload=data, monday=int(data["event"]["pulseId"])), user_id, "delivering")
 
+    print("--- %s seconds ---" % (time.time() - start_time))
     return "Book Courier Collection Route Complete"
 
 
@@ -280,12 +282,13 @@ def monday_notifications_column():
     new_notification = repair.monday.dropdown_value_webhook_comparison(data)
     if new_notification:
         if not repair.zendesk:
-            repair.monday.add_to_zendesk
+            repair.monday.add_to_zendesk()
         repair.zendesk.notifications_check_and_send(new_notification)
         repair.monday.textlocal_notification()
     else:
         print("new notification returned false")
     repair.debug_print(debug=os.environ["DEBUG"])
+
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Monday Notificaions Column Change Route Complete"
 
@@ -485,27 +488,10 @@ def screen_refurbishment_complete():
         data = data[1]
     user_id = data["event"]["userId"]
     screen = ScreenRefurb(user_id=user_id, item_id=int(data["event"]["pulseId"]))
-    screen.add_to_test_queue()
+    screen.refurb_complete()
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return "Screen Refurbishment Complete Route Completed"
-
-
-# Screen Refurbishment Tested - Add To Stock
-@app.route("/monday/screen-refurb/tested", methods=["POST"])
-def screen_refurbishment_tested():
-    start_time = time.time()
-    webhook = request.get_data()
-    data = monday_handshake(webhook)
-    if data[0] is False:
-        return data[1]
-    else:
-        data = data[1]
-    screen_set = ScreenRefurb(item_id=int(data["event"]["pulseId"]), user_id=int(data["event"]["userId"]))
-    screen_set.add_to_stock()
-
-    print("--- %s seconds ---" % (time.time() - start_time))
-    return "Screen Refurbishment Tested - Add To Stock Route Complete"
 
 
 # Refurb Group Calculation

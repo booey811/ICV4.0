@@ -1,10 +1,6 @@
-from pprint import pprint
 
-from objects import PhoneCheckResult
-import keys
+from objects import ScreenRefurb
 
-user = keys.monday.user_ids['gabe']
+screen = ScreenRefurb(user_id=user_id, item_id=int(data["event"]["pulseId"]))
+screen.refurb_complete()
 
-test = PhoneCheckResult(917532647, user)
-
-test.edit_listing()
