@@ -1,7 +1,16 @@
+import moncli
 
+from manage import Manager
 
-from objects import ScreenRefurb
+for item in Manager().monday_clients['system'][0].get_items(ids=[889160665]):
+    test = item
+    break
 
-screen = ScreenRefurb(user_id=user_id, item_id=int(data["event"]["pulseId"]))
-screen.refurb_complete()
+value = test.get_column_value('front_screen5')
+
+print(value.__dict__)
+
+value.index = 99999
+
+test.change_column_value(value)
 

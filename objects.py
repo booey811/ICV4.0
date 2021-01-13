@@ -3405,6 +3405,26 @@ class PhoneCheckResult:
         'NFC': 'haptic3'  # NFC Column
     }
 
+    face_id_values = {
+        'H/L': 'Higher/Lower',
+        'Unable': 'Unable to Activate',
+        'Other(FaceID)': 'Other',
+        '_id': 'front_screen5'
+    }
+
+    screen_values = {
+        'G': 'Glass Only',
+        'G & T': 'Glass & Touch',
+        'G T & L': 'Glass, Touch & LCD',
+        '_id': 'status_1'
+    }
+
+    rear_values = {
+        'RG': 'Rear Glass Required',
+        'RH': 'Rear Housing Required',
+        '_id': 'front_screen'
+    }
+
     def __init__(self, monday_id, user_id):
 
         self.refurb_id = monday_id
@@ -3444,8 +3464,11 @@ class PhoneCheckResult:
         code_to_apply = self.get_next_code()
         col_vals = {
             'numbers17': int(check_info['BatteryHealthPercentage']),
-            'text84': code_to_apply
+            'text84': code_to_apply,
+            'status6': str(check_info['Memory'])
         }
+        if not check_info['Network']:
+            col_vals['status1'] = {'label': 'Unlocked'}
         self.batt_percentage = int(check_info['BatteryHealthPercentage'])
         if self.batt_percentage < 84:
             col_vals['haptic2'] = {'index': 2}
@@ -3473,11 +3496,19 @@ class PhoneCheckResult:
 
                 col_vals[self.standard_checks[passed]] = {'index': 3}
 
+
+        for failure in check_info['Cosmetics'].split(','):
+            for category in [self.face_id_values, self.screen_values, self.rear_values]:
+                if failure in category:
+                    col_vals[category['_id']] = {'label': category[failure]}
+
         return [all_checks, col_vals]
 
     def record_check_info(self):
 
         info = self.get_device_info()
+
+        pprint(info)
 
         if not info:
             manager.add_update(
@@ -3495,10 +3526,11 @@ class PhoneCheckResult:
             return False
         add_to_board = self.convert_check_info(info)
         add_to_board[1]['status_14'] = {'label': 'Complete'}
-        for item in add_to_board[1]:
-            value = {item: add_to_board[1][item]}
-            print(value)
-            self.refurb_item.change_multiple_column_values(value)
+        # for item in add_to_board[1]:
+        #     value = {item: add_to_board[1][item]}
+        #     print(value)
+        #     self.refurb_item.change_multiple_column_values(value)
+        self.refurb_item.change_multiple_column_values(add_to_board[1])
         update = [str(item[0]) + ': ' + str(item[1]) for item in add_to_board[0]]
         self.refurb_item.add_update("\n".join(update))
 
@@ -3691,3 +3723,7 @@ class BackMarketSale:
         }
 
         return body
+
+test = PhoneCheckResult(968275989, 4251271)
+
+test.record_check_info()
