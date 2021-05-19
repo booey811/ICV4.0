@@ -102,5 +102,3 @@ class Manager():
 
 
 manager = Manager()
-
-manager.add_update(887375617, 'system', checkbox=["check3", False])
